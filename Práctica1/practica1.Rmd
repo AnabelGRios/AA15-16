@@ -1,0 +1,76 @@
+---
+title: "Práctica 1"
+author: "Anabel Gómez Ríos"
+output: pdf_document
+---
+
+#Ejercicio de Generación y Visualización de datos.
+
+##1. Construir una función `lista = simula_unif(N, dim, rango)` que calcule una lista de longitud `N` de vectores de dimensión `dim` conteniendo números aleatorios uniformes en el intervalo `rango`.  
+  
+```{r}
+simula_unif <- function(N, dim, rango) {
+  set.seed(1)
+  lapply(1:N, function(x) runif(dim, min = rango[1], max = rango[2]))
+}
+```
+
+Por ejemplo, vamos a obtener una lista de longitud 4 de vectores de dimensión 3 en el rango (0,1):
+```{r}
+l <- simula_unif(4,3,c(0,1))
+l
+```
+
+##2. Construir una función `lista = simula_gauss(N, dim, sigma)` que calcule una lista de longitud `N` de vectores de dimensión `dim` conteniendo números aleatorios gaussianos de media 0 y varianzas dadas por el vector `sigma`.
+
+```{r}
+simula_gauss <- function(N, dim, sigma) {
+  set.seed(1)
+  lapply(1:N, function(x) rnorm(dim, mean = 0, sigma))
+}
+```
+
+Vamos a obtener por ejemplo una lista de longitud 3 de vectores de dimensión 2 y vector de desviaciones (1,7):
+```{r}
+simula_gauss(3,2,c(1,7))
+```
+Como vemos, la varianza 1 se coge para la primera coordenada de los vectores y la varianza 7 para la segunda coordenada. Si ponemos por ejemplo c(1,7,3) como vector de desviaciones y la dimensión de los vectores es 2, ignora el número 3.
+
+##3. Suponer `N = 50, dim = 2, rango = [-50, 50]` en cada dimensión. Dibujar una gráfica de la salida de la función correspondiente.
+
+```{r}
+lista <- simula_unif(50, 2, c(-50,50))
+# Obtenemos las coordenadas x e y, que son la primera y segunda columna
+# de la lista (primera componente y segunda componente de cada vector
+# en la lista)
+x <- rapply(lista, function(x) x[1])
+y <- rapply(lista, function(x) x[2])
+plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y")
+```
+
+##4. Suponer `N = 50, dim = 2, sigma = [5,7]`. Dibujar una gráfica de la salida de la función correspondiente.
+
+```{r}
+lista2 <- simula_gauss(50, 2, c(5,7))
+# Obtenemos las coordenadas x e y, que son la primera y segunda columna
+# de la lista (primera componente y segunda componente de cada vector
+# en la lista)
+x <- rapply(lista2, function(x) x[1])
+y <- rapply(lista2, function(x) x[2])
+plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y")
+```
+
+##5. Construir la función `v = simula_recta(intervalo)` que calcula los parámetros `v = (a,b)` de una recta aleatoria `y = ax + b` que corte al cuadrado [-50,50] times$ [-50,50] (Ayuda: Para calcular la recta simular las coordenadas de dos puntos del cuadrado y calcular la recta que pasa por ellos).
+
+```{r}
+simula_recta <- function(intervalo) {
+  l <- simula_unif(2, 2, intervalo)
+  a <- (l[[2]][2] - l[[1]][2]) / (l[[2]][1] - l[[1]][1])
+  b <- l[[1]][2] - a * l[[1]][1]
+  c(a,b)
+}
+```
+
+```{r}
+simula_recta(c(-50,50))
+```
