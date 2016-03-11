@@ -9,8 +9,10 @@ output: pdf_document
 ##1. Construir una función `lista = simula_unif(N, dim, rango)` que calcule una lista de longitud `N` de vectores de dimensión `dim` conteniendo números aleatorios uniformes en el intervalo `rango`.  
   
 ```{r}
+set.seed(237)
+```
+```{r}
 simula_unif <- function(N, dim, rango) {
-  set.seed(1)
   lapply(1:N, function(x) runif(dim, min = rango[1], max = rango[2]))
 }
 ```
@@ -25,7 +27,6 @@ l
 
 ```{r}
 simula_gauss <- function(N, dim, sigma) {
-  set.seed(1)
   lapply(1:N, function(x) rnorm(dim, mean = 0, sigma))
 }
 ```
@@ -74,3 +75,333 @@ simula_recta <- function(intervalo) {
 ```{r}
 simula_recta(c(-50,50))
 ```
+
+##6. Generar una muestra 2D de puntos usando `simula_unif()` y etiquetar la muestra usando el signo de la función $f(x,y) = y-ax-b$ de cada punto a una recta simulada con `simula_recta()`. Mostrar una gráfica con el resultado de la muestra etiquetada junto con la recta usada para ello.
+
+Vamos primero a construir una función que nos devuelva la etiqueta +1 o -1 según el signo de la $f$ dada (la evaluación ya ha sido hecha):
+
+```{r}
+etiquetar <- function(f) {
+  if (f > 0) {
+    return(+1)
+  }
+  else {
+    return(-1)
+  }
+}
+```
+Ahora generamos la recta con la función indicada y utilizamos la función anterior para etiquetar los puntos haciendo uso también de la función `lapply()`, de la siguiente forma:
+
+```{r}
+r <- simula_recta(c(-50,50))
+etiquetas <- lapply(1:length(lista), function(i) {
+  #Obtenemos los puntos uno a uno y los etiquetamos
+  p <- lista[[i]]
+  f <- p[2] - r[1]*p[1] - r[2]
+  etiquetar(f)
+})
+```
+
+Esto nos devuelve en `etiquetas` una lista de 50 vectores, todos con una componente. Lo vamos a pasar a un vector con las 50 componentes con la función `unlist()`
+
+```{r}
+etiquetas <- unlist(etiquetas)
+#Mostramos las etiquetas
+etiquetas
+```
+
+Vamos a dibujar el resultado. Pintamos en una misma gráfica los puntos etiquetados con +1 (en rojo) y los puntos etiquetados con -1 (en azul). Pintamos también la recta que hemos utilizado para etiquetar los puntos:
+
+```{r}
+pinta_particion <- function(lista_puntos, etiquetas=NULL, visible=FALSE, f=NULL) {
+  x <- rapply(lista_puntos, function(x) x[1])
+  y <- rapply(lista_puntos, function(x) x[2])
+  if(is.null(etiquetas))
+     etiquetas=1
+  else etiquetas = etiquetas+3
+  plot(x, y, type = "p", col = etiquetas, xlab = "Eje X", ylab = "Eje Y", 
+       xlim = c(-50,50), ylim = c(-50,50))
+  
+  if(visible) {
+    sec <- seq(-50, 50, length.out = 1000)
+    z <- outer(sec, sec, f)
+    contour(sec, sec, z, col = "violet", levels = 0, add = TRUE)
+  }
+}
+
+pinta_particion(lista, etiquetas, TRUE, function(x,y) r[1]*x-y+r[2])
+```
+
+##7. Usar la muestra generada en el apartado anterior y etiquetarla con +1,-1 usando el signo de cada una de las siguiente funciones y visualizar el resultado del etiquetado de cada función junto con su gráfica y comparar el resultado con el caso lineal. ¿Qué consecuencias extrae sobre la forma de las regiones positiva y negativa?:
+
+Vamos a utilizar la función para etiquetar que hemos hecho en el apartado anterior y la función para dibujar que ya teníamos hecha también.
+
+###a) $f(x,y) = (x-10)^2 + (y-20)^2 - 400$
+
+```{r}
+
+etiquetasFA <- lapply(1:length(lista), function(i) {
+  #Obtenemos los puntos uno a uno y los etiquetamos
+  p <- lista[[i]]
+  f1 <- (p[1]-10)^2 + (p[2] - 20)^2 - 400
+  etiquetar(f1)
+})
+etiquetasFA <- unlist(etiquetasFA)
+
+pinta_particion(lista, etiquetasFA, TRUE, function(x,y) (x-10)^2 + (y-20)^2 - 400)
+
+```
+
+###b) $f(x,y) = 0.5*(x+10)^2 + (y-20)^2 - 400$
+
+```{r}
+
+etiquetasFB <- lapply(1:length(lista), function(i) {
+  #Obtenemos los puntos uno a uno y los etiquetamos
+  p <- lista[[i]]
+  f2 <- 0.5*(p[1]+10)^2 + (p[2] - 20)^2 - 400
+  etiquetar(f2)
+})
+etiquetasFB <- unlist(etiquetasFB)
+
+pinta_particion(lista, etiquetasFB, TRUE, function(x,y) 0.5*(x+10)^2 + (y-20)^2 - 400)
+
+```
+
+###c) $f(x,y) = 0.5*(x-10)^2 - (y+20)^2 - 400$
+
+```{r}
+
+etiquetasFC <- lapply(1:length(lista), function(i) {
+  #Obtenemos los puntos uno a uno y los etiquetamos
+  p <- lista[[i]]
+  f3 <- 0.5*(p[1]-10)^2 - (p[2] + 20)^2 - 400
+  etiquetar(f3)
+})
+etiquetasFC <- unlist(etiquetasFC)
+
+pinta_particion(lista, etiquetasFC, TRUE, function(x,y) 0.5*(x-10)^2 - (y+20)^2 - 400)
+
+```
+
+###d) $f(x,y) = y - 20x^2 - 5x + 3$
+
+```{r}
+
+etiquetasFD <- lapply(1:length(lista), function(i) {
+  #Obtenemos los puntos uno a uno y los etiquetamos
+  p <- lista[[i]]
+  f4 <- p[2] - 20*(p[1]^2) - 5*p[1] + 3
+  etiquetar(f4)
+})
+etiquetasFD <- unlist(etiquetasFD)
+pinta_particion(lista, etiquetasFD, TRUE, function(x,y) y - 20*x^2 - 5*x + 3)
+
+```
+
+Como vemos, al ser ahora las funciones cuadráticas y no lineales, los datos no son linealmente separables (los que caen dentro de las gráficas se quedan en el centro o a los lados) y por tanto el perceptron no será capaz de parar ante estas clasificaciones.
+
+##8. Considerar de nuevo la muestra etiquetada en el apartado 6. Modifique las etiquetas de un 10% aleatorio de muestras positivas y otro 10% de muestras negativas.
+
+###Visualice los puntos con las nuevas etiquetas y la recta del apartado 6.
+```{r}
+cambiar_etiquetas <- function(etiquetas) {
+  num <- 1:length(etiquetas)
+  etiquetas_cambiadas <- etiquetas
+  #Cogemos las posiciones de las etiquetas positivas y negativas
+  positivos <- num[etiquetas > 0]
+  negativos <- num[etiquetas < 0]
+  #Comprobamos que hay algún elemento que cambiar y obtenemos el 10%
+  #de posiciones aleatorias
+  if(length(positivos)*0.1 > 0) {
+    cambiar1 <- sample(positivos, length(positivos)*0.1)
+    #Cambiamos las etiquetas que hemos obtenido antes
+    etiquetas_cambiadas[cambiar1] <- -1
+  }
+  if(length(negativos)*0.1 > 0) {
+    cambiar2 <- sample(negativos, length(negativos)*0.1)
+    #Cambiamos las etiquetas que hemos obtenido antes
+    etiquetas_cambiadas[cambiar2] <- +1
+  }
+  
+  etiquetas_cambiadas
+}
+
+etiquetas2 <- cambiar_etiquetas(etiquetas)
+pinta_particion(lista, etiquetas2, TRUE, function(x,y) r[1]*x-y+r[2])
+
+```
+
+###En una gráfica aparte visualice de nuevo los mismos puntos pero junto con las funciones del apartado 7.
+
+```{r}
+pinta_particion(lista, cambiar_etiquetas(etiquetasFA), TRUE, function(x,y) (x-10)^2 + (y-20)^2 - 400)
+pinta_particion(lista, cambiar_etiquetas(etiquetasFB), TRUE, function(x,y) 0.5*(x+10)^2 + (y-20)^2 - 400)
+pinta_particion(lista, cambiar_etiquetas(etiquetasFC), TRUE, function(x,y) 0.5*(x-10)^2 - (y+20)^2 - 400)
+pinta_particion(lista, cambiar_etiquetas(etiquetasFD), TRUE, function(x,y) y - 20*x^2 - 5*x + 3)
+
+```
+
+
+#Ejercicio de Ajuste del Algoritmo Perceptron
+
+##1. Implementar la función `sol = ajusta_PLA(datos, label, max_iter, vini)` que calcula el hiperplano solución a un problema de clasificación binaria usando el algoritmo PLA. La entrada de `datos` es una matriz donde cada item con su etiqueta está representado por una fila de la matriz, `label` el vector de etiquetas (cada etiqueta es un valor +1 o -1), `max_iter` es el número máximo de iteraciones permitidas y `vini` el valor inicial del vector. La salida `sol` devuelve los coeficientes del hiperplano.
+
+Aunque pide que la salida sean los coeficientes del hiperplano, en el segundo apartado pide también el número de iteraciones que han sido necesarias para converger, por lo que vamos a devolver una lista cuya primera componente tenga `w` y la segunda componente sea el número de iteraciones necesario para converger.
+
+```{r}
+
+ajusta_PLA <- function(datos, label, max_iter, vini) {
+  parada <- F
+  fin <- F
+  w <- vini
+  iter <- 1
+  #Mientras no hayamos superado el máximo de iteraciones o 
+  #no se haya encontrado solución
+  while(!parada) {
+    #iteramos sobre los datos
+    for (j in 1:nrow(datos)) {
+      if (sign(crossprod(w, datos[j,])) != label[j]) {
+        w <- w + label[j]*datos[j,]
+        #La variable fin controla si se ha entrado en el if
+        fin <- F
+      }
+    }
+    #Si no se ha entrado en el if, todos los datos estaban bien
+    #clasificados y podemos poner a TRUE la variable parada.
+    if(fin == T) {
+      parada = T
+    }
+    else {
+      fin = T
+    }
+    iter <- iter + 1
+    if (iter >= max_iter) parada = T
+  }
+  #Devolvemos el hiperplano y el número máximo de iteraciones al que hemos
+  #llegado.
+  list(w, iter)
+}
+
+```
+
+##2. Ejecutar el algoritmo PLA con los valores simulados en el apartado 6 del ejercicio 1, inicializando el algoritmo con el vector cero y con vectores de número aleatorios en [0,1] (10 veces). Anotar el número medio de iteraciones necesarias en ambos para converger. Valorar el resultado.
+
+```{r}
+
+#Metemos los datos, que teníamos en una lista llamada "lista" en
+#una matriz.
+m <- matrix(unlist(lista), 50, 2, byrow=TRUE)
+datos <- matrix(1, 50, 3)
+datos[1:50, 1:2] <- m
+sol <- ajusta_PLA(datos, etiquetas, 20, c(0,0,0))
+iter1 <- sol[[2]]
+iter1
+w <- sol[[1]]
+w <- -w / w[2]
+pinta_particion(lista, etiquetas, TRUE, function(x,y) y-w[3]-w[1]*x)
+
+```
+
+En este caso el número de iteraciones necesario para que el algoritmo converja es 11.
+Vamos a hacerlo ahora generando números aleatorios entre 0 y 1.
+
+```{r}
+
+waleatorios <- simula_unif(10, 3, c(0,1))
+iteraciones <- lapply(1:10, function(i) {
+  wi <- waleatorios[[i]]
+  sol <- ajusta_PLA(datos, etiquetas, 200, wi)
+  sol[[2]]
+})
+
+iteraciones <- unlist(iteraciones)
+mean(iteraciones)
+
+```
+
+Generando números aleatorios entre 0 y 1 para el w inicial, el número medio de iteraciones que son necesarias para que el algoritmo converja es 10.9.
+Hay que tener en cuenta que las iteraciones que necesita para converjer dependen de los datos (en mi caso, de que he fijado la semilla a 237). Con otros datos podría ser mucho más o incluso menos.
+
+##3. Ejecutar el algoritmo PLA con los datos generados en el apartado 8 del ejercicio 1, usando valores de 10, 100 y 1000 para `max_iter`. Etiquetar los datos de la muestra usando la función solución encontrada y contar el número de errores respecto de las etiquetas originales. Valorar el resultado.
+
+Vamos a hacer primero una función que cuente las diferencias entre dos vectores de etiquetas, es decir, la cantidad de posiciones en los que dos vectores de etiquetas tienen valores distintos.
+
+```{r}
+cuenta_diferencias <- function(etiquetas1, etiquetas2) {
+  vf <- etiquetas1 == etiquetas2
+  length(vf[vf == FALSE])
+}
+```
+
+Vamos a hacer ahora una función que nos devuelva el número de errores respecto de las etiquetas originales:
+```{r}
+cuenta_errores <- function(datos, etiquetas_originales, num_iter) {
+  sol <- ajusta_PLA(datos, etiquetas_originales, num_iter, c(0,0,0))
+  w <- sol[[1]]
+  w <- -w / w[2]
+  #Recordemos que los datos que hay en la matriz "datos" son los mismos
+  #puntos que hay en la matriz "lista"
+  etiquetas_cambiadas <- lapply(1:length(lista), function(i) {
+    #Obtenemos los puntos uno a uno y los etiquetamos
+    p <- lista[[i]]
+    f <- -w[1]*p[1] + p[2] - w[3]
+    etiquetar(f)
+  })
+  #Devolvemos la solución w junto con el número de errores que da la solución
+  num <- cuenta_diferencias(etiquetas_originales, etiquetas_cambiadas)
+  list(w, num)
+}
+```
+
+```{r}
+sol1 <- cuenta_errores(datos, etiquetas2, 10)
+sol1[[2]]
+w1 <- sol1[[1]] 
+pinta_particion(lista, etiquetas2, TRUE, function(x,y) w1[1]*x-y+w1[3])
+```
+
+```{r}
+sol2 <- cuenta_errores(datos, etiquetas2, 100)
+sol2[[2]]
+w2 <- sol2[[1]] 
+pinta_particion(lista, etiquetas2, TRUE, function(x,y) w2[1]*x-y+w2[3])
+```
+
+```{r}
+sol3 <- cuenta_errores(datos, etiquetas2, 1000)
+sol3[[2]]
+w3 <- sol3[[1]] 
+pinta_particion(lista, etiquetas2, TRUE, function(x,y) w3[1]*x-y+w3[3])
+```
+
+FALTA EXPLICAR Y LAS CONSECUENCIAS
+
+##4. Repetir el análisis del punto anterior usando la primera función del apartado 7 del ejercicio 1.
+
+La función es $f(x,y) = (x-10)^2 + (y-20)^2 - 400$ y tenemos las etiquetas originales guardadas en un vector llamado `etiquetasFA`.
+
+```{r}
+sol1 <- cuenta_errores(datos, etiquetasFA, 10)
+sol1[[2]]
+w1 <- sol1[[1]] 
+pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w1[1]*x-y+w1[3])
+```
+
+```{r}
+sol2 <- cuenta_errores(datos, etiquetasFA, 100)
+sol2[[2]]
+w2 <- sol2[[1]] 
+pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w2[1]*x-y+w2[3])
+```
+
+```{r}
+sol3 <- cuenta_errores(datos, etiquetasFA, 1000)
+sol3[[2]]
+w3 <- sol3[[1]] 
+pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w3[1]*x-y+w3[3])
+```
+
+FALTAN EXPLICACIONES Y CONSECUENCIAS
+
+##5. Modifique la función `ajusta_PLA` para que le permita visualizar los datos y soluciones que va encontrando a lo largo de las iteraciones. Ejecute con la nueva versión el apartado 3 del ejericio 2.
