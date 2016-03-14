@@ -336,9 +336,8 @@ cuenta_diferencias <- function(etiquetas1, etiquetas2) {
 
 Vamos a hacer ahora una función que nos devuelva el número de errores respecto de las etiquetas originales:
 ```{r}
-cuenta_errores <- function(datos, etiquetas_originales, num_iter) {
-  sol <- ajusta_PLA(datos, etiquetas_originales, num_iter, c(0,0,0))
-  w <- sol[[1]]
+cuenta_errores <- function(sol_PLA, etiquetas_originales) {
+  w <- sol_PLA[[1]]
   w <- -w / w[2]
   #Recordemos que los datos que hay en la matriz "datos" son los mismos
   #puntos que hay en la matriz "lista"
@@ -348,60 +347,240 @@ cuenta_errores <- function(datos, etiquetas_originales, num_iter) {
     f <- -w[1]*p[1] + p[2] - w[3]
     etiquetar(f)
   })
-  #Devolvemos la solución w junto con el número de errores que da la solución
-  num <- cuenta_diferencias(etiquetas_originales, etiquetas_cambiadas)
-  list(w, num)
+  #Devolvemos el número de errores que da la solución
+  cuenta_diferencias(etiquetas_originales, etiquetas_cambiadas)
 }
 ```
 
+Vamos a ejecutarlo ahora con 10, 100 y 1000 iteraciones y vamos a pintar también la solución que da.
+
 ```{r}
-sol1 <- cuenta_errores(datos, etiquetas2, 10)
-sol1[[2]]
+sol1 <- ajusta_PLA(datos, etiquetas2, 10, c(0,0,0))
+cuenta_errores(sol1, etiquetas2)
 w1 <- sol1[[1]] 
 pinta_particion(lista, etiquetas2, TRUE, function(x,y) w1[1]*x-y+w1[3])
 ```
 
 ```{r}
-sol2 <- cuenta_errores(datos, etiquetas2, 100)
-sol2[[2]]
+sol2 <- ajusta_PLA(datos, etiquetas2, 100, c(0,0,0))
+cuenta_errores(sol2, etiquetas2)
 w2 <- sol2[[1]] 
 pinta_particion(lista, etiquetas2, TRUE, function(x,y) w2[1]*x-y+w2[3])
 ```
 
 ```{r}
-sol3 <- cuenta_errores(datos, etiquetas2, 1000)
-sol3[[2]]
+sol3 <- ajusta_PLA(datos, etiquetas2, 1000, c(0,0,0))
+cuenta_errores(sol3, etiquetas2)
 w3 <- sol3[[1]] 
 pinta_particion(lista, etiquetas2, TRUE, function(x,y) w3[1]*x-y+w3[3])
 ```
 
-FALTA EXPLICAR Y LAS CONSECUENCIAS
+Como vemos, en los tres casos el número de puntos mal clasificados es 5. Esto es porque al cambiar etiquetas al azar, los datos han dejado de ser linealmente separables, con lo que el perceptron no puede llegar a una solución en la que todos los puntos estén bien clasificados, da igual el número de iteraciones que le pongamos.
 
 ##4. Repetir el análisis del punto anterior usando la primera función del apartado 7 del ejercicio 1.
 
 La función es $f(x,y) = (x-10)^2 + (y-20)^2 - 400$ y tenemos las etiquetas originales guardadas en un vector llamado `etiquetasFA`.
 
 ```{r}
-sol1 <- cuenta_errores(datos, etiquetasFA, 10)
-sol1[[2]]
+sol1 <- ajusta_PLA(datos, etiquetasFA, 10, c(0,0,0))
+cuenta_errores(sol1, etiquetasFA)
 w1 <- sol1[[1]] 
 pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w1[1]*x-y+w1[3])
 ```
 
 ```{r}
-sol2 <- cuenta_errores(datos, etiquetasFA, 100)
-sol2[[2]]
+sol2 <- ajusta_PLA(datos, etiquetasFA, 100, c(0,0,0))
+cuenta_errores(sol2, etiquetasFA)
 w2 <- sol2[[1]] 
 pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w2[1]*x-y+w2[3])
 ```
 
 ```{r}
-sol3 <- cuenta_errores(datos, etiquetasFA, 1000)
-sol3[[2]]
+sol3 <- ajusta_PLA(datos, etiquetasFA, 1000, c(0,0,0))
+cuenta_errores(sol3, etiquetasFA)
 w3 <- sol3[[1]] 
 pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w3[1]*x-y+w3[3])
 ```
 
-FALTAN EXPLICACIONES Y CONSECUENCIAS
+En este caso los datos no eran linealmente separables de entrada, ya que se habían clasificado en base a una función cuadrática, con lo que el perceptron no va a llegar a una solución en la que todos los datos estén bien clasificados.
 
 ##5. Modifique la función `ajusta_PLA` para que le permita visualizar los datos y soluciones que va encontrando a lo largo de las iteraciones. Ejecute con la nueva versión el apartado 3 del ejericio 2.
+
+```{r}
+ajusta_PLA_sol <- function(datos, label, max_iter, vini) {
+  parada <- F
+  fin <- F
+  w <- vini
+  iter <- 1
+  #Mientras no hayamos superado el máximo de iteraciones o 
+  #no se haya encontrado solución
+  while(!parada) {
+    #iteramos sobre los datos
+    for (j in 1:nrow(datos)) {
+      if (sign(crossprod(w, datos[j,])) != label[j]) {
+        w <- w + label[j]*datos[j,]
+        #La variable fin controla si se ha entrado en el if
+        fin <- F
+      }
+    }
+    
+    #Pintamos la gráfica
+    w2 <- -w / w[2]
+    pinta_particion(lista, label, TRUE, function(x,y) -w2[1]*x + y - w2[3])
+  
+    #Paramos la ejecución para que se pueda ver la gráfica
+    cat("Presione una tecla para continuar")
+    t <- readline()
+    
+    #Si no se ha entrado en el if, todos los datos estaban bien
+    #clasificados y podemos poner a TRUE la variable parada.
+    if(fin == T) {
+      parada = T
+    }
+    else {
+      fin = T
+    }
+    iter <- iter + 1
+    if (iter >= max_iter) {parada = T}
+  }
+  #Devolvemos el hiperplano y el número máximo de iteraciones al que hemos
+  #llegado.
+  list(w, iter)
+}
+```
+```{r}
+#Llamamos a la función
+ajusta_PLA_sol(datos, etiquetas2, 10, c(0,0,0))
+```
+
+??se supone que hay que hacer esto con 100 y con 1000????
+
+##6. A la vista de la conducta de las soluciones observadas en el apartado anterior, proponga e implemente una modificación de la función original `sol = ajusta_PLA_MOD(...)` que permita obtener soluciones razonables sobre datos no linealmente separables. Mostrar y valorar el resultado encontrado usando los datos del apartado 7 del ejercicio 1.
+
+Lo que vamos a hacer es ir contando los errores que hay al etiquetar con la solución que va devolviendo el algoritmo en cada iteración y quedarnos con aquella que tenga menos errores.
+
+```{r}
+ajusta_PLA_MOD <- function(datos, label, max_iter, vini) {
+  parada <- F
+  fin <- F
+  w <- vini
+  wmejor <- w
+  iter <- 1
+  errores_mejor <- nrow(datos)
+  
+  #Mientras no hayamos superado el máximo de iteraciones o 
+  #no se haya encontrado solución
+  while(!parada) {
+    #iteramos sobre los datos
+    for (j in 1:nrow(datos)) {
+      if (sign(crossprod(w, datos[j,])) != label[j]) {
+        w <- w + label[j]*datos[j,]
+        #La variable fin controla si se ha entrado en el if
+        fin <- F
+      }
+    }
+    
+    #Contamos el número de errores que hay en la solución actual y si
+    #es menor que el número de errores en la mejor solución de las que 
+    #llevamos, nos quedamos con la actual
+    l <- list(w, 1)
+    errores_actual <- cuenta_errores(l, label)
+    if(errores_actual < errores_mejor) {
+      wmejor <- w
+      errores_mejor <- errores_actual
+    }
+    
+    #Si no se ha entrado en el if, todos los datos estaban bien
+    #clasificados y podemos poner a TRUE la variable parada.
+    if(fin == T) {
+      parada = T
+    }
+    else {
+      fin = T
+    }
+    iter <- iter + 1
+    if (iter >= max_iter) parada = T
+  }
+  #Devolvemos el hiperplano, el número máximo de iteraciones al que hemos
+  #llegado y el número de errores de la mejor solución que hemos encontrado
+  list(wmejor, iter, errores_mejor)
+}
+```
+Vamos a probarlo ahora con las funciones del ejercicio 7 (es decir, con las etiquetas que tenemos almacenadas en etiquetasFA, etiquetasFB, etiquetasFC y etiquetasFD)
+
+```{r}
+sol1_MOD <- ajusta_PLA_MOD(datos, etiquetasFA, 1000, c(0,0,0))
+w1 <- sol1_MOD[[1]]
+errores <- sol1_MOD[[3]]
+w1 <- -w1 / w1[2]
+pinta_particion(lista, etiquetasFA, TRUE, function(x,y) -w1[1]*x + y - w1[3])
+errores
+```
+
+```{r}
+sol2_MOD <- ajusta_PLA_MOD(datos, etiquetasFB, 1000, c(0,0,0))
+w2 <- sol2_MOD[[1]]
+errores <- sol2_MOD[[3]]
+w2 <- -w2 / w2[2]
+pinta_particion(lista, etiquetasFB, TRUE, function(x,y) -w2[1]*x + y - w2[3])
+errores
+```
+
+```{r}
+sol3_MOD <- ajusta_PLA_MOD(datos, etiquetasFC, 1000, c(0,0,0))
+w3 <- sol3_MOD[[1]]
+errores <- sol3_MOD[[3]]
+w3 <- -w3 / w3[2]
+pinta_particion(lista, etiquetasFC, TRUE, function(x,y) -w3[1]*x + y - w3[3])
+errores
+```
+
+```{r}
+sol4_MOD <- ajusta_PLA_MOD(datos, etiquetasFD, 1000, c(0,0,0))
+w4 <- sol4_MOD[[1]]
+errores <- sol4_MOD[[3]]
+w4 <- -w4 / w4[2]
+pinta_particion(lista, etiquetasFD, TRUE, function(x,y) -w3[1]*x + y - w3[3])
+errores
+```
+
+#3. Ejercicio sobre Regresión Lineal
+
+##1. Abra el fichero ZipDigits.info disponible en la web del curso y lea la descripsión de la representación numérica de la base de datos de números manuscrito que hay en el fichero ZipDigits.train
+
+
+##2. Lea el fichero ZipDigits.train dentro de su código y visualice las imágenes. Seleccione sólo las instancias de los números 1 y 5. Guárdelas como matrices de tamaño $16 \times 16$
+
+
+##3. Para cada matriz de números calcularemos su valor medio y su grado de simetría vertical. Para calcular la simetría calculamos la suma del valor absoluto de las diferencias en cada píxel entre la imagen original y la imagen que obtenemos invirtiendo el orden de las columnas. Finalmente le cambiamos el signo.
+
+
+##4. Representar en los ejes {X=Intensidad Promedio, Y=Simetría} las instancias seleccionadas de 1's y 5's.
+
+
+##5. Implementar la función `sol = Regress_Lin(datos, label)` que permita ajustar un modelo de regresión lineal (usar SVD). Los datos de entrada se interpretan igual que en clasificación.
+
+
+##6. Ajustar un modelo de regresión lineal a los datos de (Intensidad Promedio, Simetría) y pintar la solución junto con los datos. Valorar el resultado.
+
+
+##7. En este ejercicio exploramos cómo funciona la regresión lineal en problemas de clasificación. Para ello generamos datos usando el mismo procedimiento que en ejercicios anteriores. Suponemos $X = [-10,10] \times [-10,10]$ y elegimos muestras aleatorias uniformes dentro de $X$. La función $f$ en cada caso será una recta aleatoria que corta a $X$ y que asigna etiqueta a cada punto con el valor de su signo. En cada ejecución generamos una nueva función $f$.
+
+a) Fijar el tamaño de muestra $N=100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{in}$, (el porcentaje de puntos incorrectamente clasificados). Repetir el experimento 1000 veces y promediar los resultados. ¿Qué valor obtiene para $E_{in}$?
+
+
+b) Fijar el tamaño de muestra $N=100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{out}$. Para ello generar 1000 puntos nuevos y usarlos para estimar el error fuera de la muestra, $E_{out}$ (porcentaje de puntos mal clasificados). De nuevo, ejecutar el experimento 1000 veces y tomar el promedio. ¿Qué valor obtiene de $E_{out}$? Valore los resultados.
+
+
+c) Ahora fijamos $N=10$, ajustamos regresión lineal y usamos el vector de pesos encontrado como un vector inicial de pesos para PLA. Ejecutar PLA hasta que converja a un vector de pesos final que separe completamente la muestra de entrenamiento. Anote el número de iteraciones y repita el experimento 1000 veces. ¿Cuál es el valor promedio de iteraciones que tarda PLA en converger? (En cada iteración de PLA elija un punto aleatorio del conjunto de mal clasificados). Valore los resultados.
+
+
+##8. En este ejercicio el uso de transformación no lineales. Consideremos la función objetivo $f(x_1,x_2) = sign(x_1^2+x_2^2-0.6)$. Generar una muestra de entrenamiento de $N=1000$ puntos a partir de $X=[-10,10] \times [-10,10]$ muestreando cada punto $x \in X$ uniformemente. Generar las salidas usando el signo de la función en los puntos muestreados. Generar ruido sobre las etiquetas cambiando el signo de las salidas a un 10% de puntos del conjunto aleatorio generado.
+
+a) Ajustar regresión lineal, para estimar los pesos $\omega$. Ejecutar el experimento 1000 veces y calcular el valor promedio del error de entrenamiento $E_{in}$. Valorar el resultado.
+
+
+b) Ahora, consideremos $N=1000$ datos de entrenamiento y el siguiente vector de variables: $(1,x_1,x_2,x_1x_2,x_1^2,x_2^2)$. Ajustar de nuevo regresión lineal y calcular el nuevo vector de pesos $\widehat{\omega}$. Mostrar el resultado.
+
+
+c) Repetir el experimento anterior 1000 veces calculando en cada ocasión el error fuera de la muestra. Para ello generar en cada ejecución 1000 puntos nuevos y valorar sobre ellos la función ajustada. Promediar los valores obtenidos. ¿Qué valor obtiene? Valorar el resultado.
