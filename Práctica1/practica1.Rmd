@@ -123,12 +123,13 @@ pinta_particion <- function(lista_puntos, etiquetas=NULL, visible=FALSE, f=NULL)
        xlim = c(-50,50), ylim = c(-50,50))
   
   if(visible) {
-    sec <- seq(-50, 50, length.out = 1000)
+    sec <- seq(-60, 60, length.out = 1500)
     z <- outer(sec, sec, f)
-    contour(sec, sec, z, col = "violet", levels = 0, add = TRUE)
+    contour(sec, sec, z, col = "violet", levels = 0, add = TRUE, drawlabels = F)
   }
 }
-
+```
+```{r}
 pinta_particion(lista, etiquetas, TRUE, function(x,y) r[1]*x-y+r[2])
 ```
 
@@ -235,10 +236,20 @@ pinta_particion(lista, etiquetas2, TRUE, function(x,y) r[1]*x-y+r[2])
 ###En una gráfica aparte visualice de nuevo los mismos puntos pero junto con las funciones del apartado 7.
 
 ```{r}
-pinta_particion(lista, cambiar_etiquetas(etiquetasFA), TRUE, function(x,y) (x-10)^2 + (y-20)^2 - 400)
-pinta_particion(lista, cambiar_etiquetas(etiquetasFB), TRUE, function(x,y) 0.5*(x+10)^2 + (y-20)^2 - 400)
-pinta_particion(lista, cambiar_etiquetas(etiquetasFC), TRUE, function(x,y) 0.5*(x-10)^2 - (y+20)^2 - 400)
-pinta_particion(lista, cambiar_etiquetas(etiquetasFD), TRUE, function(x,y) y - 20*x^2 - 5*x + 3)
+pinta_particion(lista, cambiar_etiquetas(etiquetasFA), TRUE, 
+                function(x,y) (x-10)^2 + (y-20)^2 - 400)
+```
+```{r}
+pinta_particion(lista, cambiar_etiquetas(etiquetasFB), TRUE, 
+                function(x,y) 0.5*(x+10)^2 + (y-20)^2 - 400)
+```
+```{r}
+pinta_particion(lista, cambiar_etiquetas(etiquetasFC), TRUE, 
+                function(x,y) 0.5*(x-10)^2 - (y+20)^2 - 400)
+```
+```{r}
+pinta_particion(lista, cambiar_etiquetas(etiquetasFD), TRUE, 
+                function(x,y) y - 20*x^2 - 5*x + 3)
 
 ```
 
@@ -358,6 +369,7 @@ Vamos a ejecutarlo ahora con 10, 100 y 1000 iteraciones y vamos a pintar también
 sol1 <- ajusta_PLA(datos, etiquetas2, 10, c(0,0,0))
 cuenta_errores(sol1, etiquetas2)
 w1 <- sol1[[1]] 
+w1 <- -w1/w1[2]
 pinta_particion(lista, etiquetas2, TRUE, function(x,y) w1[1]*x-y+w1[3])
 ```
 
@@ -365,6 +377,7 @@ pinta_particion(lista, etiquetas2, TRUE, function(x,y) w1[1]*x-y+w1[3])
 sol2 <- ajusta_PLA(datos, etiquetas2, 100, c(0,0,0))
 cuenta_errores(sol2, etiquetas2)
 w2 <- sol2[[1]] 
+w2 <- -w2/w2[2]
 pinta_particion(lista, etiquetas2, TRUE, function(x,y) w2[1]*x-y+w2[3])
 ```
 
@@ -372,6 +385,7 @@ pinta_particion(lista, etiquetas2, TRUE, function(x,y) w2[1]*x-y+w2[3])
 sol3 <- ajusta_PLA(datos, etiquetas2, 1000, c(0,0,0))
 cuenta_errores(sol3, etiquetas2)
 w3 <- sol3[[1]] 
+w3 <- -w3/w3[2]
 pinta_particion(lista, etiquetas2, TRUE, function(x,y) w3[1]*x-y+w3[3])
 ```
 
@@ -385,6 +399,7 @@ La función es $f(x,y) = (x-10)^2 + (y-20)^2 - 400$ y tenemos las etiquetas origi
 sol1 <- ajusta_PLA(datos, etiquetasFA, 10, c(0,0,0))
 cuenta_errores(sol1, etiquetasFA)
 w1 <- sol1[[1]] 
+w1 <- -w1 / w1[2]
 pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w1[1]*x-y+w1[3])
 ```
 
@@ -392,6 +407,7 @@ pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w1[1]*x-y+w1[3])
 sol2 <- ajusta_PLA(datos, etiquetasFA, 100, c(0,0,0))
 cuenta_errores(sol2, etiquetasFA)
 w2 <- sol2[[1]] 
+w2 <- -w2 / w2[2]
 pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w2[1]*x-y+w2[3])
 ```
 
@@ -399,6 +415,7 @@ pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w2[1]*x-y+w2[3])
 sol3 <- ajusta_PLA(datos, etiquetasFA, 1000, c(0,0,0))
 cuenta_errores(sol3, etiquetasFA)
 w3 <- sol3[[1]] 
+w3 <- -w3 / w3[2]
 pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w3[1]*x-y+w3[3])
 ```
 
@@ -546,33 +563,297 @@ errores
 
 #3. Ejercicio sobre Regresión Lineal
 
-##1. Abra el fichero ZipDigits.info disponible en la web del curso y lea la descripsión de la representación numérica de la base de datos de números manuscrito que hay en el fichero ZipDigits.train
+##1. Abra el fichero ZipDigits.info disponible en la web del curso y lea la descripción de la representación numérica de la base de datos de números manuscrito que hay en el fichero ZipDigits.train
 
 
 ##2. Lea el fichero ZipDigits.train dentro de su código y visualice las imágenes. Seleccione sólo las instancias de los números 1 y 5. Guárdelas como matrices de tamaño $16 \times 16$
 
+```{r}
+
+data <- read.table("zip.train", sep=" ")
+numero <- data$V1
+frame_num1 <- data[numero==1,]
+frame_num5 <- data[numero==5,]
+#Eliminamos de cada uno la primera columna, que guarda el número del que
+#son los datos, y la última, que tiene NA
+frame_num5 <- frame_num5[,-258]
+frame_num1 <- frame_num1[,-258]
+frame_num5 <- frame_num5[,-1]
+frame_num1 <- frame_num1[,-1]
+
+#Las dos siguientes líneas pasan estos dos data.frame a matrices 
+#y los siguen dejando por filas (para poder utilizar apply sobre una matriz)
+datos_num1 <- data.matrix(frame_num1)
+datos_num5 <- data.matrix(frame_num5)
+
+#Lo siguiente hace una lista de matrices, una por cada instancia de número 1 o 5
+lista_num5 <- lapply(split(datos_num5, seq(nrow(datos_num5))), function(x) {
+    matrix(x, 16, 16, T)
+})
+lista_num1 <- lapply(split(datos_num1, seq(nrow(datos_num1))), function(x) {
+    matrix(x, 16, 16, T)
+})
+
+#Mostramos una imagen de un 1 y una imagen de un 5
+image(lista_num1[[1]])
+image(lista_num5[[1]])
+```
+
 
 ##3. Para cada matriz de números calcularemos su valor medio y su grado de simetría vertical. Para calcular la simetría calculamos la suma del valor absoluto de las diferencias en cada píxel entre la imagen original y la imagen que obtenemos invirtiendo el orden de las columnas. Finalmente le cambiamos el signo.
+
+Hacemos una función para calcular la simetría vertical presente en las imágenes.
+```{r}
+
+calcular_simetria <- function(mat) {
+  #Invertimos la matriz por columnas
+  mat_invertida = apply(mat, 2, function(x) rev(x))
+  #Calulamos el valor absoluto de la diferencia de cada elemento entre las dos
+  #matrices
+  dif = abs(mat - mat_invertida)
+  #Sumamos los elementos de la matriz
+  suma <- sum(dif)
+  #Devolvemos el signo cambiado de la suma
+  -suma
+}
+
+```
 
 
 ##4. Representar en los ejes {X=Intensidad Promedio, Y=Simetría} las instancias seleccionadas de 1's y 5's.
 
+Vamos a hacer primero una variante de la función `pinta_particion` de los dos ejercicios anteriores, que ahora recibirá los datos de los ejes X e Y en vectores
+
+```{r}
+
+pinta_grafica <- function(coordX, coordY, etiquetas=NULL, visible=FALSE, a=NULL, b=NULL, xlab="Intensidad Promedio", ylab="Simetría") {
+  if(is.null(etiquetas))
+     etiquetas=1
+  else etiquetas = etiquetas+3
+  
+  plot(coordX, coordY, type = "p", col = etiquetas, xlab = xlab, ylab = ylab)
+  
+  if(visible) {
+    abline(b,a)
+  }
+}
+
+```
+
+
+La intensidad promedio es la media de los valores de la matriz, que se puede calcular simplemente con `mean(m)` siendo `m` una matriz.
+Vamos a representar entonces en una gráfica las instancias.
+```{r}
+
+#Calculamos primero las intensidades y las simetrías de todas las matrices, 
+#es decir, de todas las instancias de 1's y 5's
+simetria_1 <- lapply(lista_num1, function(m) calcular_simetria(m))
+simetria_5 <- lapply(lista_num5, function(m) calcular_simetria(m))
+intensidad_1 <- lapply(lista_num1, function(m) mean(m))
+intensidad_5 <- lapply(lista_num5, function(m) mean(m))
+
+#Ponemos las listas anteriores como vectores
+simetria_1 <- unlist(simetria_1)
+simetria_5 <- unlist(simetria_5)
+intensidad_1 <- unlist(intensidad_1)
+intensidad_5 <- unlist(intensidad_5)
+
+#Pintamos en una gráfica la intensidad y simetría de las instancias de ambos
+#números
+intensidad <- c(intensidad_1, intensidad_5)
+simetria <- c(simetria_1, simetria_5)
+color <- c(rep.int(0, length(intensidad_1)), rep.int(2, length(intensidad_5)))
+pinta_grafica(intensidad, simetria, color)
+
+```
+
 
 ##5. Implementar la función `sol = Regress_Lin(datos, label)` que permita ajustar un modelo de regresión lineal (usar SVD). Los datos de entrada se interpretan igual que en clasificación.
+
+Formamos primero una matriz con los datos y le calculamos la pseudoinversa haciendo uso de la descomposición en valores singulares y devolvemos después $w = X^{-1}y$ donde $X^{-1}$ es la pseudoinversa de $X$.
+
+```{r}
+
+Regress_Lin <- function(datos, label) {
+  descomp <- La.svd(datos)
+  vt <- descomp[[3]]
+  if (length(descomp[[1]]) == 2) {
+    diag <- matrix(c(descomp[[1]][1], 0, 0, descomp[[1]][2]), 2, 2, T)
+  }
+  else {
+    diag <- matrix(c(descomp[[1]][1], 0, 0, 0, descomp[[1]][2], 0,
+                     0, 0, descomp[[1]][3]), 3, 3, T)
+  }
+  diag2 <- t(solve(diag^2))
+  prod_inv <- t(vt) %*% diag2 %*% vt
+  pseud_inv <- prod_inv %*% t(datos)
+  
+  w <- pseud_inv %*% label
+  w
+}
+
+```
 
 
 ##6. Ajustar un modelo de regresión lineal a los datos de (Intensidad Promedio, Simetría) y pintar la solución junto con los datos. Valorar el resultado.
 
+```{r}
+
+w <- Regress_Lin(cbind(intensidad, 1), simetria)
+pinta_grafica(intensidad, simetria, color, TRUE, w[1], w[2])
+
+```
+
+
 
 ##7. En este ejercicio exploramos cómo funciona la regresión lineal en problemas de clasificación. Para ello generamos datos usando el mismo procedimiento que en ejercicios anteriores. Suponemos $X = [-10,10] \times [-10,10]$ y elegimos muestras aleatorias uniformes dentro de $X$. La función $f$ en cada caso será una recta aleatoria que corta a $X$ y que asigna etiqueta a cada punto con el valor de su signo. En cada ejecución generamos una nueva función $f$.
 
-a) Fijar el tamaño de muestra $N=100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{in}$, (el porcentaje de puntos incorrectamente clasificados). Repetir el experimento 1000 veces y promediar los resultados. ¿Qué valor obtiene para $E_{in}$?
+###a) Fijar el tamaño de muestra $N=100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{in}$, (el porcentaje de puntos incorrectamente clasificados). Repetir el experimento 1000 veces y promediar los resultados. ¿Qué valor obtiene para $E_{in}$?
+
+Generamos los datos en el intervalo pedido, generamos también $f$ de manera aleatoria y etiquetamos los datos con esa recta.
+```{r}
+datos <- simula_unif(100, 2, c(-10,10))
+#Pasamos la lista de datos una matriz con la tercera columna a 1
+datos <- unlist(datos)
+datos <- matrix(datos, 100, 2, T)
+datos <- cbind(datos, 1)
+
+generaEtiquetas <- function() {
+  r <- simula_recta(c(-10,10))
+  etiquetas <- lapply(1:nrow(datos), function(i) {
+    #Obtenemos los puntos uno a uno y los etiquetamos
+    p <- datos[i,]
+    f <- p[2] - r[1]*p[1] - r[2]
+    etiquetar(f)
+  })
+  
+  etiquetas <- unlist(etiquetas)
+  etiquetas
+}
+
+```
+
+Usamos ahora regresión lineal para encontar $g$ 1000 veces y promediamos los errores que se cometen.
+```{r}
+errores <- 0
+for (i in 1:1000) {
+  etiquetas <- generaEtiquetas()
+  w <- Regress_Lin(datos, etiquetas)
+  w <- -w / w[2]
+  etiquetas_cambiadas <- lapply(1:nrow(datos), function(i) {
+    #Obtenemos los puntos uno a uno y los etiquetamos
+    p <- datos[i,]
+    f <- p[2] - w[1]*p[1] - w[3]
+    etiquetar(f)
+  })
+  errores <- errores + cuenta_diferencias(etiquetas, etiquetas_cambiadas)
+}
+
+errores <- errores / 1000
+
+#Pintamos la última de las rectas
+pinta_grafica(datos[,1], datos[,2], etiquetas, TRUE, w[1], w[3], "Eje X", "Eje Y")
+
+```
+
+Calculamos ahora el porcentaje de puntos mal clasificados $E_{in}$
+
+```{r}
+Ein <- errores*nrow(datos)/100
+Ein
+
+```
 
 
-b) Fijar el tamaño de muestra $N=100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{out}$. Para ello generar 1000 puntos nuevos y usarlos para estimar el error fuera de la muestra, $E_{out}$ (porcentaje de puntos mal clasificados). De nuevo, ejecutar el experimento 1000 veces y tomar el promedio. ¿Qué valor obtiene de $E_{out}$? Valore los resultados.
+###b) Fijar el tamaño de muestra $N=100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{out}$. Para ello generar 1000 puntos nuevos y usarlos para estimar el error fuera de la muestra, $E_{out}$ (porcentaje de puntos mal clasificados). De nuevo, ejecutar el experimento 1000 veces y tomar el promedio. ¿Qué valor obtiene de $E_{out}$? Valore los resultados.
+
+Utilizamos el conjunto de datos del apartado anterior, que ya tenemos en una matriz `datos`. Vamos a generar una nueva recta aleatoria, etiquetar los datos en base a esta recta y obtener $g$ por regresión lineal. Después generamos 1000 puntos nuevos en `datos_out` y vamos a calcular $E_{out}$ repitíendolo 1000 veces y quedándonos con la media de los errores, como hemos hecho en el apartado anterior
+
+```{r}
+r <- simula_recta(c(-10,10))
+etiquetas_f <- lapply(1:nrow(datos), function(i) {
+  #Obtenemos los puntos uno a uno y los etiquetamos
+  p <- datos[i,]
+  f <- p[2] - r[1]*p[1] - r[2]
+  etiquetar(f)
+})
+etiquetas_f <- unlist(etiquetas_f)
+
+#Obtenemos g por regresión
+g <- Regress_Lin(datos, etiquetas)
+g <- -g / g[2]
+
+#Generamos los nuevos datos y los pasamos a una matriz
+datos_out <- simula_unif(1000, 2, c(-10,10))
+datos_out <- unlist(datos_out)
+datos_out <- matrix(datos_out, 100, 2, T)
+datos_out <- cbind(datos_out, 1)
+
+#Contamos los errores
+errores <- 0
+for (i in 1:1000) {
+  etiquetas_originales <- lapply(1:nrow(datos_out), function(i) {
+    #Obtenemos los puntos uno a uno y los etiquetamos
+    p <- datos[i,]
+    f <- p[2] - r[1]*p[1] - r[2]
+  etiquetar(f)
+  })
+  etiquetas_originales <- unlist(etiquetas_originales)
+  etiquetas_g <- lapply(1:nrow(datos_out), function(i) {
+    #Obtenemos los puntos uno a uno y los etiquetamos
+    p <- datos[i,]
+    f <- p[2] - g[1]*p[1] - g[2]
+    etiquetar(f)
+  })
+  etiquetas_g <- unlist(etiquetas_g)
+  
+  errores <- errores + cuenta_diferencias(etiquetas_originales, etiquetas_g)
+}
+
+Eout = errores / 1000
+Eout
+
+```
 
 
-c) Ahora fijamos $N=10$, ajustamos regresión lineal y usamos el vector de pesos encontrado como un vector inicial de pesos para PLA. Ejecutar PLA hasta que converja a un vector de pesos final que separe completamente la muestra de entrenamiento. Anote el número de iteraciones y repita el experimento 1000 veces. ¿Cuál es el valor promedio de iteraciones que tarda PLA en converger? (En cada iteración de PLA elija un punto aleatorio del conjunto de mal clasificados). Valore los resultados.
+###c) Ahora fijamos $N=10$, ajustamos regresión lineal y usamos el vector de pesos encontrado como un vector inicial de pesos para PLA. Ejecutar PLA hasta que converja a un vector de pesos final que separe completamente la muestra de entrenamiento. Anote el número de iteraciones y repita el experimento 1000 veces. ¿Cuál es el valor promedio de iteraciones que tarda PLA en converger? (En cada iteración de PLA elija un punto aleatorio del conjunto de mal clasificados). Valore los resultados.
+
+```{r}
+
+datos <- simula_unif(10, 2, c(-10,10))
+#Pasamos la lista de datos una matriz con la tercera columna a 1
+datos <- unlist(datos)
+datos <- matrix(datos, 10, 2, T)
+datos <- cbind(datos, 1)
+
+iteraciones <- 0
+
+for (i in 1:1000) {
+  #Obtenemos una recta aleatoria, etiquetamos los datos en base a esa recta y 
+  #obtenemos g, un vector de pesos inicial para el PLA
+  r <- simula_recta(c(-10,10))
+  etiquetas_f <- lapply(1:nrow(datos), function(i) {
+    #Obtenemos los puntos uno a uno y los etiquetamos
+    p <- datos[i,]
+    f <- p[2] - r[1]*p[1] - r[2]
+    etiquetar(f)
+  })
+  etiquetas_f <- unlist(etiquetas_f)
+  
+  g <- Regress_Lin(datos, etiquetas_f)
+  g <- -g / g[2]
+  
+  #Le pasamos al PLA g como vector inicial y nos quedamos con el número de 
+  #iteraciones que tarda en converger
+  sol <- ajusta_PLA(datos, etiquetas_f, 1000, g)
+  iteraciones <- iteraciones + sol[[2]]
+}
+
+iteraciones <- iteraciones / 1000
+iteraciones
+
+```
+
 
 
 ##8. En este ejercicio el uso de transformación no lineales. Consideremos la función objetivo $f(x_1,x_2) = sign(x_1^2+x_2^2-0.6)$. Generar una muestra de entrenamiento de $N=1000$ puntos a partir de $X=[-10,10] \times [-10,10]$ muestreando cada punto $x \in X$ uniformemente. Generar las salidas usando el signo de la función en los puntos muestreados. Generar ruido sobre las etiquetas cambiando el signo de las salidas a un 10% de puntos del conjunto aleatorio generado.
