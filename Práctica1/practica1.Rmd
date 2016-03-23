@@ -285,7 +285,9 @@ pinta_particion(lista, cambiar_etiquetas(etiquetasFD), TRUE,
 
 ##1. Implementar la función `sol = ajusta_PLA(datos, label, max_iter, vini)` que calcula el hiperplano solución a un problema de clasificación binaria usando el algoritmo PLA. La entrada de `datos` es una matriz donde cada item con su etiqueta está representado por una fila de la matriz, `label` el vector de etiquetas (cada etiqueta es un valor +1 o -1), `max_iter` es el número máximo de iteraciones permitidas y `vini` el valor inicial del vector. La salida `sol` devuelve los coeficientes del hiperplano.
 
-Aunque pide que la salida sean los coeficientes del hiperplano, en el segundo apartado pide también el número de iteraciones que han sido necesarias para converger, por lo que vamos a devolver una lista cuya primera componente tenga `w` y la segunda componente sea el número de iteraciones necesario para converger.
+Aunque pide que la salida sean los coeficientes del hiperplano, en el segundo apartado pide también el número de iteraciones que han sido necesarias para converger, por lo que vamos a devolver una lista cuya primera componente tenga `w`, los coeficientes del hiperplano, y la segunda componente sea el número de iteraciones necesario para converger, es decir, la iteración en la que se para.  
+
+Lo que hacemos es seguir el algoritmo dado en clase de teoría: iteramos sobre todos los datos mientras no se superen el máximo de iteraciones que le pasamos como parámetro o mientras no se haya encontrado una solución ya. Se considera que se ha encontrado una solución cuando se pasa una vez por todos los datos y no ha habido cambios (es decir, todos estaban correctamente clasificados), que es algo que controlamos con dos variables booleanas. Sabemos si los datos están bien clasificados porque nos quedamos con el signo del producto escalar entre el $\omega$ actual y cada punto. En caso de que el signo no coincida con la etiqueta para ese punto, movemos la recta sumándole el valor real de la etiqueta por el punto.
 
 ```{r}
 
@@ -294,19 +296,19 @@ ajusta_PLA <- function(datos, label, max_iter, vini) {
   fin <- F
   w <- vini
   iter <- 1
-  #Mientras no hayamos superado el máximo de iteraciones o 
-  #no se haya encontrado solución
+  # Mientras no hayamos superado el máximo de iteraciones o 
+  # no se haya encontrado solución
   while(!parada) {
-    #iteramos sobre los datos
+    # iteramos sobre los datos
     for (j in 1:nrow(datos)) {
       if (sign(crossprod(w, datos[j,])) != label[j]) {
         w <- w + label[j]*datos[j,]
-        #La variable fin controla si se ha entrado en el if
+        # La variable fin controla si se ha entrado en el if
         fin <- F
       }
     }
-    #Si no se ha entrado en el if, todos los datos estaban bien
-    #clasificados y podemos poner a TRUE la variable parada.
+    # Si no se ha entrado en el if, todos los datos estaban bien
+    # clasificados y podemos poner a TRUE la variable parada.
     if(fin == T) {
       parada = T
     }
@@ -316,8 +318,8 @@ ajusta_PLA <- function(datos, label, max_iter, vini) {
     iter <- iter + 1
     if (iter >= max_iter) parada = T
   }
-  #Devolvemos el hiperplano y el número máximo de iteraciones al que hemos
-  #llegado.
+  # Devolvemos el hiperplano y el número máximo de iteraciones al que hemos
+  # llegado.
   list(w, iter)
 }
 
@@ -325,10 +327,15 @@ ajusta_PLA <- function(datos, label, max_iter, vini) {
 
 ##2. Ejecutar el algoritmo PLA con los valores simulados en el apartado 6 del ejercicio 1, inicializando el algoritmo con el vector cero y con vectores de número aleatorios en [0,1] (10 veces). Anotar el número medio de iteraciones necesarias en ambos para converger. Valorar el resultado.
 
+El algoritmo anterior opera con los datos dentro de una matriz. Lo que hacemos es pasar los datos, que teníamos en una lista, a una matriz con la función `matrix()`, a la que le pasamos los datos, el número de filas y columnas y si queremos que meta los datos por filas, que en nuestro caso sí queremos, puesto que los tenemos almacenados así. Además, le añadimos a cada punto una tercera coordenada a 1 para pasarlos a coordenadas homogéneas, lo que se traduce en una tercera columna en la matriz toda puest a 1's.  
+
+A esta matriz es a la que le hacemos el PLA y nos quedamos con la solución $\omega$ y con el número de iteraciones que necesita para converjer, y pintamos los puntos junto con la solución dada por el algoritmo. El PLA devuelve en $\omega$ en la última componente el término independiente (en este caso $b$). Como lo que tenemos es una recta, vamos a dejar con coeficiente a 1 la $y$, que será la segunda componente de $\omega$ y además la vamos a despejar, por lo que tenemos que dividir la solución del PLA entre menos la segunda componente de la solución.
+
+
 ```{r}
 
-#Metemos los datos, que teníamos en una lista llamada "lista" en
-#una matriz.
+# Metemos los datos, que teníamos en una lista llamada "lista" en
+# una matriz.
 m <- matrix(unlist(lista), 50, 2, byrow=TRUE)
 datos <- matrix(1, 50, 3)
 datos[1:50, 1:2] <- m
@@ -342,7 +349,7 @@ pinta_particion(lista, etiquetas, TRUE, function(x,y) y-w[3]-w[1]*x)
 ```
 
 En este caso el número de iteraciones necesario para que el algoritmo converja es 11.
-Vamos a hacerlo ahora generando números aleatorios entre 0 y 1.
+Vamos a hacerlo ahora generando números aleatorios entre 0 y 1, 10 veces. Lo que he hecho ha sido meter en una lista gracias a la función `lapply` las iteraciones que hacen falta en cada una de las 10 veces que vamos a llamar el algoritmo y hacer la media de todos ellos con la función `mean()`.
 
 ```{r}
 
@@ -359,7 +366,7 @@ mean(iteraciones)
 ```
 
 Generando números aleatorios entre 0 y 1 para el w inicial, el número medio de iteraciones que son necesarias para que el algoritmo converja es 10.9.
-Hay que tener en cuenta que las iteraciones que necesita para converjer dependen de los datos (en mi caso, de que he fijado la semilla a 237). Con otros datos podría ser mucho más o incluso menos.
+Hay que tener en cuenta que las iteraciones que necesita para converjer dependen de los datos (en mi caso, de que he fijado la semilla a 237). Con otros datos podría ser mucho más o incluso menos. En mi caso se justifica que tarde tan poco porque el vector inicial es el (0,0,0) y los datos son separables por una recta que está próxima a la inicial.
 
 ##3. Ejecutar el algoritmo PLA con los datos generados en el apartado 8 del ejercicio 1, usando valores de 10, 100 y 1000 para `max_iter`. Etiquetar los datos de la muestra usando la función solución encontrada y contar el número de errores respecto de las etiquetas originales. Valorar el resultado.
 
@@ -372,20 +379,20 @@ cuenta_diferencias <- function(etiquetas1, etiquetas2) {
 }
 ```
 
-Vamos a hacer ahora una función que nos devuelva el número de errores respecto de las etiquetas originales:
+Vamos a hacer ahora una función que nos devuelva el número de errores respecto de las etiquetas originales, utilizando la función anterior. Esta función recibe como parámetro la lista que devuelve como solución el PLA y el vector de etiquetas originales:
 ```{r}
 cuenta_errores <- function(sol_PLA, etiquetas_originales) {
   w <- sol_PLA[[1]]
   w <- -w / w[2]
-  #Recordemos que los datos que hay en la matriz "datos" son los mismos
-  #puntos que hay en la matriz "lista"
+  # Recordemos que los datos que hay en la matriz "datos" son los mismos
+  # puntos que hay en la matriz "lista"
   etiquetas_cambiadas <- lapply(1:length(lista), function(i) {
-    #Obtenemos los puntos uno a uno y los etiquetamos
+    # Obtenemos los puntos uno a uno y los etiquetamos
     p <- lista[[i]]
     f <- -w[1]*p[1] + p[2] - w[3]
     etiquetar(f)
   })
-  #Devolvemos el número de errores que da la solución
+  # Devolvemos el número de errores que da la solución
   cuenta_diferencias(etiquetas_originales, etiquetas_cambiadas)
 }
 ```
@@ -446,9 +453,11 @@ w3 <- -w3 / w3[2]
 pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w3[1]*x-y+w3[3])
 ```
 
-En este caso los datos no eran linealmente separables de entrada, ya que se habían clasificado en base a una función cuadrática, con lo que el perceptron no va a llegar a una solución en la que todos los datos estén bien clasificados.
+En este caso los datos no eran linealmente separables de entrada, ya que se habían clasificado en base a una función cuadrática, con lo que el perceptron no va a llegar a una solución en la que todos los datos estén bien clasificados, de nuevo, da igual el número de iteraciones que le pongamos.
 
 ##5. Modifique la función `ajusta_PLA` para que le permita visualizar los datos y soluciones que va encontrando a lo largo de las iteraciones. Ejecute con la nueva versión el apartado 3 del ejericio 2.
+
+Lo que hacemos es utilizar la función `Sys.sleep(x)`, que para la ejecución durante x segundos. Añadimos esta función cuando el perceptrón ha dado una vuelta entera a los datos.
 
 ```{r}
 ajusta_PLA_sol <- function(datos, label, max_iter, vini) {
@@ -456,28 +465,29 @@ ajusta_PLA_sol <- function(datos, label, max_iter, vini) {
   fin <- F
   w <- vini
   iter <- 1
-  #Mientras no hayamos superado el máximo de iteraciones o 
-  #no se haya encontrado solución
+  # Mientras no hayamos superado el máximo de iteraciones o 
+  # no se haya encontrado solución
   while(!parada) {
-    #iteramos sobre los datos
+    # iteramos sobre los datos
     for (j in 1:nrow(datos)) {
       if (sign(crossprod(w, datos[j,])) != label[j]) {
         w <- w + label[j]*datos[j,]
-        #La variable fin controla si se ha entrado en el if
+        # La variable fin controla si se ha entrado en el if
         fin <- F
       }
     }
     
-    #Pintamos la gráfica
+    # Pintamos la gráfica
     w2 <- -w / w[2]
     pinta_particion(lista, label, TRUE, function(x,y) -w2[1]*x + y - w2[3])
   
-    #Paramos la ejecución para que se pueda ver la gráfica
-    cat("Presione una tecla para continuar")
-    t <- readline()
+    # Paramos la ejecución para que se pueda ver la gráfica durante medio segundo
+    #cat("Presione una tecla para continuar")
+    #t <- readline()
+    Sys.sleep(0.5)
     
-    #Si no se ha entrado en el if, todos los datos estaban bien
-    #clasificados y podemos poner a TRUE la variable parada.
+    # Si no se ha entrado en el if, todos los datos estaban bien
+    # clasificados y podemos poner a TRUE la variable parada.
     if(fin == T) {
       parada = T
     }
@@ -487,21 +497,24 @@ ajusta_PLA_sol <- function(datos, label, max_iter, vini) {
     iter <- iter + 1
     if (iter >= max_iter) {parada = T}
   }
-  #Devolvemos el hiperplano y el número máximo de iteraciones al que hemos
-  #llegado.
+  # Devolvemos el hiperplano y el número máximo de iteraciones al que hemos
+  # llegado.
   list(w, iter)
 }
 ```
-```{r}
-#Llamamos a la función
+Llamamos ahora a esta función con 10, 100 y 1000 como número de iteraciones
+
+```#{r}
+# Llamamos a la función
 ajusta_PLA_sol(datos, etiquetas2, 10, c(0,0,0))
+ajusta_PLA_sol(datos, etiquetas2, 100, c(0,0,0))
+ajusta_PLA_sol(datos, etiquetas2, 1000, c(0,0,0))
 ```
 
-??se supone que hay que hacer esto con 100 y con 1000????
 
 ##6. A la vista de la conducta de las soluciones observadas en el apartado anterior, proponga e implemente una modificación de la función original `sol = ajusta_PLA_MOD(...)` que permita obtener soluciones razonables sobre datos no linealmente separables. Mostrar y valorar el resultado encontrado usando los datos del apartado 7 del ejercicio 1.
 
-Lo que vamos a hacer es ir contando los errores que hay al etiquetar con la solución que va devolviendo el algoritmo en cada iteración y quedarnos con aquella que tenga menos errores.
+Lo que vamos a hacer es ir contando los errores (con la función que hemos hecho en apartados anteriores) que hay al etiquetar con la solución que va devolviendo el algoritmo en cada iteración (una pasada a los datos) y quedarnos con aquella que tenga menos errores. Además devolvemos como tercer elemento de la lista el número de errores de la mejor solución, que es la que estamos devolviendo como primer elemento de la lista. El resto del algoritmo continúa igual:
 
 ```{r}
 ajusta_PLA_MOD <- function(datos, label, max_iter, vini) {
@@ -512,21 +525,21 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini) {
   iter <- 1
   errores_mejor <- nrow(datos)
   
-  #Mientras no hayamos superado el máximo de iteraciones o 
-  #no se haya encontrado solución
+  # Mientras no hayamos superado el máximo de iteraciones o 
+  # no se haya encontrado solución
   while(!parada) {
-    #iteramos sobre los datos
+    # iteramos sobre los datos
     for (j in 1:nrow(datos)) {
       if (sign(crossprod(w, datos[j,])) != label[j]) {
         w <- w + label[j]*datos[j,]
-        #La variable fin controla si se ha entrado en el if
+        # La variable fin controla si se ha entrado en el if
         fin <- F
       }
     }
     
-    #Contamos el número de errores que hay en la solución actual y si
-    #es menor que el número de errores en la mejor solución de las que 
-    #llevamos, nos quedamos con la actual
+    # Contamos el número de errores que hay en la solución actual y si
+    # es menor que el número de errores en la mejor solución de las que 
+    # llevamos, nos quedamos con la actual
     l <- list(w, 1)
     errores_actual <- cuenta_errores(l, label)
     if(errores_actual < errores_mejor) {
@@ -534,8 +547,8 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini) {
       errores_mejor <- errores_actual
     }
     
-    #Si no se ha entrado en el if, todos los datos estaban bien
-    #clasificados y podemos poner a TRUE la variable parada.
+    # Si no se ha entrado en el if, todos los datos estaban bien
+    # clasificados y podemos poner a TRUE la variable parada.
     if(fin == T) {
       parada = T
     }
@@ -545,8 +558,8 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini) {
     iter <- iter + 1
     if (iter >= max_iter) parada = T
   }
-  #Devolvemos el hiperplano, el número máximo de iteraciones al que hemos
-  #llegado y el número de errores de la mejor solución que hemos encontrado
+  # Devolvemos el hiperplano, el número máximo de iteraciones al que hemos
+  # llegado y el número de errores de la mejor solución que hemos encontrado
   list(wmejor, iter, errores_mejor)
 }
 ```
@@ -588,12 +601,14 @@ pinta_particion(lista, etiquetasFD, TRUE, function(x,y) -w3[1]*x + y - w3[3])
 errores
 ```
 
+Como vemos, en la mayoría de los casos la mejor solución es la recta que se queda a un lado porque sale mejor (en tanto a que hay menos errores) no clasificar bien únicamente los que se quedaban dentro de las regiones de las funciones cuadráticas que clasificar bien algunos de ellos pero a la vez clasificar mal algunos de los que se quedaban fuera.
+
 #3. Ejercicio sobre Regresión Lineal
 
-##1. Abra el fichero ZipDigits.info disponible en la web del curso y lea la descripción de la representación numérica de la base de datos de números manuscrito que hay en el fichero ZipDigits.train
+##1. Abra el fichero zip.info disponible en la web del curso y lea la descripción de la representación numérica de la base de datos de números manuscrito que hay en el fichero zip.train
 
 
-##2. Lea el fichero ZipDigits.train dentro de su código y visualice las imágenes. Seleccione sólo las instancias de los números 1 y 5. Guárdelas como matrices de tamaño $16 \times 16$
+##2. Lea el fichero zip.train dentro de su código y visualice las imágenes. Seleccione sólo las instancias de los números 1 y 5. Guárdelas como matrices de tamaño $16 \times 16$
 
 ```{r}
 
@@ -882,7 +897,7 @@ iteraciones
 ```
 
 
-##8. En este ejercicio exploramos el uso de transformación no lineales. Consideremos la función objetivo $f(x_1,x_2) = sign(x_1^2+x_2^2-0.6)$. Generar una muestra de entrenamiento de $N=1000$ puntos a partir de $X=[-10,10] \times [-10,10]$ muestreando cada punto $x \in X$ uniformemente. Generar las salidas usando el signo de la función en los puntos muestreados. Generar ruido sobre las etiquetas cambiando el signo de las salidas a un 10% de puntos del conjunto aleatorio generado.
+##8. En este ejercicio exploramos el uso de transformación no lineales. Consideremos la función objetivo $f(x_1,x_2) = sign(x_1^2+x_2^2-25)$. Generar una muestra de entrenamiento de $N=1000$ puntos a partir de $X=[-10,10] \times [-10,10]$ muestreando cada punto $x \in X$ uniformemente. Generar las salidas usando el signo de la función en los puntos muestreados. Generar ruido sobre las etiquetas cambiando el signo de las salidas a un 10% de puntos del conjunto aleatorio generado.
 
 ```{r}
 #Generamos la muestra de puntos
@@ -896,7 +911,7 @@ datos <- cbind(datos, 1)
 etiquetas_f <- lapply(1:nrow(datos), function(i) {
   #Obtenemos los puntos uno a uno y los etiquetamos
   p <- datos[i,]
-  f <- p[1]^2 + p[2]^2 - 0.6
+  f <- p[1]^2 + p[2]^2 - 25
   etiquetar(f)
 })
 etiquetas_f <- unlist(etiquetas_f)
