@@ -4,10 +4,14 @@ author: "Anabel Gómez Ríos"
 output: pdf_document
 ---
 
-#Ejercicio de Generación y Visualización de datos.
+#1. Ejercicio de Generación y Visualización de datos.
 
 ##1. Construir una función `lista = simula_unif(N, dim, rango)` que calcule una lista de longitud `N` de vectores de dimensión `dim` conteniendo números aleatorios uniformes en el intervalo `rango`.  
   
+Lo primero que hago es fijar una semilla para toda la práctica, puesto que la generación aleatoria se va a utilizar mucho y es conveniente que los resultados se puedan repetir. Fijo la semilla a 237 con la función `set.seed()`.  
+
+Como pide una lista, utilizo la función `lapply()`, que itera sobre una lista o un vector (en este caso un vector de la longitud pedida) y devuelve una lista en la que vamos a meter los números aleatorios uniformes generados con la función `runif()`, en la que ya le decimos la dimensión y el rango en el que tiene que muestrear (de forma que si la dimensión es 2 genera los números de dos en dos y los mete de dos en dos en cada elemento de la lista).
+
 ```{r}
 set.seed(237)
 ```
@@ -17,13 +21,15 @@ simula_unif <- function(N, dim, rango) {
 }
 ```
 
-Por ejemplo, vamos a obtener una lista de longitud 4 de vectores de dimensión 3 en el rango (0,1):
+Por ejemplo, vamos a obtener una lista de longitud 4 de vectores de dimensión 3 en el rango (0,1) y la mostramos después:
 ```{r}
 l <- simula_unif(4,3,c(0,1))
 l
 ```
 
 ##2. Construir una función `lista = simula_gauss(N, dim, sigma)` que calcule una lista de longitud `N` de vectores de dimensión `dim` conteniendo números aleatorios gaussianos de media 0 y varianzas dadas por el vector `sigma`.
+
+Utilizo el mismo procedimiento del apartado anterior, utilizando `lapply()` sobre un vector de la longitu pedida pero utilizando en este caso la función `rnorm()` para que genere los números en la distribución normal (que es la gaussiana) que acepta como parámetros el número de números que tiene que general, la media y la desviación típica.
 
 ```{r}
 simula_gauss <- function(N, dim, sigma) {
@@ -35,15 +41,17 @@ Vamos a obtener por ejemplo una lista de longitud 3 de vectores de dimensión 2 y
 ```{r}
 simula_gauss(3,2,c(1,7))
 ```
-Como vemos, la varianza 1 se coge para la primera coordenada de los vectores y la varianza 7 para la segunda coordenada. Si ponemos por ejemplo c(1,7,3) como vector de desviaciones y la dimensión de los vectores es 2, ignora el número 3.
+
+Como vemos, la desviación 1 se coge para la primera coordenada de los vectores y la desviación 7 para la segunda coordenada. Si ponemos por ejemplo c(1,7,3) como vector de desviaciones y la dimensión de los vectores es 2, ignora el número 3.
 
 ##3. Suponer `N = 50, dim = 2, rango = [-50, 50]` en cada dimensión. Dibujar una gráfica de la salida de la función correspondiente.
+
+Como nos dicen el rango, lo hacemos con la generación uniforme, por lo que le pasamos a la función `simula_unif()` que acabamos de hacer los tres datos que nos dan y obtenemos las coordenadas $x$ e $y$ de los datos (que serán la primera y segunda columna respectivamente) con la función `rapply()`, a la que le pasamos como función que devuelva la primera y la segunda coordenada de cada elemento de la lista. De esta forma obtenemos dos vectores, uno con todas las primeras coordenadas y otro con las segundas. Estos dos vectores es lo que le pasamos a la función `plot()` para que los pinte, junto con el tipo de punto que queremos (en este caso un círculo alrededor del punto) y los títulos de los ejes, con lo que obtenemos una gráfica en la que aparecen los puntos entre -50 y 50 en cada eje, como nos pedían.
 
 ```{r}
 lista <- simula_unif(50, 2, c(-50,50))
 # Obtenemos las coordenadas x e y, que son la primera y segunda columna
-# de la lista (primera componente y segunda componente de cada vector
-# en la lista)
+# de la lista (primera componente y segunda componente de cada vector en la lista)
 x <- rapply(lista, function(x) x[1])
 y <- rapply(lista, function(x) x[2])
 plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y")
@@ -51,17 +59,22 @@ plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y")
 
 ##4. Suponer `N = 50, dim = 2, sigma = [5,7]`. Dibujar una gráfica de la salida de la función correspondiente.
 
+En este caso utilizamos la función `simula_gauss()` que acabamos de crear y utilizamos `rapply()` de nuevo para obtener las coordenadas $x$ e $y$ en vectores, que serán los que le pasemos a `plot()`, obteniendo de nuevo una gráfica, esta vez con una desviación de 5 en el eje X y una desviación de 7 en el eje Y.
+
 ```{r}
 lista2 <- simula_gauss(50, 2, c(5,7))
 # Obtenemos las coordenadas x e y, que son la primera y segunda columna
-# de la lista (primera componente y segunda componente de cada vector
-# en la lista)
+# de la lista (primera componente y segunda componente de cada vector en la lista)
 x <- rapply(lista2, function(x) x[1])
 y <- rapply(lista2, function(x) x[2])
 plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y")
 ```
 
-##5. Construir la función `v = simula_recta(intervalo)` que calcula los parámetros `v = (a,b)` de una recta aleatoria `y = ax + b` que corte al cuadrado [-50,50] times$ [-50,50] (Ayuda: Para calcular la recta simular las coordenadas de dos puntos del cuadrado y calcular la recta que pasa por ellos).
+Como vemos la gráfica tiene sentido puesto que la mayoría de los puntos están en el intervalo (-5,5) en el eje X y en el (-7,7) en el Y.
+
+##5. Construir la función `v = simula_recta(intervalo)` que calcula los parámetros `v = (a,b)` de una recta aleatoria `y = ax + b` que corte al cuadrado $[-50,50] \times [-50,50]$ (Ayuda: Para calcular la recta simular las coordenadas de dos puntos del cuadrado y calcular la recta que pasa por ellos).
+
+Le pasamos a la función como parámetro el cuadrado que queremos que la recta corte, que será el intervalo que le pasaremos a la función `simula_unif()`. Una vez hecho esto calculamos $a$ y $b$ como la recta que pasa por los puntos que hemos generado con `simula_unif()`: si $(x_1,y_1)$ y $(x_2, y_2)$ son los puntos por los que pasa la recta, entonces $a=\frac{y_2 - y_1}{x_2 - x_1}$ la pendiente de la recta y con $a$ despejamos $b$ con el primer punto $b=y_1-ax_1$. Por último devolvemos un vector con $a$ y $b$.
 
 ```{r}
 simula_recta <- function(intervalo) {
@@ -72,17 +85,18 @@ simula_recta <- function(intervalo) {
 }
 ```
 
+Simulamos la recta pedida que corta al cuadrado $[-50,50] \times [-50,50]$
 ```{r}
 simula_recta(c(-50,50))
 ```
 
 ##6. Generar una muestra 2D de puntos usando `simula_unif()` y etiquetar la muestra usando el signo de la función $f(x,y) = y-ax-b$ de cada punto a una recta simulada con `simula_recta()`. Mostrar una gráfica con el resultado de la muestra etiquetada junto con la recta usada para ello.
 
-Vamos primero a construir una función que nos devuelva la etiqueta +1 o -1 según el signo de la $f$ dada (la evaluación ya ha sido hecha):
+Vamos primero a construir una función que nos devuelva la etiqueta +1 o -1 según el signo de la $f$ dada (suponiendo que la evaluación ya ha sido hecha):
 
 ```{r}
-etiquetar <- function(f) {
-  if (f > 0) {
+etiquetar <- function(valor) {
+  if (valor > 0) {
     return(+1)
   }
   else {
@@ -90,12 +104,13 @@ etiquetar <- function(f) {
   }
 }
 ```
-Ahora generamos la recta con la función indicada y utilizamos la función anterior para etiquetar los puntos haciendo uso también de la función `lapply()`, de la siguiente forma:
+
+Ahora generamos la recta con la función indicada y utilizamos la función anterior para etiquetar los puntos haciendo uso también de la función `lapply()`, iterando sobre un vector del tamaño de la lista que serán las posiciones, de forma que en cada iteración nos quedamos con el elemento $i$ de la lista (el punto i-ésimo) y para cada punto evaluamos en la recta dada y etiquetamos con la función anterior:
 
 ```{r}
 r <- simula_recta(c(-50,50))
 etiquetas <- lapply(1:length(lista), function(i) {
-  #Obtenemos los puntos uno a uno y los etiquetamos
+  # Obtenemos los puntos uno a uno y los etiquetamos
   p <- lista[[i]]
   f <- p[2] - r[1]*p[1] - r[2]
   etiquetar(f)
@@ -106,11 +121,11 @@ Esto nos devuelve en `etiquetas` una lista de 50 vectores, todos con una compone
 
 ```{r}
 etiquetas <- unlist(etiquetas)
-#Mostramos las etiquetas
+# Mostramos las etiquetas
 etiquetas
 ```
 
-Vamos a dibujar el resultado. Pintamos en una misma gráfica los puntos etiquetados con +1 (en rojo) y los puntos etiquetados con -1 (en azul). Pintamos también la recta que hemos utilizado para etiquetar los puntos:
+Vamos a dibujar el resultado. Pintamos en una misma gráfica los puntos etiquetados con +1 (en rojo) y los puntos etiquetados con -1 (en azul), esto lo hacemos utilizando el mismo vector de etiquetas que ya teníamos, sumándole una cantidad positiva (puesto que los colores empiezan en 1 y en nuestro vector tenemos almecenados muchos -1). Pintamos también la recta que hemos utilizado para etiquetar los puntos utilizando la función `contour()`, que junto con `outer()` permite dibujar una gráfica dando la expresión implícita de la misma (lo que nos va a venir muy bien para el apartado 7 de este ejericio). Vamos también a dar la opción de no pintar gráfica junto con los puntos para que sea más general la función y nos sirva para más cosas, utilizando los valores por defecto:
 
 ```{r}
 pinta_particion <- function(lista_puntos, etiquetas=NULL, visible=FALSE, f=NULL) {
@@ -122,6 +137,7 @@ pinta_particion <- function(lista_puntos, etiquetas=NULL, visible=FALSE, f=NULL)
   plot(x, y, type = "p", col = etiquetas, xlab = "Eje X", ylab = "Eje Y", 
        xlim = c(-50,50), ylim = c(-50,50))
   
+  # Si queremos pintar función junto con los datos
   if(visible) {
     sec <- seq(-60, 60, length.out = 1500)
     z <- outer(sec, sec, f)
@@ -129,20 +145,22 @@ pinta_particion <- function(lista_puntos, etiquetas=NULL, visible=FALSE, f=NULL)
   }
 }
 ```
+
+Utilizamos la función para pintar la recta junto con los puntos:
 ```{r}
 pinta_particion(lista, etiquetas, TRUE, function(x,y) r[1]*x-y+r[2])
 ```
 
 ##7. Usar la muestra generada en el apartado anterior y etiquetarla con +1,-1 usando el signo de cada una de las siguiente funciones y visualizar el resultado del etiquetado de cada función junto con su gráfica y comparar el resultado con el caso lineal. ¿Qué consecuencias extrae sobre la forma de las regiones positiva y negativa?:
 
-Vamos a utilizar la función para etiquetar que hemos hecho en el apartado anterior y la función para dibujar que ya teníamos hecha también.
+Vamos a utilizar la función para etiquetar que hemos hecho en el apartado anterior y la función para dibujar que acabamos de hacer también. En todos los subapartados hacemos lo mismo: etiquetamos los datos según la función del mismo modo que antes y se los pasamos a la función anterior para que los pinte.
 
 ###a) $f(x,y) = (x-10)^2 + (y-20)^2 - 400$
 
 ```{r}
 
 etiquetasFA <- lapply(1:length(lista), function(i) {
-  #Obtenemos los puntos uno a uno y los etiquetamos
+  # Obtenemos los puntos uno a uno y los etiquetamos
   p <- lista[[i]]
   f1 <- (p[1]-10)^2 + (p[2] - 20)^2 - 400
   etiquetar(f1)
@@ -158,7 +176,7 @@ pinta_particion(lista, etiquetasFA, TRUE, function(x,y) (x-10)^2 + (y-20)^2 - 40
 ```{r}
 
 etiquetasFB <- lapply(1:length(lista), function(i) {
-  #Obtenemos los puntos uno a uno y los etiquetamos
+  # Obtenemos los puntos uno a uno y los etiquetamos
   p <- lista[[i]]
   f2 <- 0.5*(p[1]+10)^2 + (p[2] - 20)^2 - 400
   etiquetar(f2)
@@ -174,7 +192,7 @@ pinta_particion(lista, etiquetasFB, TRUE, function(x,y) 0.5*(x+10)^2 + (y-20)^2 
 ```{r}
 
 etiquetasFC <- lapply(1:length(lista), function(i) {
-  #Obtenemos los puntos uno a uno y los etiquetamos
+  # Obtenemos los puntos uno a uno y los etiquetamos
   p <- lista[[i]]
   f3 <- 0.5*(p[1]-10)^2 - (p[2] + 20)^2 - 400
   etiquetar(f3)
@@ -190,7 +208,7 @@ pinta_particion(lista, etiquetasFC, TRUE, function(x,y) 0.5*(x-10)^2 - (y+20)^2 
 ```{r}
 
 etiquetasFD <- lapply(1:length(lista), function(i) {
-  #Obtenemos los puntos uno a uno y los etiquetamos
+  # Obtenemos los puntos uno a uno y los etiquetamos
   p <- lista[[i]]
   f4 <- p[2] - 20*(p[1]^2) - 5*p[1] + 3
   etiquetar(f4)
@@ -200,40 +218,49 @@ pinta_particion(lista, etiquetasFD, TRUE, function(x,y) y - 20*x^2 - 5*x + 3)
 
 ```
 
-Como vemos, al ser ahora las funciones cuadráticas y no lineales, los datos no son linealmente separables (los que caen dentro de las gráficas se quedan en el centro o a los lados) y por tanto el perceptron no será capaz de parar ante estas clasificaciones.
+Como vemos, al ser ahora las funciones cuadráticas y no lineales, los datos no son linealmente separables (los que caen dentro de las gráficas se quedan en el centro o a ambos lados) y por tanto el perceptron no será capaz de separar totalmente estas clasificaciones.
 
 ##8. Considerar de nuevo la muestra etiquetada en el apartado 6. Modifique las etiquetas de un 10% aleatorio de muestras positivas y otro 10% de muestras negativas.
 
 ###Visualice los puntos con las nuevas etiquetas y la recta del apartado 6.
+
+Primero hacemos una función que cambia el 10% de etiquetas de cada parte, para ello nos creamos un vector con las posiciones en las que hay etiquetas positivas y otro con las posiciones en las que hay etiquetas negativas y utilizamos la función `sample()` para elegir de cada uno de estos dos vectores el 10%, que serán las posiciones que cambiaremos:
+
 ```{r}
 cambiar_etiquetas <- function(etiquetas) {
   num <- 1:length(etiquetas)
   etiquetas_cambiadas <- etiquetas
-  #Cogemos las posiciones de las etiquetas positivas y negativas
+  # Cogemos las posiciones de las etiquetas positivas y negativas
   positivos <- num[etiquetas > 0]
   negativos <- num[etiquetas < 0]
-  #Comprobamos que hay algún elemento que cambiar y obtenemos el 10%
-  #de posiciones aleatorias
+  # Comprobamos que hay algún elemento que cambiar y obtenemos el 10%
+  # de posiciones aleatorias
   if(length(positivos)*0.1 > 0) {
     cambiar1 <- sample(positivos, length(positivos)*0.1)
-    #Cambiamos las etiquetas que hemos obtenido antes
+    # Cambiamos las etiquetas que hemos obtenido antes
     etiquetas_cambiadas[cambiar1] <- -1
   }
   if(length(negativos)*0.1 > 0) {
     cambiar2 <- sample(negativos, length(negativos)*0.1)
-    #Cambiamos las etiquetas que hemos obtenido antes
+    # Cambiamos las etiquetas que hemos obtenido antes
     etiquetas_cambiadas[cambiar2] <- +1
   }
-  
+  # Devolvemos las etiquetas cambiadas
   etiquetas_cambiadas
 }
 
+# Llamamos a esta función para cambiar las etiquetas y pintamos los datos con
+# estas nuevas etiquetas
 etiquetas2 <- cambiar_etiquetas(etiquetas)
 pinta_particion(lista, etiquetas2, TRUE, function(x,y) r[1]*x-y+r[2])
 
 ```
 
+Podemos ver como dentro de la región de puntos azules hay dos rojos y dentro de la región roja hay dos azules, haciendo los datos no linealmente separables.
+
 ###En una gráfica aparte visualice de nuevo los mismos puntos pero junto con las funciones del apartado 7.
+
+Lo único que tenemos que hacer es llamar a la función para pintar cambiando las etiquetas y junto con las funciones del apartado 7.
 
 ```{r}
 pinta_particion(lista, cambiar_etiquetas(etiquetasFA), TRUE, 
@@ -254,7 +281,7 @@ pinta_particion(lista, cambiar_etiquetas(etiquetasFD), TRUE,
 ```
 
 
-#Ejercicio de Ajuste del Algoritmo Perceptron
+#2. Ejercicio de Ajuste del Algoritmo Perceptron
 
 ##1. Implementar la función `sol = ajusta_PLA(datos, label, max_iter, vini)` que calcula el hiperplano solución a un problema de clasificación binaria usando el algoritmo PLA. La entrada de `datos` es una matriz donde cada item con su etiqueta está representado por una fila de la matriz, `label` el vector de etiquetas (cada etiqueta es un valor +1 o -1), `max_iter` es el número máximo de iteraciones permitidas y `vini` el valor inicial del vector. La salida `sol` devuelve los coeficientes del hiperplano.
 
@@ -570,7 +597,7 @@ errores
 
 ```{r}
 
-data <- read.table("zip.train", sep=" ")
+data <- read.table("datos/zip.train", sep=" ")
 numero <- data$V1
 frame_num1 <- data[numero==1,]
 frame_num5 <- data[numero==5,]
@@ -855,10 +882,36 @@ iteraciones
 ```
 
 
+##8. En este ejercicio exploramos el uso de transformación no lineales. Consideremos la función objetivo $f(x_1,x_2) = sign(x_1^2+x_2^2-0.6)$. Generar una muestra de entrenamiento de $N=1000$ puntos a partir de $X=[-10,10] \times [-10,10]$ muestreando cada punto $x \in X$ uniformemente. Generar las salidas usando el signo de la función en los puntos muestreados. Generar ruido sobre las etiquetas cambiando el signo de las salidas a un 10% de puntos del conjunto aleatorio generado.
 
-##8. En este ejercicio el uso de transformación no lineales. Consideremos la función objetivo $f(x_1,x_2) = sign(x_1^2+x_2^2-0.6)$. Generar una muestra de entrenamiento de $N=1000$ puntos a partir de $X=[-10,10] \times [-10,10]$ muestreando cada punto $x \in X$ uniformemente. Generar las salidas usando el signo de la función en los puntos muestreados. Generar ruido sobre las etiquetas cambiando el signo de las salidas a un 10% de puntos del conjunto aleatorio generado.
+```{r}
+#Generamos la muestra de puntos
+datos <- simula_unif(1000, 2, c(-10,10))
+#Pasamos la lista de datos una matriz con la tercera columna a 1
+datos <- unlist(datos)
+datos <- matrix(datos, 10, 2, T)
+datos <- cbind(datos, 1)
 
-a) Ajustar regresión lineal, para estimar los pesos $\omega$. Ejecutar el experimento 1000 veces y calcular el valor promedio del error de entrenamiento $E_{in}$. Valorar el resultado.
+#Etiquetamos los puntos en base a la f dada
+etiquetas_f <- lapply(1:nrow(datos), function(i) {
+  #Obtenemos los puntos uno a uno y los etiquetamos
+  p <- datos[i,]
+  f <- p[1]^2 + p[2]^2 - 0.6
+  etiquetar(f)
+})
+etiquetas_f <- unlist(etiquetas_f)
+
+#Generamos ruido sobre estas etiquetas cambiando el signo a un 10% de estas
+#etiquetas
+pos <- 1:length(etiquetas_f)
+cambiar <- sample(pos, length(pos)*0.1)
+etiquetas_f[cambiar] <- etiquetas_f[cambiar]*(-1)
+
+```
+
+
+###a) Ajustar regresión lineal, para estimar los pesos $\omega$. Ejecutar el experimento 1000 veces y calcular el valor promedio del error de entrenamiento $E_{in}$. Valorar el resultado.
+
 
 
 b) Ahora, consideremos $N=1000$ datos de entrenamiento y el siguiente vector de variables: $(1,x_1,x_2,x_1x_2,x_1^2,x_2^2)$. Ajustar de nuevo regresión lineal y calcular el nuevo vector de pesos $\widehat{\omega}$. Mostrar el resultado.
