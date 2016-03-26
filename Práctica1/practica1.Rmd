@@ -997,6 +997,9 @@ for (i in 1:1000) {
   #Generamos ruido sobre las etiquetas originales
   etiquetas_originales <- cambiar_etiquetas(etiquetas_originales)
   
+  #Hacemos regresión
+  w <- Regress_Lin(datos_out, etiquetas_originales)
+  
   etiquetas_w <- unlist(lapply(1:nrow(datos_out), function(i) {
     #Obtenemos los puntos uno a uno y los etiquetamos
     p <- datos_out[i,]
