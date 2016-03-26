@@ -134,14 +134,15 @@ etiquetas
 Vamos a dibujar el resultado. Pintamos en una misma gráfica los puntos etiquetados con +1 (en rojo) y los puntos etiquetados con -1 (en azul), esto lo hacemos utilizando el mismo vector de etiquetas que ya teníamos, sumándole una cantidad positiva (puesto que los colores empiezan en 1 y en nuestro vector tenemos almecenados muchos -1). Pintamos también la recta que hemos utilizado para etiquetar los puntos utilizando la función `contour()`, que junto con `outer()` permite dibujar una gráfica dando la expresión implícita de la misma (lo que nos va a venir muy bien para el apartado 7 de este ejericio). Vamos también a dar la opción de no pintar gráfica junto con los puntos para que sea más general la función y nos sirva para más cosas, utilizando los valores por defecto:
 
 ```{r}
-pinta_particion <- function(lista_puntos, etiquetas=NULL, visible=FALSE, f=NULL) {
+pinta_particion <- function(lista_puntos, etiquetas=NULL, visible=FALSE, f=NULL,
+                            rango = c(-50,50)) {
   x <- rapply(lista_puntos, function(x) x[1])
   y <- rapply(lista_puntos, function(x) x[2])
   if(is.null(etiquetas))
      etiquetas=1
   else etiquetas = etiquetas+3
   plot(x, y, type = "p", col = etiquetas, xlab = "Eje X", ylab = "Eje Y", 
-       xlim = c(-50,50), ylim = c(-50,50))
+       xlim = rango, ylim = rango)
   
   # Si queremos pintar función junto con los datos
   if(visible) {
@@ -844,13 +845,13 @@ for (i in 1:1000) {
 
   etiquetas_originales <- unlist(lapply(1:nrow(datos_out), function(i) {
     #Obtenemos los puntos uno a uno y los etiquetamos
-    p <- datos[i,]
+    p <- datos_out[i,]
     f <- p[2] - r[1]*p[1] - r[2]
     etiquetar(f)
   }))
   etiquetas_g <- unlist(lapply(1:nrow(datos_out), function(i) {
     #Obtenemos los puntos uno a uno y los etiquetamos
-    p <- datos[i,]
+    p <- datos_out[i,]
     sign(crossprod(g,p))
   }))
   
@@ -924,10 +925,8 @@ for (i in 1:1000) {
   }))
   
   #Generamos ruido sobre estas etiquetas cambiando el signo a un 10% de estas
-  #etiquetas
-  pos <- 1:length(etiquetas_f)
-  cambiar <- sample(pos, length(pos)*0.1)
-  etiquetas_f[cambiar] <- etiquetas_f[cambiar]*(-1)
+  #etiquetas con la función que ya tenemos
+  etiquetas_f <- cambiar_etiquetas(etiquetas_f)
   
   #Generamos w por regresión
   w <- Regress_Lin(datos, etiquetas_f)
@@ -946,5 +945,71 @@ E_in
 
 ###b) Ahora, consideremos $N=1000$ datos de entrenamiento y el siguiente vector de variables: $(1,x_1,x_2,x_1x_2,x_1^2,x_2^2)$. Ajustar de nuevo regresión lineal y calcular el nuevo vector de pesos $\widehat{\omega}$. Mostrar el resultado.
 
+```{r}
+N <- 1000
+#Generamos la muestra de puntos
+lista_puntos <- simula_unif(N, 2, c(-10,10))
+x1 <- rapply(lista_puntos, function(x) x[1])
+x2 <- rapply(lista_puntos, function(x) x[2])
+datos <- cbind(1, x1, x2, x1*x2, x1^2, x2^2)
 
-c) Repetir el experimento anterior 1000 veces calculando en cada ocasión el error fuera de la muestra. Para ello generar en cada ejecución 1000 puntos nuevos y valorar sobre ellos la función ajustada. Promediar los valores obtenidos. ¿Qué valor obtiene? Valorar el resultado.
+#Etiquetamos los puntos en base a la f dada
+coord <- cbind(x1, x2)
+etiquetas_f <- unlist(lapply(1:nrow(coord), function(i) {
+  #Obtenemos los puntos uno a uno y los etiquetamos
+  p <- coord[i,]
+  f <- p[1]^2 + p[2]^2 - 25
+  etiquetar(f)
+}))
+
+#Generamos ruido sobre las etiquetas
+etiquetas_f = cambiar_etiquetas(etiquetas_f)
+
+#Hacemos regresión
+w <- Regress_Lin(datos, etiquetas_f)
+w
+
+pinta_particion(lista_puntos, etiquetas_f, TRUE, function(x,y) w[1] + w[2]*x + 
+                  w[3]*y + w[4]*x*y + w[5]*x^2 + w[6]*y^2, c(-10,10))
+
+```
+
+
+###c) Repetir el experimento anterior 1000 veces calculando en cada ocasión el error fuera de la muestra. Para ello generar en cada ejecución 1000 puntos nuevos y valorar sobre ellos la función ajustada. Promediar los valores obtenidos. ¿Qué valor obtiene? Valorar el resultado.
+
+```{r}
+N <- 1000
+errores <- 0
+for (i in 1:1000) {
+  #Generamos los nuevos 1000 puntos con los que calcular el error fuera
+  lista_puntos <- simula_unif(N, 2, c(-10,10))
+  x1 <- rapply(lista_puntos, function(x) x[1])
+  x2 <- rapply(lista_puntos, function(x) x[2])
+  datos_out <- cbind(1, x1, x2, x1*x2, x1^2, x2^2)
+  
+  etiquetas_originales <- unlist(lapply(1:nrow(datos_out), function(i) {
+    #Obtenemos los puntos uno a uno y los etiquetamos
+    p <- datos_out[i,]
+    f <- p[1]^2 + p[2]^2 - 25
+    etiquetar(f)
+  }))
+  
+  #Generamos ruido sobre las etiquetas originales
+  etiquetas_originales <- cambiar_etiquetas(etiquetas_originales)
+  
+  etiquetas_w <- unlist(lapply(1:nrow(datos_out), function(i) {
+    #Obtenemos los puntos uno a uno y los etiquetamos
+    p <- datos_out[i,]
+    sign(crossprod(w,p))
+  }))
+  
+  #Contamos los errores
+  errores <- errores + cuenta_diferencias(etiquetas_originales, etiquetas_w)/N
+
+}
+
+Eout = errores/1000
+Eout
+
+```
+
