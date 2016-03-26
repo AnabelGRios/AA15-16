@@ -25,6 +25,8 @@ Por ejemplo, vamos a obtener una lista de longitud 4 de vectores de dimensión 3 
 ```{r}
 l <- simula_unif(4,3,c(0,1))
 l
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 ##2. Construir una función `lista = simula_gauss(N, dim, sigma)` que calcule una lista de longitud `N` de vectores de dimensión `dim` conteniendo números aleatorios gaussianos de media 0 y varianzas dadas por el vector `sigma`.
@@ -40,6 +42,8 @@ simula_gauss <- function(N, dim, sigma) {
 Vamos a obtener por ejemplo una lista de longitud 3 de vectores de dimensión 2 y vector de desviaciones (1,7):
 ```{r}
 simula_gauss(3,2,c(1,7))
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 Como vemos, la desviación 1 se coge para la primera coordenada de los vectores y la desviación 7 para la segunda coordenada. Si ponemos por ejemplo c(1,7,3) como vector de desviaciones y la dimensión de los vectores es 2, ignora el número 3.
@@ -55,6 +59,8 @@ lista <- simula_unif(50, 2, c(-50,50))
 x <- rapply(lista, function(x) x[1])
 y <- rapply(lista, function(x) x[2])
 plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y")
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 ##4. Suponer `N = 50, dim = 2, sigma = [5,7]`. Dibujar una gráfica de la salida de la función correspondiente.
@@ -754,10 +760,11 @@ pinta_grafica(intensidad, simetria, color, TRUE, w[1], w[2])
 
 Generamos los datos en el intervalo pedido, generamos también $f$ de manera aleatoria y etiquetamos los datos con esa recta.
 ```{r}
-datos <- simula_unif(100, 2, c(-10,10))
+N <- 100
+datos <- simula_unif(N, 2, c(-10,10))
 #Pasamos la lista de datos una matriz con la tercera columna a 1
 datos <- unlist(datos)
-datos <- matrix(datos, 100, 2, T)
+datos <- matrix(datos, N, 2, T)
 datos <- cbind(datos, 1)
 
 generaEtiquetas <- function() {
@@ -775,24 +782,20 @@ generaEtiquetas <- function() {
 
 ```
 
-Usamos ahora regresión lineal para encontar $g$ 1000 veces y promediamos los errores que se cometen.
+Usamos ahora regresión lineal para encontar $g$ 1000 veces y calculamos $E_{in}$ como el porcentaje de puntos mal clasificados.
 ```{r}
 errores <- 0
 for (i in 1:1000) {
   etiquetas <- generaEtiquetas()
   w <- Regress_Lin(datos, etiquetas)
-  w <- -w / w[2]
-  etiquetas_cambiadas <- lapply(1:nrow(datos), function(i) {
-    #Obtenemos los puntos uno a uno y los etiquetamos
-    p <- datos[i,]
-    f <- p[2] - w[1]*p[1] - w[3]
-    etiquetar(f)
-  })
-  errores <- errores + cuenta_diferencias(etiquetas, etiquetas_cambiadas)
+  etiquetas_cambiadas <- unlist(lapply(1:nrow(datos), function(i) {
+    p <- datos[i, ]
+    sign(crossprod(w,p))
+  }))
+  errores <- errores + cuenta_diferencias(etiquetas, etiquetas_cambiadas)/N
 }
 
-errores <- errores / 1000
-
+w <- -w / w[2]
 #Pintamos la última de las rectas
 pinta_grafica(datos[,1], datos[,2], etiquetas, TRUE, w[1], w[3], "Eje X", "Eje Y")
 
@@ -801,7 +804,7 @@ pinta_grafica(datos[,1], datos[,2], etiquetas, TRUE, w[1], w[3], "Eje X", "Eje Y
 Calculamos ahora el porcentaje de puntos mal clasificados $E_{in}$
 
 ```{r}
-Ein <- errores*nrow(datos)/100
+Ein <- errores/1000
 Ein
 
 ```
@@ -809,47 +812,50 @@ Ein
 
 ###b) Fijar el tamaño de muestra $N=100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{out}$. Para ello generar 1000 puntos nuevos y usarlos para estimar el error fuera de la muestra, $E_{out}$ (porcentaje de puntos mal clasificados). De nuevo, ejecutar el experimento 1000 veces y tomar el promedio. ¿Qué valor obtiene de $E_{out}$? Valore los resultados.
 
-Utilizamos el conjunto de datos del apartado anterior, que ya tenemos en una matriz `datos`. Vamos a generar una nueva recta aleatoria, etiquetar los datos en base a esta recta y obtener $g$ por regresión lineal. Después generamos 1000 puntos nuevos en `datos_out` y vamos a calcular $E_{out}$ repitíendolo 1000 veces y quedándonos con la media de los errores, como hemos hecho en el apartado anterior
+Generamos un conjunto de datos nuevo, como en el apartado anterior. Vamos a generar una nueva recta aleatoria, etiquetar los datos en base a esta recta y obtener $g$ por regresión lineal. Después generamos 1000 puntos nuevos en `datos_out` y vamos a calcular $E_{out}$ repitíendolo 1000 veces y quedándonos con la media de los errores, como hemos hecho en el apartado anterior
 
 ```{r}
+N <- 100
+datos <- simula_unif(N, 2, c(-10,10))
+#Pasamos la lista de datos una matriz con la tercera columna a 1
+datos <- unlist(datos)
+datos <- matrix(datos, N, 2, T)
+datos <- cbind(datos, 1)
+
 r <- simula_recta(c(-10,10))
-etiquetas_f <- lapply(1:nrow(datos), function(i) {
+etiquetas_f <- unlist(lapply(1:nrow(datos), function(i) {
   #Obtenemos los puntos uno a uno y los etiquetamos
   p <- datos[i,]
   f <- p[2] - r[1]*p[1] - r[2]
   etiquetar(f)
-})
-etiquetas_f <- unlist(etiquetas_f)
+}))
 
 #Obtenemos g por regresión
 g <- Regress_Lin(datos, etiquetas)
-g <- -g / g[2]
-
-#Generamos los nuevos datos y los pasamos a una matriz
-datos_out <- simula_unif(1000, 2, c(-10,10))
-datos_out <- unlist(datos_out)
-datos_out <- matrix(datos_out, 100, 2, T)
-datos_out <- cbind(datos_out, 1)
 
 #Contamos los errores
 errores <- 0
 for (i in 1:1000) {
-  etiquetas_originales <- lapply(1:nrow(datos_out), function(i) {
+  #Generamos los nuevos datos (los de fuera de la muestra) y los pasamos a 
+  #una matriz
+  datos_out <- simula_unif(1000, 2, c(-10,10))
+  datos_out <- unlist(datos_out)
+  datos_out <- matrix(datos_out, 100, 2, T)
+  datos_out <- cbind(datos_out, 1)
+
+  etiquetas_originales <- unlist(lapply(1:nrow(datos_out), function(i) {
     #Obtenemos los puntos uno a uno y los etiquetamos
     p <- datos[i,]
     f <- p[2] - r[1]*p[1] - r[2]
-  etiquetar(f)
-  })
-  etiquetas_originales <- unlist(etiquetas_originales)
-  etiquetas_g <- lapply(1:nrow(datos_out), function(i) {
+    etiquetar(f)
+  }))
+  etiquetas_g <- unlist(lapply(1:nrow(datos_out), function(i) {
     #Obtenemos los puntos uno a uno y los etiquetamos
     p <- datos[i,]
-    f <- p[2] - g[1]*p[1] - g[2]
-    etiquetar(f)
-  })
-  etiquetas_g <- unlist(etiquetas_g)
+    sign(crossprod(g,p))
+  }))
   
-  errores <- errores + cuenta_diferencias(etiquetas_originales, etiquetas_g)
+  errores <- errores + cuenta_diferencias(etiquetas_originales, etiquetas_g)/N
 }
 
 Eout = errores / 1000
@@ -861,11 +867,11 @@ Eout
 ###c) Ahora fijamos $N=10$, ajustamos regresión lineal y usamos el vector de pesos encontrado como un vector inicial de pesos para PLA. Ejecutar PLA hasta que converja a un vector de pesos final que separe completamente la muestra de entrenamiento. Anote el número de iteraciones y repita el experimento 1000 veces. ¿Cuál es el valor promedio de iteraciones que tarda PLA en converger? (En cada iteración de PLA elija un punto aleatorio del conjunto de mal clasificados). Valore los resultados.
 
 ```{r}
-
-datos <- simula_unif(10, 2, c(-10,10))
+N <- 10
+datos <- simula_unif(N, 2, c(-10,10))
 #Pasamos la lista de datos una matriz con la tercera columna a 1
 datos <- unlist(datos)
-datos <- matrix(datos, 10, 2, T)
+datos <- matrix(datos, N, 2, T)
 datos <- cbind(datos, 1)
 
 iteraciones <- 0
@@ -874,16 +880,14 @@ for (i in 1:1000) {
   #Obtenemos una recta aleatoria, etiquetamos los datos en base a esa recta y 
   #obtenemos g, un vector de pesos inicial para el PLA
   r <- simula_recta(c(-10,10))
-  etiquetas_f <- lapply(1:nrow(datos), function(i) {
+  etiquetas_f <- unlist(lapply(1:nrow(datos), function(i) {
     #Obtenemos los puntos uno a uno y los etiquetamos
     p <- datos[i,]
     f <- p[2] - r[1]*p[1] - r[2]
     etiquetar(f)
-  })
-  etiquetas_f <- unlist(etiquetas_f)
+  }))
   
   g <- Regress_Lin(datos, etiquetas_f)
-  g <- -g / g[2]
   
   #Le pasamos al PLA g como vector inicial y nos quedamos con el número de 
   #iteraciones que tarda en converger
