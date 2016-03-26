@@ -725,15 +725,14 @@ Formamos primero una matriz con los datos y le calculamos la pseudoinversa hacie
 Regress_Lin <- function(datos, label) {
   descomp <- La.svd(datos)
   vt <- descomp[[3]]
-  if (length(descomp[[1]]) == 2) {
-    diag <- matrix(c(descomp[[1]][1], 0, 0, descomp[[1]][2]), 2, 2, T)
+  diag <- matrix(0, length(descomp[[1]]), length(descomp[[1]]))
+  for (i in 1:length(descomp[[1]])) {
+    diag[i,i] = descomp[[1]][i]
+    if (diag[i,i] != 0) {
+      diag[i,i] = 1/(diag[i,i]^2)
+    }
   }
-  else {
-    diag <- matrix(c(descomp[[1]][1], 0, 0, 0, descomp[[1]][2], 0,
-                     0, 0, descomp[[1]][3]), 3, 3, T)
-  }
-  diag2 <- t(solve(diag^2))
-  prod_inv <- t(vt) %*% diag2 %*% vt
+  prod_inv <- t(vt) %*% diag %*% vt
   pseud_inv <- prod_inv %*% t(datos)
   
   w <- pseud_inv %*% label
@@ -901,39 +900,51 @@ iteraciones
 ```
 
 
-##8. En este ejercicio exploramos el uso de transformación no lineales. Consideremos la función objetivo $f(x_1,x_2) = sign(x_1^2+x_2^2-25)$. Generar una muestra de entrenamiento de $N=1000$ puntos a partir de $X=[-10,10] \times [-10,10]$ muestreando cada punto $x \in X$ uniformemente. Generar las salidas usando el signo de la función en los puntos muestreados. Generar ruido sobre las etiquetas cambiando el signo de las salidas a un 10% de puntos del conjunto aleatorio generado.
+##8. En este ejercicio exploramos el uso de transformaciones no lineales. Consideremos la función objetivo $f(x_1,x_2) = sign(x_1^2+x_2^2-25)$. Generar una muestra de entrenamiento de $N=1000$ puntos a partir de $X=[-10,10] \times [-10,10]$ muestreando cada punto $x \in X$ uniformemente. Generar las salidas usando el signo de la función en los puntos muestreados. Generar ruido sobre las etiquetas cambiando el signo de las salidas a un 10% de puntos del conjunto aleatorio generado.
+
+###a) Ajustar regresión lineal, para estimar los pesos $\omega$. Ejecutar el experimento 1000 veces y calcular el valor promedio del error de entrenamiento $E_{in}$. Valorar el resultado.
 
 ```{r}
-#Generamos la muestra de puntos
-datos <- simula_unif(1000, 2, c(-10,10))
-#Pasamos la lista de datos una matriz con la tercera columna a 1
-datos <- unlist(datos)
-datos <- matrix(datos, 10, 2, T)
-datos <- cbind(datos, 1)
+errores <- 0
+for (i in 1:1000) {
+  N <- 1000
+  #Generamos la muestra de puntos
+  datos <- simula_unif(N, 2, c(-10,10))
+  #Pasamos la lista de datos una matriz con la tercera columna a 1
+  datos <- unlist(datos)
+  datos <- matrix(datos, N, 2, T)
+  datos <- cbind(datos, 1)
+  
+  #Etiquetamos los puntos en base a la f dada
+  etiquetas_f <- unlist(lapply(1:nrow(datos), function(i) {
+    #Obtenemos los puntos uno a uno y los etiquetamos
+    p <- datos[i,]
+    f <- p[1]^2 + p[2]^2 - 25
+    etiquetar(f)
+  }))
+  
+  #Generamos ruido sobre estas etiquetas cambiando el signo a un 10% de estas
+  #etiquetas
+  pos <- 1:length(etiquetas_f)
+  cambiar <- sample(pos, length(pos)*0.1)
+  etiquetas_f[cambiar] <- etiquetas_f[cambiar]*(-1)
+  
+  #Generamos w por regresión
+  w <- Regress_Lin(datos, etiquetas_f)
+  etiquetas_cambiadas <- unlist(lapply(1:nrow(datos), function(i) {
+    p <- datos[i, ]
+    sign(crossprod(w,p))
+  }))
+  errores <- errores + cuenta_diferencias(etiquetas_f, etiquetas_cambiadas)/N
+}
 
-#Etiquetamos los puntos en base a la f dada
-etiquetas_f <- lapply(1:nrow(datos), function(i) {
-  #Obtenemos los puntos uno a uno y los etiquetamos
-  p <- datos[i,]
-  f <- p[1]^2 + p[2]^2 - 25
-  etiquetar(f)
-})
-etiquetas_f <- unlist(etiquetas_f)
-
-#Generamos ruido sobre estas etiquetas cambiando el signo a un 10% de estas
-#etiquetas
-pos <- 1:length(etiquetas_f)
-cambiar <- sample(pos, length(pos)*0.1)
-etiquetas_f[cambiar] <- etiquetas_f[cambiar]*(-1)
+E_in = errores/1000
+E_in
 
 ```
 
 
-###a) Ajustar regresión lineal, para estimar los pesos $\omega$. Ejecutar el experimento 1000 veces y calcular el valor promedio del error de entrenamiento $E_{in}$. Valorar el resultado.
-
-
-
-b) Ahora, consideremos $N=1000$ datos de entrenamiento y el siguiente vector de variables: $(1,x_1,x_2,x_1x_2,x_1^2,x_2^2)$. Ajustar de nuevo regresión lineal y calcular el nuevo vector de pesos $\widehat{\omega}$. Mostrar el resultado.
+###b) Ahora, consideremos $N=1000$ datos de entrenamiento y el siguiente vector de variables: $(1,x_1,x_2,x_1x_2,x_1^2,x_2^2)$. Ajustar de nuevo regresión lineal y calcular el nuevo vector de pesos $\widehat{\omega}$. Mostrar el resultado.
 
 
 c) Repetir el experimento anterior 1000 veces calculando en cada ocasión el error fuera de la muestra. Para ello generar en cada ejecución 1000 puntos nuevos y valorar sobre ellos la función ajustada. Promediar los valores obtenidos. ¿Qué valor obtiene? Valorar el resultado.
