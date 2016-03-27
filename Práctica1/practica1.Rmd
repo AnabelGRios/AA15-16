@@ -14,8 +14,12 @@ Como pide una lista, utilizo la función `lapply()`, que itera sobre una lista o 
 
 ```{r}
 set.seed(237)
+# Para que muestre las gráficas por pantalla
+X11()
 ```
 ```{r}
+cat("Ejercicio 1\n")
+cat("Apartado 1\n")
 simula_unif <- function(N, dim, rango) {
   lapply(1:N, function(x) runif(dim, min = rango[1], max = rango[2]))
 }
@@ -24,10 +28,10 @@ simula_unif <- function(N, dim, rango) {
 Por ejemplo, vamos a obtener una lista de longitud 4 de vectores de dimensión 3 en el rango (0,1) y la mostramos después:
 ```{r}
 l <- simula_unif(4,3,c(0,1))
-cat("Lista de longitd 4 y dimensión 3 en el rango (0,1)")
+cat("Lista de longitd 4 y dimensión 3 en el rango (0,1)\n")
 print(l)
-#cat("Presione una tecla para continuar")
-#t <- readline()
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 ##2. Construir una función `lista = simula_gauss(N, dim, sigma)` que calcule una lista de longitud `N` de vectores de dimensión `dim` conteniendo números aleatorios gaussianos de media 0 y varianzas dadas por el vector `sigma`.
@@ -35,6 +39,7 @@ print(l)
 Utilizo el mismo procedimiento del apartado anterior, utilizando `lapply()` sobre un vector de la longitu pedida pero utilizando en este caso la función `rnorm()` para que genere los números en la distribución normal (que es la gaussiana) que acepta como parámetros el número de números que tiene que general, la media y la desviación típica.
 
 ```{r}
+cat("Apartado 2\n")
 simula_gauss <- function(N, dim, sigma) {
   lapply(1:N, function(x) rnorm(dim, mean = 0, sqrt(sigma)))
 }
@@ -43,8 +48,10 @@ simula_gauss <- function(N, dim, sigma) {
 Vamos a obtener por ejemplo una lista de longitud 3 de vectores de dimensión 2 y vector de varianzas (1,7):
 ```{r}
 s <- simula_gauss(3,2,c(1,7))
-cat("Lista de longitud 3 y dimensión 2 con varianza (1,7)")
+cat("Lista de longitud 3 y dimensión 2 con varianza (1,7)\n")
 print(s)
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 Como vemos, la varinza 1 se coge para la primera coordenada de los vectores y la varianza 7 para la segunda coordenada. Si ponemos por ejemplo c(1,7,3) como vector de varianzas y la dimensión de los vectores es 2, ignora el número 3.
@@ -54,12 +61,15 @@ Como vemos, la varinza 1 se coge para la primera coordenada de los vectores y la
 Como nos dicen el rango, lo hacemos con la generación uniforme, por lo que le pasamos a la función `simula_unif()` que acabamos de hacer los tres datos que nos dan y obtenemos las coordenadas $x$ e $y$ de los datos (que serán la primera y segunda columna respectivamente) con la función `rapply()`, a la que le pasamos como función que devuelva la primera y la segunda coordenada de cada elemento de la lista. De esta forma obtenemos dos vectores, uno con todas las primeras coordenadas y otro con las segundas. Estos dos vectores es lo que le pasamos a la función `plot()` para que los pinte, junto con el tipo de punto que queremos (en este caso un círculo alrededor del punto) y los títulos de los ejes, con lo que obtenemos una gráfica en la que aparecen los puntos entre -50 y 50 en cada eje, como nos pedían.
 
 ```{r}
+cat("Apartado 3\n")
 lista <- simula_unif(50, 2, c(-50,50))
 # Obtenemos las coordenadas x e y, que son la primera y segunda columna
 # de la lista (primera componente y segunda componente de cada vector en la lista)
 x <- rapply(lista, function(x) x[1])
 y <- rapply(lista, function(x) x[2])
 plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y", main="Datos uniformes")
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -68,12 +78,15 @@ plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y", main="Datos uniformes")
 En este caso utilizamos la función `simula_gauss()` que acabamos de crear y utilizamos `rapply()` de nuevo para obtener las coordenadas $x$ e $y$ en vectores, que serán los que le pasemos a `plot()`, obteniendo de nuevo una gráfica, esta vez con una varianza de 5 en el eje X y una varianza de 7 en el eje Y.
 
 ```{r}
+cat("Apartado 4\n")
 lista2 <- simula_gauss(50, 2, c(5,7))
 # Obtenemos las coordenadas x e y, que son la primera y segunda columna
 # de la lista (primera componente y segunda componente de cada vector en la lista)
 x <- rapply(lista2, function(x) x[1])
 y <- rapply(lista2, function(x) x[2])
 plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y", main="Datos gaussianos")
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 Como vemos la gráfica tiene sentido puesto que la mayoría de los puntos están en el intervalo (-5,5) en el eje X y en el (-7,7) en el Y.
@@ -83,6 +96,7 @@ Como vemos la gráfica tiene sentido puesto que la mayoría de los puntos están en
 Le pasamos a la función como parámetro el cuadrado que queremos que la recta corte, que será el intervalo que le pasaremos a la función `simula_unif()`. Una vez hecho esto calculamos $a$ y $b$ como la recta que pasa por los puntos que hemos generado con `simula_unif()`: si $(x_1,y_1)$ y $(x_2, y_2)$ son los puntos por los que pasa la recta, entonces $a=\frac{y_2 - y_1}{x_2 - x_1}$ la pendiente de la recta y con $a$ despejamos $b$ con el primer punto $b=y_1-ax_1$. Por último devolvemos un vector con $a$ y $b$.
 
 ```{r}
+cat("Apartado 5\n")
 simula_recta <- function(intervalo) {
   l <- simula_unif(2, 2, intervalo)
   a <- (l[[2]][2] - l[[1]][2]) / (l[[2]][1] - l[[1]][1])
@@ -93,8 +107,10 @@ simula_recta <- function(intervalo) {
 
 Simulamos la recta pedida que corta al cuadrado $[-50,50] \times [-50,50]$
 ```{r}
-cat("Coeficientes de la recta que corta al cuadrado (-50,50)x(-50,50)")
+cat("Coeficientes de la recta que corta al cuadrado (-50,50)x(-50,50)\n")
 print(simula_recta(c(-50,50)))
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 ##6. Generar una muestra 2D de puntos usando `simula_unif()` y etiquetar la muestra usando el signo de la función $f(x,y) = y-ax-b$ de cada punto a una recta simulada con `simula_recta()`. Mostrar una gráfica con el resultado de la muestra etiquetada junto con la recta usada para ello.
@@ -102,6 +118,7 @@ print(simula_recta(c(-50,50)))
 Vamos primero a construir una función que nos devuelva la etiqueta +1 o -1 según el signo de la $f$ dada (suponiendo que la evaluación ya ha sido hecha):
 
 ```{r}
+cat("Apartado 6\n")
 etiquetar <- function(valor) {
   if (valor > 0) {
     return(+1)
@@ -156,6 +173,8 @@ Utilizamos la función para pintar la recta junto con los puntos:
 ```{r}
 pinta_particion(lista, etiquetas, TRUE, function(x,y) r[1]*x-y+r[2], 
                 main="Puntos etiquetados con recta")
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 ##7. Usar la muestra generada en el apartado anterior y etiquetarla con +1,-1 usando el signo de cada una de las siguiente funciones y visualizar el resultado del etiquetado de cada función junto con su gráfica y comparar el resultado con el caso lineal. ¿Qué consecuencias extrae sobre la forma de las regiones positiva y negativa?:
@@ -165,7 +184,7 @@ Vamos a utilizar la función para etiquetar que hemos hecho en el apartado anteri
 ###a) $f(x,y) = (x-10)^2 + (y-20)^2 - 400$
 
 ```{r}
-
+cat("Apartado 7\n")
 etiquetasFA <- lapply(1:length(lista), function(i) {
   # Obtenemos los puntos uno a uno y los etiquetamos
   p <- lista[[i]]
@@ -176,6 +195,8 @@ etiquetasFA <- unlist(etiquetasFA)
 
 pinta_particion(lista, etiquetasFA, TRUE, function(x,y) (x-10)^2 + (y-20)^2 -
                   400, main="Puntos etiquetados con función a")
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -193,6 +214,8 @@ etiquetasFB <- unlist(etiquetasFB)
 
 pinta_particion(lista, etiquetasFB, TRUE, function(x,y) 0.5*(x+10)^2 + (y-20)^2
                 - 400, main="Puntos etiquetados con función b")
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -210,6 +233,8 @@ etiquetasFC <- unlist(etiquetasFC)
 
 pinta_particion(lista, etiquetasFC, TRUE, function(x,y) 0.5*(x-10)^2 - (y+20)^2
                 - 400, main="Puntos etiquetados con función c")
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -226,6 +251,8 @@ etiquetasFD <- lapply(1:length(lista), function(i) {
 etiquetasFD <- unlist(etiquetasFD)
 pinta_particion(lista, etiquetasFD, TRUE, function(x,y) y - 20*x^2 - 5*x + 3, 
                 main="Puntos etiquetados con función d")
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -238,6 +265,7 @@ Como vemos, al ser ahora las funciones cuadráticas y no lineales, los datos no s
 Primero hacemos una función que cambia el 10% de etiquetas de cada parte, para ello nos creamos un vector con las posiciones en las que hay etiquetas positivas y otro con las posiciones en las que hay etiquetas negativas y utilizamos la función `sample()` para elegir de cada uno de estos dos vectores el 10%, que serán las posiciones que cambiaremos:
 
 ```{r}
+cat("Apartado 8\n")
 cambiar_etiquetas <- function(etiquetas) {
   num <- 1:length(etiquetas)
   etiquetas_cambiadas <- etiquetas
@@ -265,6 +293,8 @@ cambiar_etiquetas <- function(etiquetas) {
 etiquetas2 <- cambiar_etiquetas(etiquetas)
 pinta_particion(lista, etiquetas2, TRUE, function(x,y) r[1]*x-y+r[2], 
                 main="Puntos etiquetados con recta y ruido")
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -278,21 +308,29 @@ Lo único que tenemos que hacer es llamar a la función para pintar cambiando las 
 pinta_particion(lista, cambiar_etiquetas(etiquetasFA), TRUE, 
                 function(x,y) (x-10)^2 + (y-20)^2 - 400, 
                 main="Puntos etiquetados con función a y ruido")
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 ```{r}
 pinta_particion(lista, cambiar_etiquetas(etiquetasFB), TRUE, 
                 function(x,y) 0.5*(x+10)^2 + (y-20)^2 - 400, 
                 main="Puntos etiquetados con función b y ruido")
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 ```{r}
 pinta_particion(lista, cambiar_etiquetas(etiquetasFC), TRUE, 
                 function(x,y) 0.5*(x-10)^2 - (y+20)^2 - 400, 
                 main="Puntos etiquetados con función c y ruido")
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 ```{r}
 pinta_particion(lista, cambiar_etiquetas(etiquetasFD), TRUE, 
                 function(x,y) y - 20*x^2 - 5*x + 3, 
                 main="Puntos etiquetados con función d y ruido")
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -306,7 +344,8 @@ Aunque pide que la salida sean los coeficientes del hiperplano, en el segundo ap
 Lo que hacemos es seguir el algoritmo dado en clase de teoría: iteramos sobre todos los datos mientras no se superen el máximo de iteraciones que le pasamos como parámetro o mientras no se haya encontrado una solución ya. Se considera que se ha encontrado una solución cuando se pasa una vez por todos los datos y no ha habido cambios (es decir, todos estaban correctamente clasificados), que es algo que controlamos con dos variables booleanas. Sabemos si los datos están bien clasificados porque nos quedamos con el signo del producto escalar entre el $\omega$ actual y cada punto. En caso de que el signo no coincida con la etiqueta para ese punto, movemos la recta sumándole el valor real de la etiqueta por el punto.
 
 ```{r}
-
+cat("Ejercicio 2\n")
+cat("Apartado 1\n")
 ajusta_PLA <- function(datos, label, max_iter, vini) {
   parada <- F
   fin <- F
@@ -349,7 +388,7 @@ A esta matriz es a la que le hacemos el PLA y nos quedamos con la solución $\ome
 
 
 ```{r}
-
+cat("Apartado 2\n")
 # Metemos los datos, que teníamos en una lista llamada "lista" en
 # una matriz.
 m <- matrix(unlist(lista), 50, 2, byrow=TRUE)
@@ -362,6 +401,8 @@ w <- sol[[1]]
 w <- -w / w[2]
 pinta_particion(lista, etiquetas, TRUE, function(x,y) y-w[3]-w[1]*x, 
                 main="Solución algoritmo PLA")
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -378,8 +419,10 @@ iteraciones <- lapply(1:10, function(i) {
 })
 
 iteraciones <- unlist(iteraciones)
-cat("La media de las iteraciones para que el PLA converja ha sido: ")
+cat("La media de las iteraciones para que el PLA converja ha sido: \n")
 print(mean(iteraciones))
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -391,6 +434,7 @@ Hay que tener en cuenta que las iteraciones que necesita para converjer dependen
 Vamos a hacer primero una función que cuente las diferencias entre dos vectores de etiquetas, es decir, la cantidad de posiciones en los que dos vectores de etiquetas tienen valores distintos.
 
 ```{r}
+cat("Apartado 3\n")
 cuenta_diferencias <- function(etiquetas1, etiquetas2) {
   vf <- etiquetas1 == etiquetas2
   length(vf[vf == FALSE])
@@ -419,32 +463,38 @@ Vamos a ejecutarlo ahora con 10, 100 y 1000 iteraciones y vamos a pintar también
 
 ```{r}
 sol1 <- ajusta_PLA(datos, etiquetas2, 10, c(0,0,0))
-cat("El número de fallos ha sido:")
+cat("El número de fallos ha sido:\n")
 print(cuenta_errores(sol1, etiquetas2))
 w1 <- sol1[[1]] 
 w1 <- -w1/w1[2]
 pinta_particion(lista, etiquetas2, TRUE, function(x,y) w1[1]*x-y+w1[3],
                 main="Solución PLA para 10 iteraciones")
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 ```{r}
 sol2 <- ajusta_PLA(datos, etiquetas2, 100, c(0,0,0))
-cat("El número de fallos ha sido:")
+cat("El número de fallos ha sido:\n")
 print(cuenta_errores(sol2, etiquetas2))
 w2 <- sol2[[1]] 
 w2 <- -w2/w2[2]
 pinta_particion(lista, etiquetas2, TRUE, function(x,y) w2[1]*x-y+w2[3], 
                 main="Solución PLA para 100 iteraciones")
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 ```{r}
 sol3 <- ajusta_PLA(datos, etiquetas2, 1000, c(0,0,0))
-cat("El número de fallos ha sido:")
+cat("El número de fallos ha sido:\n")
 print(cuenta_errores(sol3, etiquetas2))
 w3 <- sol3[[1]] 
 w3 <- -w3/w3[2]
 pinta_particion(lista, etiquetas2, TRUE, function(x,y) w3[1]*x-y+w3[3], 
                 main = "Solución PLA para 1000 iteraciones")
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 Como vemos, en los tres casos el número de puntos mal clasificados es 5. Esto es porque al cambiar etiquetas al azar, los datos han dejado de ser linealmente separables, con lo que el perceptron no puede llegar a una solución en la que todos los puntos estén bien clasificados, da igual el número de iteraciones que le pongamos.
@@ -454,33 +504,40 @@ Como vemos, en los tres casos el número de puntos mal clasificados es 5. Esto es
 La función es $f(x,y) = (x-10)^2 + (y-20)^2 - 400$ y tenemos las etiquetas originales guardadas en un vector llamado `etiquetasFA`.
 
 ```{r}
+cat("Apartado 4\n")
 sol1 <- ajusta_PLA(datos, etiquetasFA, 10, c(0,0,0))
-cat("El número de fallos con la primera función del apartado 7 ha sido:")
+cat("El número de fallos con la primera función del apartado 7 ha sido:\n")
 print(cuenta_errores(sol1, etiquetasFA))
 w1 <- sol1[[1]] 
 w1 <- -w1 / w1[2]
 pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w1[1]*x-y+w1[3], 
                 main="Solución PLA para 10 iteraciones")
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 ```{r}
 sol2 <- ajusta_PLA(datos, etiquetasFA, 100, c(0,0,0))
-cat("El número de fallos con la primera función del apartado 7 ha sido:")
+cat("El número de fallos con la primera función del apartado 7 ha sido:\n")
 print(cuenta_errores(sol2, etiquetasFA))
 w2 <- sol2[[1]] 
 w2 <- -w2 / w2[2]
 pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w2[1]*x-y+w2[3], 
                 main="Solución PLA para 100 iteraciones")
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 ```{r}
 sol3 <- ajusta_PLA(datos, etiquetasFA, 1000, c(0,0,0))
-cat("El número de fallos con la primera función del apartado 7 ha sido:")
+cat("El número de fallos con la primera función del apartado 7 ha sido:\n")
 print(cuenta_errores(sol3, etiquetasFA))
 w3 <- sol3[[1]] 
 w3 <- -w3 / w3[2]
 pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w3[1]*x-y+w3[3], 
                 main="Solución PLA para 1000 iteraciones")
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 En este caso los datos no eran linealmente separables de entrada, ya que se habían clasificado en base a una función cuadrática, con lo que el perceptron no va a llegar a una solución en la que todos los datos estén bien clasificados, de nuevo, da igual el número de iteraciones que le pongamos.
@@ -490,6 +547,7 @@ En este caso los datos no eran linealmente separables de entrada, ya que se habí
 Lo que hacemos es utilizar la función `Sys.sleep(x)`, que para la ejecución durante x segundos. Añadimos esta función cuando el perceptrón ha dado una vuelta entera a los datos.
 
 ```{r}
+cat("Apartado 5\n")
 ajusta_PLA_sol <- function(datos, label, max_iter, vini) {
   parada <- F
   fin <- F
@@ -514,7 +572,7 @@ ajusta_PLA_sol <- function(datos, label, max_iter, vini) {
     # Paramos la ejecución para que se pueda ver la gráfica durante medio segundo
     #cat("Presione una tecla para continuar")
     #t <- readline()
-    Sys.sleep(0.5)
+    Sys.sleep(1)
     
     # Si no se ha entrado en el if, todos los datos estaban bien
     # clasificados y podemos poner a TRUE la variable parada.
@@ -534,11 +592,19 @@ ajusta_PLA_sol <- function(datos, label, max_iter, vini) {
 ```
 Llamamos ahora a esta función con 10, 100 y 1000 como número de iteraciones
 
-```#{r}
+```{r}
 # Llamamos a la función
 ajusta_PLA_sol(datos, etiquetas2, 10, c(0,0,0))
+cat("Presione una tecla para continuar")
+t <- readline()
 ajusta_PLA_sol(datos, etiquetas2, 100, c(0,0,0))
-ajusta_PLA_sol(datos, etiquetas2, 1000, c(0,0,0))
+cat("Presione una tecla para continuar")
+t <- readline()
+cat("Nota: la ejecución con 1000 iteraciones está comentada. 
+    Descomentar si se quiere ver.")
+#ajusta_PLA_sol(datos, etiquetas2, 1000, c(0,0,0))
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 
@@ -547,6 +613,7 @@ ajusta_PLA_sol(datos, etiquetas2, 1000, c(0,0,0))
 Lo que vamos a hacer es ir contando los errores (con la función que hemos hecho en apartados anteriores) que hay al etiquetar con la solución que va devolviendo el algoritmo en cada iteración (una pasada a los datos) y quedarnos con aquella que tenga menos errores. Además devolvemos como tercer elemento de la lista el número de errores de la mejor solución, que es la que estamos devolviendo como primer elemento de la lista. El resto del algoritmo continúa igual:
 
 ```{r}
+cat("Apartado 6\n")
 ajusta_PLA_MOD <- function(datos, label, max_iter, vini) {
   parada <- F
   fin <- F
@@ -602,8 +669,10 @@ errores <- sol1_MOD[[3]]
 w1 <- -w1 / w1[2]
 pinta_particion(lista, etiquetasFA, TRUE, function(x,y) -w1[1]*x + y - w1[3],
                  main="Solución PLA MOD para función a")
-cat("El número de errores para el PLA MOD y función a ha sido:")
+cat("El número de errores para el PLA MOD y función a ha sido:\n")
 print(errores)
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 ```{r}
@@ -613,8 +682,10 @@ errores <- sol2_MOD[[3]]
 w2 <- -w2 / w2[2]
 pinta_particion(lista, etiquetasFB, TRUE, function(x,y) -w2[1]*x + y - w2[3], 
                 main="Solución PLA MOD para función b")
-cat("El número de errores para el PLA MOD y función b ha sido:")
+cat("El número de errores para el PLA MOD y función b ha sido:\n")
 print(errores)
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 ```{r}
@@ -624,8 +695,10 @@ errores <- sol3_MOD[[3]]
 w3 <- -w3 / w3[2]
 pinta_particion(lista, etiquetasFC, TRUE, function(x,y) -w3[1]*x + y - w3[3], 
                 main="Solución PLA MOD para función c")
-cat("El número de errores para el PLA MOD y función c ha sido:")
+cat("El número de errores para el PLA MOD y función c ha sido:\n")
 print(errores)
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 ```{r}
@@ -635,8 +708,10 @@ errores <- sol4_MOD[[3]]
 w4 <- -w4 / w4[2]
 pinta_particion(lista, etiquetasFD, TRUE, function(x,y) -w3[1]*x + y - w3[3], 
                 main="Solución PLA MOD para función d")
-cat("El número de errores para el PLA MOD y función d ha sido:")
+cat("El número de errores para el PLA MOD y función d ha sido:\n")
 print(errores)
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 Como vemos, en la mayoría de los casos la mejor solución es la recta que se queda a un lado porque sale mejor (en tanto a que hay menos errores) no clasificar bien únicamente los que se quedaban dentro de las regiones de las funciones cuadráticas que clasificar bien algunos de ellos pero a la vez clasificar mal algunos de los que se quedaban fuera.
@@ -651,7 +726,8 @@ Como vemos, en la mayoría de los casos la mejor solución es la recta que se qued
 Utilizamos la función `read_table()` indicándole que la separación es un espacio. Esto nos carga en `data` todas las instancias en un data_frame, una por fila, donde la primera columna es el número que se está representando y el resto de columnas son los datos. Sin embargo nos introduce una última columna en la que todos los datos son NA que vamos a eliminar. Nos quedamos con aquellas filas en las que la primera columa sea un 1 o un 5 y después a estas les eliminamos también la primera columna, para quedarnos sólo con los datos, pero metiendo en dos data_frame distintos las instancias del 1 y las del 5, para poder diferenciarlas. Después pasamos estos dos data_frame a matrices con data.matrix (sigue dejando cada instancia en una fila) y una vez tenemos la matriz podemos utilizar `lapply()` para extraer cada fila y de cada fila hacer una matriz de $16 \times 16$ y meterlas todas en una lista, con lo que nos queda una  lista de matrices con las instancias del 1 y otra lista de matrices con las instancias del 5. A continuación mostramos con la función `image()` la primera instancia del número 1 y la primera del número 5.
 
 ```{r}
-
+cat("Ejercicio 3\n")
+cat("Apartado 2\n")
 data <- read.table("datos/zip.train", sep=" ")
 numero <- data$V1
 frame_num1 <- data[numero==1,]
@@ -678,7 +754,11 @@ lista_num1 <- lapply(split(datos_num1, seq(nrow(datos_num1))), function(x) {
 
 # Mostramos una imagen de un 1 y una imagen de un 5
 image(lista_num1[[1]])
+cat("Presione una tecla para continuar")
+t <- readline()
 image(lista_num5[[1]])
+cat("Presione una tecla para continuar")
+t <- readline()
 ```
 
 
@@ -686,7 +766,7 @@ image(lista_num5[[1]])
 
 Hacemos una función para calcular la simetría vertical presente en las imágenes, que lo que hace es invertir la matriz por columnas con la función `rev()` y calcular la diferencia en valor absoluto entre la matriz original y la invertida. A continuación sumamos los elementos de la matriz y devolvemos el cambio de signo de la suma.
 ```{r}
-
+cat("Apartado 3\n")
 calcular_simetria <- function(mat) {
   # Invertimos la matriz por columnas
   mat_invertida = apply(mat, 2, function(x) rev(x))
@@ -707,7 +787,7 @@ calcular_simetria <- function(mat) {
 Vamos a hacer primero una variante de la función `pinta_particion` de los dos ejercicios anteriores, que ahora recibirá los datos de los ejes X e Y en vectores
 
 ```{r}
-
+cat("Apartado 4\n")
 pinta_grafica <- function(coordX, coordY, etiquetas=NULL, visible=FALSE, a=NULL, b=NULL, xlab="Intensidad Promedio", ylab="Simetría", main="") {
   if(is.null(etiquetas))
      etiquetas=1
@@ -747,6 +827,8 @@ intensidad <- c(intensidad_1, intensidad_5)
 simetria <- c(simetria_1, simetria_5)
 color <- c(rep.int(0, length(intensidad_1)), rep.int(2, length(intensidad_5)))
 pinta_grafica(intensidad, simetria, color)
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -756,7 +838,7 @@ pinta_grafica(intensidad, simetria, color)
 Formamos primero una matriz con los datos y le calculamos la pseudoinversa haciendo uso de la descomposición en valores singulares y devolvemos después $w = X^{-1}y$ donde $X^{-1}$ es la pseudoinversa de $X$. Utilizamos para ello la función `La.svd()` que devuelve $UDV^T$. Hay que tener en cuenta que la matriz diagonal $D$ la devuelve como un vector, sólo con la diagonal principal, por lo que tenemos que transformarala a una matriz diagonal, puesto que la vamos a multiplicar con otras matrices. Utilizamos el razonamiento seguido en clase y si le calculamos la descomposición en valores singulares una matriz $X$ entonces su pseudoinversa es $V(D^2)^{-1}V^TX^T$, con lo que en el método tenemos que calcular también la inversa del cuadrado de la matriz diagonal, lo que es fácil al ser diagonal (simplemente tenemos que cambiar cada valor por su inverso, o dejarlo a 0 si era 0). Con todo esto, el método es el siguiente:
 
 ```{r}
-
+cat("Apartado 5\n")
 Regress_Lin <- function(datos, label) {
   descomp <- La.svd(datos)
   vt <- descomp[[3]]
@@ -783,9 +865,11 @@ Regress_Lin <- function(datos, label) {
 Como queremos ajustar la intensidad a la simetría lo que hacemos es pasar como datos la intensidad (poniéndo los puntos en coordenadas homogéneas, por lo que añadimos una columna de 1 al final) y pasar como etiquetas la simetría:
 
 ```{r}
-
+cat("Apartado 6\n")
 w <- Regress_Lin(cbind(intensidad, 1), simetria)
 pinta_grafica(intensidad, simetria, color, TRUE, w[1], w[2])
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -800,6 +884,7 @@ Como ahora queremos utilizar la regresión para clasficación, tenemos que pasarle
 
 Generamos los datos en el intervalo pedido y creamos una función que cada vez que la llamemos nos cree una recta aleatoria con la función `simula_recta()` que ya tenemos hecha de un ejercicio anterior y nos devuelva las etiquetas de los datos que hemos generado en base a esa recta.
 ```{r}
+cat("Apartado 7\n")
 N <- 100
 datos <- simula_unif(N, 2, c(-10,10))
 #Pasamos la lista de datos una matriz con la tercera columna a 1
@@ -846,6 +931,8 @@ w <- -w / w[2]
 # Pintamos la última de las rectas, por ver cómo lo está haciendo
 pinta_grafica(datos[,1], datos[,2], etiquetas, TRUE, w[1], w[3], "Eje X", 
               "Eje Y", main="Regresión lineal para clasificación")
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -854,8 +941,10 @@ Calculamos ahora el porcentaje de puntos mal clasificados $E_{in}$
 
 ```{r}
 Ein <- 100*errores/N
-cat("El porcentaje de puntos mal clasificados dentro de la muestra, Ein:")
+cat("El porcentaje de puntos mal clasificados dentro de la muestra, Ein:\n")
 print(Ein)
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -912,8 +1001,10 @@ for (i in 1:1000) {
 errores <- errores / 1000
 
 Eout = 100*errores/N
-cat("El porcentaje de puntos mal clasificados fuera de la muestra, Eout:")
+cat("El porcentaje de puntos mal clasificados fuera de la muestra, Eout:\n")
 print(Eout)
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -952,8 +1043,10 @@ for (i in 1:1000) {
 }
 
 iteraciones <- iteraciones / 1000
-cat("Número medio de iteraciones para PLA converja:")
+cat("Número medio de iteraciones para PLA converja:\n")
 print(iteraciones)
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -966,6 +1059,7 @@ El número medio de iteraciones es alrededor de 9, lo que está bastante bien, com
 En cada iteración creamos un conjunto de 1000 datos que etiquetamos en base a la función que nos han dado, generamos ruido a esas etiquetas (10% de cada parte, con la función que ya tenemos para esto del primer ejercicio) y calculamos el error según las etiquetas con ruido. Hacemos la media de errores y calculamos $E_{in}$ como el porcentaje:
 
 ```{r}
+cat("Apartado 8\n")
 errores <- 0
 for (i in 1:1000) {
   N <- 1000
@@ -998,8 +1092,10 @@ for (i in 1:1000) {
 }
 errores <- errores/1000
 E_in = 100*errores/N
-cat("Porcentaje de números mal clasificados dentro de la muestra, Ein")
+cat("Porcentaje de números mal clasificados dentro de la muestra, Ein\n")
 print(E_in)
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 Ahora el error dentro de la muestra es más del 25%. Tiene sentido puesto que le estamos metiendo un ruido a las etiquetas del 10% en cada parte, con lo que la regresión no puede ser tan buena como en el apartado anterior.
@@ -1035,6 +1131,8 @@ w
 pinta_particion(lista_puntos, etiquetas_f, TRUE, function(x,y) w[1] + w[2]*x + 
                   w[3]*y + w[4]*x*y + w[5]*x^2 + w[6]*y^2, c(-10,10), 
                 main = "Regresión para clasificación con ruido con curva")
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
@@ -1077,8 +1175,10 @@ for (i in 1:1000) {
 
 errores = errores/1000
 Eout = 100*errores/N
-cat("Porcentaje de puntos mal clasificado fuera de la muestra, Eout:")
+cat("Porcentaje de puntos mal clasificado fuera de la muestra, Eout:\n")
 print(Eout)
+cat("Presione una tecla para continuar")
+t <- readline()
 
 ```
 
