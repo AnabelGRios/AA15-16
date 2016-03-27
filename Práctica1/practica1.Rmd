@@ -24,9 +24,10 @@ simula_unif <- function(N, dim, rango) {
 Por ejemplo, vamos a obtener una lista de longitud 4 de vectores de dimensión 3 en el rango (0,1) y la mostramos después:
 ```{r}
 l <- simula_unif(4,3,c(0,1))
-l
-cat("Presione una tecla para continuar")
-t <- readline()
+cat("Lista de longitd 4 y dimensión 3 en el rango (0,1)")
+print(l)
+#cat("Presione una tecla para continuar")
+#t <- readline()
 ```
 
 ##2. Construir una función `lista = simula_gauss(N, dim, sigma)` que calcule una lista de longitud `N` de vectores de dimensión `dim` conteniendo números aleatorios gaussianos de media 0 y varianzas dadas por el vector `sigma`.
@@ -35,18 +36,18 @@ Utilizo el mismo procedimiento del apartado anterior, utilizando `lapply()` sobr
 
 ```{r}
 simula_gauss <- function(N, dim, sigma) {
-  lapply(1:N, function(x) rnorm(dim, mean = 0, sigma))
+  lapply(1:N, function(x) rnorm(dim, mean = 0, sqrt(sigma)))
 }
 ```
 
-Vamos a obtener por ejemplo una lista de longitud 3 de vectores de dimensión 2 y vector de desviaciones (1,7):
+Vamos a obtener por ejemplo una lista de longitud 3 de vectores de dimensión 2 y vector de varianzas (1,7):
 ```{r}
-simula_gauss(3,2,c(1,7))
-cat("Presione una tecla para continuar")
-t <- readline()
+s <- simula_gauss(3,2,c(1,7))
+cat("Lista de longitud 3 y dimensión 2 con varianza (1,7)")
+print(s)
 ```
 
-Como vemos, la desviación 1 se coge para la primera coordenada de los vectores y la desviación 7 para la segunda coordenada. Si ponemos por ejemplo c(1,7,3) como vector de desviaciones y la dimensión de los vectores es 2, ignora el número 3.
+Como vemos, la varinza 1 se coge para la primera coordenada de los vectores y la varianza 7 para la segunda coordenada. Si ponemos por ejemplo c(1,7,3) como vector de varianzas y la dimensión de los vectores es 2, ignora el número 3.
 
 ##3. Suponer `N = 50, dim = 2, rango = [-50, 50]` en cada dimensión. Dibujar una gráfica de la salida de la función correspondiente.
 
@@ -58,14 +59,13 @@ lista <- simula_unif(50, 2, c(-50,50))
 # de la lista (primera componente y segunda componente de cada vector en la lista)
 x <- rapply(lista, function(x) x[1])
 y <- rapply(lista, function(x) x[2])
-plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y")
-cat("Presione una tecla para continuar")
-t <- readline()
+plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y", main="Datos uniformes")
+
 ```
 
 ##4. Suponer `N = 50, dim = 2, sigma = [5,7]`. Dibujar una gráfica de la salida de la función correspondiente.
 
-En este caso utilizamos la función `simula_gauss()` que acabamos de crear y utilizamos `rapply()` de nuevo para obtener las coordenadas $x$ e $y$ en vectores, que serán los que le pasemos a `plot()`, obteniendo de nuevo una gráfica, esta vez con una desviación de 5 en el eje X y una desviación de 7 en el eje Y.
+En este caso utilizamos la función `simula_gauss()` que acabamos de crear y utilizamos `rapply()` de nuevo para obtener las coordenadas $x$ e $y$ en vectores, que serán los que le pasemos a `plot()`, obteniendo de nuevo una gráfica, esta vez con una varianza de 5 en el eje X y una varianza de 7 en el eje Y.
 
 ```{r}
 lista2 <- simula_gauss(50, 2, c(5,7))
@@ -73,7 +73,7 @@ lista2 <- simula_gauss(50, 2, c(5,7))
 # de la lista (primera componente y segunda componente de cada vector en la lista)
 x <- rapply(lista2, function(x) x[1])
 y <- rapply(lista2, function(x) x[2])
-plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y")
+plot(x, y, type = "p", xlab = "Eje X", ylab = "Eje Y", main="Datos gaussianos")
 ```
 
 Como vemos la gráfica tiene sentido puesto que la mayoría de los puntos están en el intervalo (-5,5) en el eje X y en el (-7,7) en el Y.
@@ -93,7 +93,8 @@ simula_recta <- function(intervalo) {
 
 Simulamos la recta pedida que corta al cuadrado $[-50,50] \times [-50,50]$
 ```{r}
-simula_recta(c(-50,50))
+cat("Coeficientes de la recta que corta al cuadrado (-50,50)x(-50,50)")
+print(simula_recta(c(-50,50)))
 ```
 
 ##6. Generar una muestra 2D de puntos usando `simula_unif()` y etiquetar la muestra usando el signo de la función $f(x,y) = y-ax-b$ de cada punto a una recta simulada con `simula_recta()`. Mostrar una gráfica con el resultado de la muestra etiquetada junto con la recta usada para ello.
@@ -127,22 +128,20 @@ Esto nos devuelve en `etiquetas` una lista de 50 vectores, todos con una compone
 
 ```{r}
 etiquetas <- unlist(etiquetas)
-# Mostramos las etiquetas
-etiquetas
 ```
 
 Vamos a dibujar el resultado. Pintamos en una misma gráfica los puntos etiquetados con +1 (en rojo) y los puntos etiquetados con -1 (en azul), esto lo hacemos utilizando el mismo vector de etiquetas que ya teníamos, sumándole una cantidad positiva (puesto que los colores empiezan en 1 y en nuestro vector tenemos almecenados muchos -1). Pintamos también la recta que hemos utilizado para etiquetar los puntos utilizando la función `contour()`, que junto con `outer()` permite dibujar una gráfica dando la expresión implícita de la misma (lo que nos va a venir muy bien para el apartado 7 de este ejericio). Vamos también a dar la opción de no pintar gráfica junto con los puntos para que sea más general la función y nos sirva para más cosas, utilizando los valores por defecto:
 
 ```{r}
 pinta_particion <- function(lista_puntos, etiquetas=NULL, visible=FALSE, f=NULL,
-                            rango = c(-50,50)) {
+                            rango = c(-50,50), main="") {
   x <- rapply(lista_puntos, function(x) x[1])
   y <- rapply(lista_puntos, function(x) x[2])
   if(is.null(etiquetas))
      etiquetas=1
   else etiquetas = etiquetas+3
   plot(x, y, type = "p", col = etiquetas, xlab = "Eje X", ylab = "Eje Y", 
-       xlim = rango, ylim = rango)
+       xlim = rango, ylim = rango, main = main)
   
   # Si queremos pintar función junto con los datos
   if(visible) {
@@ -155,7 +154,8 @@ pinta_particion <- function(lista_puntos, etiquetas=NULL, visible=FALSE, f=NULL,
 
 Utilizamos la función para pintar la recta junto con los puntos:
 ```{r}
-pinta_particion(lista, etiquetas, TRUE, function(x,y) r[1]*x-y+r[2])
+pinta_particion(lista, etiquetas, TRUE, function(x,y) r[1]*x-y+r[2], 
+                main="Puntos etiquetados con recta")
 ```
 
 ##7. Usar la muestra generada en el apartado anterior y etiquetarla con +1,-1 usando el signo de cada una de las siguiente funciones y visualizar el resultado del etiquetado de cada función junto con su gráfica y comparar el resultado con el caso lineal. ¿Qué consecuencias extrae sobre la forma de las regiones positiva y negativa?:
@@ -174,7 +174,8 @@ etiquetasFA <- lapply(1:length(lista), function(i) {
 })
 etiquetasFA <- unlist(etiquetasFA)
 
-pinta_particion(lista, etiquetasFA, TRUE, function(x,y) (x-10)^2 + (y-20)^2 - 400)
+pinta_particion(lista, etiquetasFA, TRUE, function(x,y) (x-10)^2 + (y-20)^2 -
+                  400, main="Puntos etiquetados con función a")
 
 ```
 
@@ -190,7 +191,8 @@ etiquetasFB <- lapply(1:length(lista), function(i) {
 })
 etiquetasFB <- unlist(etiquetasFB)
 
-pinta_particion(lista, etiquetasFB, TRUE, function(x,y) 0.5*(x+10)^2 + (y-20)^2 - 400)
+pinta_particion(lista, etiquetasFB, TRUE, function(x,y) 0.5*(x+10)^2 + (y-20)^2
+                - 400, main="Puntos etiquetados con función b")
 
 ```
 
@@ -206,7 +208,8 @@ etiquetasFC <- lapply(1:length(lista), function(i) {
 })
 etiquetasFC <- unlist(etiquetasFC)
 
-pinta_particion(lista, etiquetasFC, TRUE, function(x,y) 0.5*(x-10)^2 - (y+20)^2 - 400)
+pinta_particion(lista, etiquetasFC, TRUE, function(x,y) 0.5*(x-10)^2 - (y+20)^2
+                - 400, main="Puntos etiquetados con función c")
 
 ```
 
@@ -221,7 +224,8 @@ etiquetasFD <- lapply(1:length(lista), function(i) {
   etiquetar(f4)
 })
 etiquetasFD <- unlist(etiquetasFD)
-pinta_particion(lista, etiquetasFD, TRUE, function(x,y) y - 20*x^2 - 5*x + 3)
+pinta_particion(lista, etiquetasFD, TRUE, function(x,y) y - 20*x^2 - 5*x + 3, 
+                main="Puntos etiquetados con función d")
 
 ```
 
@@ -259,7 +263,8 @@ cambiar_etiquetas <- function(etiquetas) {
 # Llamamos a esta función para cambiar las etiquetas y pintamos los datos con
 # estas nuevas etiquetas
 etiquetas2 <- cambiar_etiquetas(etiquetas)
-pinta_particion(lista, etiquetas2, TRUE, function(x,y) r[1]*x-y+r[2])
+pinta_particion(lista, etiquetas2, TRUE, function(x,y) r[1]*x-y+r[2], 
+                main="Puntos etiquetados con recta y ruido")
 
 ```
 
@@ -271,19 +276,23 @@ Lo único que tenemos que hacer es llamar a la función para pintar cambiando las 
 
 ```{r}
 pinta_particion(lista, cambiar_etiquetas(etiquetasFA), TRUE, 
-                function(x,y) (x-10)^2 + (y-20)^2 - 400)
+                function(x,y) (x-10)^2 + (y-20)^2 - 400, 
+                main="Puntos etiquetados con función a y ruido")
 ```
 ```{r}
 pinta_particion(lista, cambiar_etiquetas(etiquetasFB), TRUE, 
-                function(x,y) 0.5*(x+10)^2 + (y-20)^2 - 400)
+                function(x,y) 0.5*(x+10)^2 + (y-20)^2 - 400, 
+                main="Puntos etiquetados con función b y ruido")
 ```
 ```{r}
 pinta_particion(lista, cambiar_etiquetas(etiquetasFC), TRUE, 
-                function(x,y) 0.5*(x-10)^2 - (y+20)^2 - 400)
+                function(x,y) 0.5*(x-10)^2 - (y+20)^2 - 400, 
+                main="Puntos etiquetados con función c y ruido")
 ```
 ```{r}
 pinta_particion(lista, cambiar_etiquetas(etiquetasFD), TRUE, 
-                function(x,y) y - 20*x^2 - 5*x + 3)
+                function(x,y) y - 20*x^2 - 5*x + 3, 
+                main="Puntos etiquetados con función d y ruido")
 
 ```
 
@@ -351,7 +360,8 @@ iter1 <- sol[[2]]
 iter1
 w <- sol[[1]]
 w <- -w / w[2]
-pinta_particion(lista, etiquetas, TRUE, function(x,y) y-w[3]-w[1]*x)
+pinta_particion(lista, etiquetas, TRUE, function(x,y) y-w[3]-w[1]*x, 
+                main="Solución algoritmo PLA")
 
 ```
 
@@ -368,7 +378,8 @@ iteraciones <- lapply(1:10, function(i) {
 })
 
 iteraciones <- unlist(iteraciones)
-mean(iteraciones)
+cat("La media de las iteraciones para que el PLA converja ha sido: ")
+print(mean(iteraciones))
 
 ```
 
@@ -408,26 +419,32 @@ Vamos a ejecutarlo ahora con 10, 100 y 1000 iteraciones y vamos a pintar también
 
 ```{r}
 sol1 <- ajusta_PLA(datos, etiquetas2, 10, c(0,0,0))
-cuenta_errores(sol1, etiquetas2)
+cat("El número de fallos ha sido:")
+print(cuenta_errores(sol1, etiquetas2))
 w1 <- sol1[[1]] 
 w1 <- -w1/w1[2]
-pinta_particion(lista, etiquetas2, TRUE, function(x,y) w1[1]*x-y+w1[3])
+pinta_particion(lista, etiquetas2, TRUE, function(x,y) w1[1]*x-y+w1[3],
+                main="Solución PLA para 10 iteraciones")
 ```
 
 ```{r}
 sol2 <- ajusta_PLA(datos, etiquetas2, 100, c(0,0,0))
-cuenta_errores(sol2, etiquetas2)
+cat("El número de fallos ha sido:")
+print(cuenta_errores(sol2, etiquetas2))
 w2 <- sol2[[1]] 
 w2 <- -w2/w2[2]
-pinta_particion(lista, etiquetas2, TRUE, function(x,y) w2[1]*x-y+w2[3])
+pinta_particion(lista, etiquetas2, TRUE, function(x,y) w2[1]*x-y+w2[3], 
+                main="Solución PLA para 100 iteraciones")
 ```
 
 ```{r}
 sol3 <- ajusta_PLA(datos, etiquetas2, 1000, c(0,0,0))
-cuenta_errores(sol3, etiquetas2)
+cat("El número de fallos ha sido:")
+print(cuenta_errores(sol3, etiquetas2))
 w3 <- sol3[[1]] 
 w3 <- -w3/w3[2]
-pinta_particion(lista, etiquetas2, TRUE, function(x,y) w3[1]*x-y+w3[3])
+pinta_particion(lista, etiquetas2, TRUE, function(x,y) w3[1]*x-y+w3[3], 
+                main = "Solución PLA para 1000 iteraciones")
 ```
 
 Como vemos, en los tres casos el número de puntos mal clasificados es 5. Esto es porque al cambiar etiquetas al azar, los datos han dejado de ser linealmente separables, con lo que el perceptron no puede llegar a una solución en la que todos los puntos estén bien clasificados, da igual el número de iteraciones que le pongamos.
@@ -438,26 +455,32 @@ La función es $f(x,y) = (x-10)^2 + (y-20)^2 - 400$ y tenemos las etiquetas origi
 
 ```{r}
 sol1 <- ajusta_PLA(datos, etiquetasFA, 10, c(0,0,0))
-cuenta_errores(sol1, etiquetasFA)
+cat("El número de fallos con la primera función del apartado 7 ha sido:")
+print(cuenta_errores(sol1, etiquetasFA))
 w1 <- sol1[[1]] 
 w1 <- -w1 / w1[2]
-pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w1[1]*x-y+w1[3])
+pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w1[1]*x-y+w1[3], 
+                main="Solución PLA para 10 iteraciones")
 ```
 
 ```{r}
 sol2 <- ajusta_PLA(datos, etiquetasFA, 100, c(0,0,0))
-cuenta_errores(sol2, etiquetasFA)
+cat("El número de fallos con la primera función del apartado 7 ha sido:")
+print(cuenta_errores(sol2, etiquetasFA))
 w2 <- sol2[[1]] 
 w2 <- -w2 / w2[2]
-pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w2[1]*x-y+w2[3])
+pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w2[1]*x-y+w2[3], 
+                main="Solución PLA para 100 iteraciones")
 ```
 
 ```{r}
 sol3 <- ajusta_PLA(datos, etiquetasFA, 1000, c(0,0,0))
-cuenta_errores(sol3, etiquetasFA)
+cat("El número de fallos con la primera función del apartado 7 ha sido:")
+print(cuenta_errores(sol3, etiquetasFA))
 w3 <- sol3[[1]] 
 w3 <- -w3 / w3[2]
-pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w3[1]*x-y+w3[3])
+pinta_particion(lista, etiquetasFA, TRUE, function(x,y) w3[1]*x-y+w3[3], 
+                main="Solución PLA para 1000 iteraciones")
 ```
 
 En este caso los datos no eran linealmente separables de entrada, ya que se habían clasificado en base a una función cuadrática, con lo que el perceptron no va a llegar a una solución en la que todos los datos estén bien clasificados, de nuevo, da igual el número de iteraciones que le pongamos.
@@ -577,8 +600,10 @@ sol1_MOD <- ajusta_PLA_MOD(datos, etiquetasFA, 1000, c(0,0,0))
 w1 <- sol1_MOD[[1]]
 errores <- sol1_MOD[[3]]
 w1 <- -w1 / w1[2]
-pinta_particion(lista, etiquetasFA, TRUE, function(x,y) -w1[1]*x + y - w1[3])
-errores
+pinta_particion(lista, etiquetasFA, TRUE, function(x,y) -w1[1]*x + y - w1[3],
+                 main="Solución PLA MOD para función a")
+cat("El número de errores para el PLA MOD y función a ha sido:")
+print(errores)
 ```
 
 ```{r}
@@ -586,8 +611,10 @@ sol2_MOD <- ajusta_PLA_MOD(datos, etiquetasFB, 1000, c(0,0,0))
 w2 <- sol2_MOD[[1]]
 errores <- sol2_MOD[[3]]
 w2 <- -w2 / w2[2]
-pinta_particion(lista, etiquetasFB, TRUE, function(x,y) -w2[1]*x + y - w2[3])
-errores
+pinta_particion(lista, etiquetasFB, TRUE, function(x,y) -w2[1]*x + y - w2[3], 
+                main="Solución PLA MOD para función b")
+cat("El número de errores para el PLA MOD y función b ha sido:")
+print(errores)
 ```
 
 ```{r}
@@ -595,8 +622,10 @@ sol3_MOD <- ajusta_PLA_MOD(datos, etiquetasFC, 1000, c(0,0,0))
 w3 <- sol3_MOD[[1]]
 errores <- sol3_MOD[[3]]
 w3 <- -w3 / w3[2]
-pinta_particion(lista, etiquetasFC, TRUE, function(x,y) -w3[1]*x + y - w3[3])
-errores
+pinta_particion(lista, etiquetasFC, TRUE, function(x,y) -w3[1]*x + y - w3[3], 
+                main="Solución PLA MOD para función c")
+cat("El número de errores para el PLA MOD y función c ha sido:")
+print(errores)
 ```
 
 ```{r}
@@ -604,8 +633,10 @@ sol4_MOD <- ajusta_PLA_MOD(datos, etiquetasFD, 1000, c(0,0,0))
 w4 <- sol4_MOD[[1]]
 errores <- sol4_MOD[[3]]
 w4 <- -w4 / w4[2]
-pinta_particion(lista, etiquetasFD, TRUE, function(x,y) -w3[1]*x + y - w3[3])
-errores
+pinta_particion(lista, etiquetasFD, TRUE, function(x,y) -w3[1]*x + y - w3[3], 
+                main="Solución PLA MOD para función d")
+cat("El número de errores para el PLA MOD y función d ha sido:")
+print(errores)
 ```
 
 Como vemos, en la mayoría de los casos la mejor solución es la recta que se queda a un lado porque sale mejor (en tanto a que hay menos errores) no clasificar bien únicamente los que se quedaban dentro de las regiones de las funciones cuadráticas que clasificar bien algunos de ellos pero a la vez clasificar mal algunos de los que se quedaban fuera.
@@ -677,12 +708,13 @@ Vamos a hacer primero una variante de la función `pinta_particion` de los dos ej
 
 ```{r}
 
-pinta_grafica <- function(coordX, coordY, etiquetas=NULL, visible=FALSE, a=NULL, b=NULL, xlab="Intensidad Promedio", ylab="Simetría") {
+pinta_grafica <- function(coordX, coordY, etiquetas=NULL, visible=FALSE, a=NULL, b=NULL, xlab="Intensidad Promedio", ylab="Simetría", main="") {
   if(is.null(etiquetas))
      etiquetas=1
   else etiquetas = etiquetas+3
   
-  plot(coordX, coordY, type = "p", col = etiquetas, xlab = xlab, ylab = ylab)
+  plot(coordX, coordY, type = "p", col = etiquetas, xlab = xlab, ylab = ylab, 
+       main = main)
   
   if(visible) {
     abline(b,a)
@@ -812,7 +844,8 @@ errores <- errores / 1000
 
 w <- -w / w[2]
 # Pintamos la última de las rectas, por ver cómo lo está haciendo
-pinta_grafica(datos[,1], datos[,2], etiquetas, TRUE, w[1], w[3], "Eje X", "Eje Y")
+pinta_grafica(datos[,1], datos[,2], etiquetas, TRUE, w[1], w[3], "Eje X", 
+              "Eje Y", main="Regresión lineal para clasificación")
 
 ```
 
@@ -820,12 +853,13 @@ Como vemos la clasificación es bastante buena.
 Calculamos ahora el porcentaje de puntos mal clasificados $E_{in}$
 
 ```{r}
-Ein <- errores/N
-Ein
+Ein <- 100*errores/N
+cat("El porcentaje de puntos mal clasificados dentro de la muestra, Ein:")
+print(Ein)
 
 ```
 
-En efecto, tenemos un porcentaje de error dentro de la muestra de 0.0388%, lo que confirma que la clasificación es bastante buena.
+En efecto, tenemos un porcentaje de error dentro de la muestra de 3.88%, lo que confirma que la clasificación es bastante buena.
 
 ###b) Fijar el tamaño de muestra $N=100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{out}$. Para ello generar 1000 puntos nuevos y usarlos para estimar el error fuera de la muestra, $E_{out}$ (porcentaje de puntos mal clasificados). De nuevo, ejecutar el experimento 1000 veces y tomar el promedio. ¿Qué valor obtiene de $E_{out}$? Valore los resultados.
 
@@ -848,7 +882,7 @@ etiquetas_f <- unlist(lapply(1:nrow(datos), function(i) {
 }))
 
 # Obtenemos g por regresión
-g <- Regress_Lin(datos, etiquetas)
+g <- Regress_Lin(datos, etiquetas_f)
 
 # Contamos los errores
 errores <- 0
@@ -877,12 +911,13 @@ for (i in 1:1000) {
 # Hacemos la media de los errores
 errores <- errores / 1000
 
-Eout = errores/N
-Eout
+Eout = 100*errores/N
+cat("El porcentaje de puntos mal clasificados fuera de la muestra, Eout:")
+print(Eout)
 
 ```
 
-En este caso vemos que $E_{out}$ ha aumentado pero el porcentaje de error sigue siendo bajo, 0.5%, por lo que la clasificación sigue siendo muy buena.
+En este caso vemos que $E_{out}$ ha aumentado pero el porcentaje de error sigue siendo bajo, 9.327%, por lo que la clasificación sigue siendo muy buena.
 
 ###c) Ahora fijamos $N=10$, ajustamos regresión lineal y usamos el vector de pesos encontrado como un vector inicial de pesos para PLA. Ejecutar PLA hasta que converja a un vector de pesos final que separe completamente la muestra de entrenamiento. Anote el número de iteraciones y repita el experimento 1000 veces. ¿Cuál es el valor promedio de iteraciones que tarda PLA en converger? (En cada iteración de PLA elija un punto aleatorio del conjunto de mal clasificados). Valore los resultados.
 
@@ -917,7 +952,8 @@ for (i in 1:1000) {
 }
 
 iteraciones <- iteraciones / 1000
-iteraciones
+cat("Número medio de iteraciones para PLA converja:")
+print(iteraciones)
 
 ```
 
@@ -961,13 +997,16 @@ for (i in 1:1000) {
   errores <- errores + cuenta_diferencias(etiquetas_f, etiquetas_cambiadas)
 }
 errores <- errores/1000
-E_in = errores/N
-E_in
+E_in = 100*errores/N
+cat("Porcentaje de números mal clasificados dentro de la muestra, Ein")
+print(E_in)
 
 ```
-
+Ahora el error dentro de la muestra es más del 25%. Tiene sentido puesto que le estamos metiendo un ruido a las etiquetas del 10% en cada parte, con lo que la regresión no puede ser tan buena como en el apartado anterior.
 
 ###b) Ahora, consideremos $N=1000$ datos de entrenamiento y el siguiente vector de variables: $(1,x_1,x_2,x_1x_2,x_1^2,x_2^2)$. Ajustar de nuevo regresión lineal y calcular el nuevo vector de pesos $\widehat{\omega}$. Mostrar el resultado.
+
+Generamos la muestra de 1000 puntos, la etiquetamos en base a la f dada y hacemos ruido sobre ella. Le hacemos la transformación a los datos en base al vector pedido y estos son los que le pasamos a la regresión.
 
 ```{r}
 N <- 1000
@@ -994,12 +1033,16 @@ w <- Regress_Lin(datos, etiquetas_f)
 w
 
 pinta_particion(lista_puntos, etiquetas_f, TRUE, function(x,y) w[1] + w[2]*x + 
-                  w[3]*y + w[4]*x*y + w[5]*x^2 + w[6]*y^2, c(-10,10))
+                  w[3]*y + w[4]*x*y + w[5]*x^2 + w[6]*y^2, c(-10,10), 
+                main = "Regresión para clasificación con ruido con curva")
 
 ```
 
+Como vemos en este caso la regresión nos devuelve una curva para ajustar los datos.
 
 ###c) Repetir el experimento anterior 1000 veces calculando en cada ocasión el error fuera de la muestra. Para ello generar en cada ejecución 1000 puntos nuevos y valorar sobre ellos la función ajustada. Promediar los valores obtenidos. ¿Qué valor obtiene? Valorar el resultado.
+
+Utilizamos la $\omega$ que tenemos del apartado anteriory vamos a generar 1000 datos nuevos en cada iteración y a calcular el error fuera de la muestra, haciendo la media de los errores primero y después haciendo el porcentaje para $E_{out}$.
 
 ```{r}
 N <- 1000
@@ -1021,9 +1064,6 @@ for (i in 1:1000) {
   #Generamos ruido sobre las etiquetas originales
   etiquetas_originales <- cambiar_etiquetas(etiquetas_originales)
   
-  #Hacemos regresión
-  w <- Regress_Lin(datos_out, etiquetas_originales)
-  
   etiquetas_w <- unlist(lapply(1:nrow(datos_out), function(i) {
     #Obtenemos los puntos uno a uno y los etiquetamos
     p <- datos_out[i,]
@@ -1036,8 +1076,10 @@ for (i in 1:1000) {
 }
 
 errores = errores/1000
-Eout = errores/N
-Eout
+Eout = 100*errores/N
+cat("Porcentaje de puntos mal clasificado fuera de la muestra, Eout:")
+print(Eout)
 
 ```
 
+En este caso vemos como el porcentaje de error es considerablemente más alto debido tanto a que la regresión no era ya de por sí tan buena al estar ajustando con ruido, si no que además ahora estamos volviendo a meter ruido en cada iteración, por lo que pone $E_{out}$ a más del 40%.
