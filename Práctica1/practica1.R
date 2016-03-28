@@ -12,7 +12,7 @@ simula_unif <- function(N, dim, rango) {
 
 ## ------------------------------------------------------------------------
 l <- simula_unif(4,3,c(0,1))
-cat("Lista de longitd 4 y dimensión 3 en el rango (0,1)\n")
+cat("Lista de longitud 4 y dimensión 3 en el rango (0,1)\n")
 print(l)
 cat("Presione una tecla para continuar")
 t <- readline()
@@ -286,7 +286,8 @@ datos <- matrix(1, 50, 3)
 datos[1:50, 1:2] <- m
 sol <- ajusta_PLA(datos, etiquetas, 20, c(0,0,0))
 iter1 <- sol[[2]]
-iter1
+cat("El número de iteraciones necesarias para converger en PLA ha sido:\n")
+print(iter1)
 w <- sol[[1]]
 w <- -w / w[2]
 pinta_particion(lista, etiquetas, TRUE, function(x,y) y-w[3]-w[1]*x, 
@@ -296,7 +297,7 @@ t <- readline()
 
 
 ## ------------------------------------------------------------------------
-
+# Metemos los 10 vectores iniciales aleatorios en una lista
 waleatorios <- simula_unif(10, 3, c(0,1))
 iteraciones <- lapply(1:10, function(i) {
   wi <- waleatorios[[i]]
@@ -336,7 +337,7 @@ cuenta_errores <- function(sol_PLA, etiquetas_originales) {
 
 ## ------------------------------------------------------------------------
 sol1 <- ajusta_PLA(datos, etiquetas2, 10, c(0,0,0))
-cat("El número de fallos ha sido:\n")
+cat("El número de fallos para 10 iteraciones ha sido:\n")
 print(cuenta_errores(sol1, etiquetas2))
 w1 <- sol1[[1]] 
 w1 <- -w1/w1[2]
@@ -347,7 +348,7 @@ t <- readline()
 
 ## ------------------------------------------------------------------------
 sol2 <- ajusta_PLA(datos, etiquetas2, 100, c(0,0,0))
-cat("El número de fallos ha sido:\n")
+cat("El número de fallos para 100 iteraciones ha sido:\n")
 print(cuenta_errores(sol2, etiquetas2))
 w2 <- sol2[[1]] 
 w2 <- -w2/w2[2]
@@ -358,7 +359,7 @@ t <- readline()
 
 ## ------------------------------------------------------------------------
 sol3 <- ajusta_PLA(datos, etiquetas2, 1000, c(0,0,0))
-cat("El número de fallos ha sido:\n")
+cat("El número de fallos para 1000 iteraciones ha sido:\n")
 print(cuenta_errores(sol3, etiquetas2))
 w3 <- sol3[[1]] 
 w3 <- -w3/w3[2]
@@ -370,7 +371,7 @@ t <- readline()
 ## ------------------------------------------------------------------------
 cat("Apartado 4\n")
 sol1 <- ajusta_PLA(datos, etiquetasFA, 10, c(0,0,0))
-cat("El número de fallos con la primera función del apartado 7 ha sido:\n")
+cat("El número de fallos con la primera función del apartado 7 y 10 iteraciones ha sido:\n")
 print(cuenta_errores(sol1, etiquetasFA))
 w1 <- sol1[[1]] 
 w1 <- -w1 / w1[2]
@@ -381,7 +382,7 @@ t <- readline()
 
 ## ------------------------------------------------------------------------
 sol2 <- ajusta_PLA(datos, etiquetasFA, 100, c(0,0,0))
-cat("El número de fallos con la primera función del apartado 7 ha sido:\n")
+cat("El número de fallos con la primera función del apartado 7 y 100 iteraciones ha sido:\n")
 print(cuenta_errores(sol2, etiquetasFA))
 w2 <- sol2[[1]] 
 w2 <- -w2 / w2[2]
@@ -392,7 +393,7 @@ t <- readline()
 
 ## ------------------------------------------------------------------------
 sol3 <- ajusta_PLA(datos, etiquetasFA, 1000, c(0,0,0))
-cat("El número de fallos con la primera función del apartado 7 ha sido:\n")
+cat("El número de fallos con la primera función del apartado 7 y 1000 iteraciones ha sido:\n")
 print(cuenta_errores(sol3, etiquetasFA))
 w3 <- sol3[[1]] 
 w3 <- -w3 / w3[2]
@@ -425,8 +426,6 @@ ajusta_PLA_sol <- function(datos, label, max_iter, vini) {
     pinta_particion(lista, label, TRUE, function(x,y) -w2[1]*x + y - w2[3])
   
     # Paramos la ejecución para que se pueda ver la gráfica durante medio segundo
-    #cat("Presione una tecla para continuar")
-    #t <- readline()
     Sys.sleep(1)
     
     # Si no se ha entrado en el if, todos los datos estaban bien
@@ -607,7 +606,8 @@ calcular_simetria <- function(mat) {
 
 ## ------------------------------------------------------------------------
 cat("Apartado 4\n")
-pinta_grafica <- function(coordX, coordY, etiquetas=NULL, visible=FALSE, a=NULL, b=NULL, xlab="Intensidad Promedio", ylab="Simetría", main="") {
+pinta_grafica <- function(coordX, coordY, etiquetas=NULL, visible=FALSE, a=NULL, b=NULL, 
+                          xlab="Intensidad Promedio", ylab="Simetría", main="") {
   if(is.null(etiquetas))
      etiquetas=1
   else etiquetas = etiquetas+3
@@ -651,8 +651,8 @@ cat("Apartado 5\n")
 Regress_Lin <- function(datos, label) {
   descomp <- La.svd(datos)
   vt <- descomp[[3]]
+  # Creamos la inversa de la matriz diagonal al cuadrado
   diag <- matrix(0, length(descomp[[1]]), length(descomp[[1]]))
-  # Creamos la matriz diagonal
   for (i in 1:length(descomp[[1]])) {
     diag[i,i] = descomp[[1]][i]
     if (diag[i,i] != 0) {
@@ -670,7 +670,8 @@ Regress_Lin <- function(datos, label) {
 ## ------------------------------------------------------------------------
 cat("Apartado 6\n")
 w <- Regress_Lin(cbind(intensidad, 1), simetria)
-pinta_grafica(intensidad, simetria, color, TRUE, w[1], w[2])
+pinta_grafica(intensidad, simetria, color, TRUE, w[1], w[2], 
+              main="Regresión")
 cat("Presione una tecla para continuar")
 t <- readline()
 
@@ -888,7 +889,7 @@ w
 
 pinta_particion(lista_puntos, etiquetas_f, TRUE, function(x,y) w[1] + w[2]*x + 
                   w[3]*y + w[4]*x*y + w[5]*x^2 + w[6]*y^2, c(-10,10), 
-                main = "Regresión para clasificación con ruido con curva")
+                main = "Regresión para clasificación con ruido en curva")
 cat("Presione una tecla para continuar")
 t <- readline()
 

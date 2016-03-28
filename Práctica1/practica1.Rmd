@@ -28,7 +28,7 @@ simula_unif <- function(N, dim, rango) {
 Por ejemplo, vamos a obtener una lista de longitud 4 de vectores de dimensión 3 en el rango (0,1) y la mostramos después:
 ```{r}
 l <- simula_unif(4,3,c(0,1))
-cat("Lista de longitd 4 y dimensión 3 en el rango (0,1)\n")
+cat("Lista de longitud 4 y dimensión 3 en el rango (0,1)\n")
 print(l)
 cat("Presione una tecla para continuar")
 t <- readline()
@@ -36,7 +36,7 @@ t <- readline()
 
 ##2. Construir una función `lista = simula_gauss(N, dim, sigma)` que calcule una lista de longitud `N` de vectores de dimensión `dim` conteniendo números aleatorios gaussianos de media 0 y varianzas dadas por el vector `sigma`.
 
-Utilizo el mismo procedimiento del apartado anterior, utilizando `lapply()` sobre un vector de la longitu pedida pero utilizando en este caso la función `rnorm()` para que genere los números en la distribución normal (que es la gaussiana) que acepta como parámetros el número de números que tiene que general, la media y la desviación típica.
+Utilizo el mismo procedimiento del apartado anterior, utilizando `lapply()` sobre un vector de la longitud pedida pero utilizando en este caso la función `rnorm()` para que genere los números en la distribución normal (que es la gaussiana) que acepta como parámetros el número de números que tiene que generar, la media y la desviación típica. Como nosotros le estamos pasando el vector de varianzas lo único que tenemos que hacer es pasarle a `rnorm()` la raíz cuadrada de dicho vector.
 
 ```{r}
 cat("Apartado 2\n")
@@ -54,7 +54,7 @@ cat("Presione una tecla para continuar")
 t <- readline()
 ```
 
-Como vemos, la varinza 1 se coge para la primera coordenada de los vectores y la varianza 7 para la segunda coordenada. Si ponemos por ejemplo c(1,7,3) como vector de varianzas y la dimensión de los vectores es 2, ignora el número 3.
+Como vemos, la varianza 1 se coge para la primera coordenada de los vectores y la varianza 7 para la segunda coordenada. Si ponemos por ejemplo c(1,7,3) como vector de varianzas y la dimensión de los vectores es 2, ignora el número 3.
 
 ##3. Suponer `N = 50, dim = 2, rango = [-50, 50]` en cada dimensión. Dibujar una gráfica de la salida de la función correspondiente.
 
@@ -89,7 +89,6 @@ cat("Presione una tecla para continuar")
 t <- readline()
 ```
 
-Como vemos la gráfica tiene sentido puesto que la mayoría de los puntos están en el intervalo (-5,5) en el eje X y en el (-7,7) en el Y.
 
 ##5. Construir la función `v = simula_recta(intervalo)` que calcula los parámetros `v = (a,b)` de una recta aleatoria `y = ax + b` que corte al cuadrado $[-50,50] \times [-50,50]$ (Ayuda: Para calcular la recta simular las coordenadas de dos puntos del cuadrado y calcular la recta que pasa por ellos).
 
@@ -141,7 +140,7 @@ etiquetas <- lapply(1:length(lista), function(i) {
 })
 ```
 
-Esto nos devuelve en `etiquetas` una lista de 50 vectores, todos con una componente. Lo vamos a pasar a un vector con las 50 componentes con la función `unlist()`
+Esto nos devuelve en `etiquetas` una lista de 50 vectores, todos con una componente. Lo vamos a pasar a un vector de 50 componentes con la función `unlist()`:
 
 ```{r}
 etiquetas <- unlist(etiquetas)
@@ -339,9 +338,9 @@ t <- readline()
 
 ##1. Implementar la función `sol = ajusta_PLA(datos, label, max_iter, vini)` que calcula el hiperplano solución a un problema de clasificación binaria usando el algoritmo PLA. La entrada de `datos` es una matriz donde cada item con su etiqueta está representado por una fila de la matriz, `label` el vector de etiquetas (cada etiqueta es un valor +1 o -1), `max_iter` es el número máximo de iteraciones permitidas y `vini` el valor inicial del vector. La salida `sol` devuelve los coeficientes del hiperplano.
 
-Aunque pide que la salida sean los coeficientes del hiperplano, en el segundo apartado pide también el número de iteraciones que han sido necesarias para converger, por lo que vamos a devolver una lista cuya primera componente tenga `w`, los coeficientes del hiperplano, y la segunda componente sea el número de iteraciones necesario para converger, es decir, la iteración en la que se para.  
+Aunque pide que la salida sean los coeficientes del hiperplano, en el segundo apartado pide también el número de iteraciones que han sido necesarias para converger, por lo que vamos a devolver una lista cuya primera componente tenga $\omega$, los coeficientes del hiperplano, y la segunda componente sea el número de iteraciones necesario para converger, es decir, la iteración en la que se para.  
 
-Lo que hacemos es seguir el algoritmo dado en clase de teoría: iteramos sobre todos los datos mientras no se superen el máximo de iteraciones que le pasamos como parámetro o mientras no se haya encontrado una solución ya. Se considera que se ha encontrado una solución cuando se pasa una vez por todos los datos y no ha habido cambios (es decir, todos estaban correctamente clasificados), que es algo que controlamos con dos variables booleanas. Sabemos si los datos están bien clasificados porque nos quedamos con el signo del producto escalar entre el $\omega$ actual y cada punto. En caso de que el signo no coincida con la etiqueta para ese punto, movemos la recta sumándole el valor real de la etiqueta por el punto.
+Lo que hacemos es seguir el algoritmo dado en clase de teoría: iteramos sobre todos los datos mientras no se superen el máximo de iteraciones que le pasamos como parámetro o mientras no se haya encontrado una solución ya. Se considera que se ha encontrado una solución cuando se pasa una vez por todos los datos y no ha habido cambios (es decir, todos estaban correctamente clasificados), que es algo que controlamos con dos variables booleanas. Sabemos si los datos están bien clasificados porque nos quedamos con el signo del producto escalar entre el $\omega$ actual y cada punto. En caso de que el signo no coincida con la etiqueta para ese punto, movemos la recta sumándole el valor real de la etiqueta en ese punto por el mismo punto.
 
 ```{r}
 cat("Ejercicio 2\n")
@@ -382,7 +381,7 @@ ajusta_PLA <- function(datos, label, max_iter, vini) {
 
 ##2. Ejecutar el algoritmo PLA con los valores simulados en el apartado 6 del ejercicio 1, inicializando el algoritmo con el vector cero y con vectores de número aleatorios en [0,1] (10 veces). Anotar el número medio de iteraciones necesarias en ambos para converger. Valorar el resultado.
 
-El algoritmo anterior opera con los datos dentro de una matriz. Lo que hacemos es pasar los datos, que teníamos en una lista, a una matriz con la función `matrix()`, a la que le pasamos los datos, el número de filas y columnas y si queremos que meta los datos por filas, que en nuestro caso sí queremos, puesto que los tenemos almacenados así. Además, le añadimos a cada punto una tercera coordenada a 1 para pasarlos a coordenadas homogéneas, lo que se traduce en una tercera columna en la matriz toda puest a 1's.  
+El algoritmo anterior opera con los datos dentro de una matriz. Lo que hacemos es pasar los datos, que teníamos en una lista, a una matriz con la función `matrix()`, a la que le pasamos los datos, el número de filas y columnas y si queremos que meta los datos por filas, que en nuestro caso sí queremos, puesto que los tenemos almacenados así. Además, le añadimos a cada punto una tercera coordenada a 1 para pasarlos a coordenadas homogéneas, lo que se traduce en una tercera columna en la matriz toda puesta a 1's.  
 
 A esta matriz es a la que le hacemos el PLA y nos quedamos con la solución $\omega$ y con el número de iteraciones que necesita para converjer, y pintamos los puntos junto con la solución dada por el algoritmo. El PLA devuelve en $\omega$ en la última componente el término independiente (en este caso $b$). Como lo que tenemos es una recta, vamos a dejar con coeficiente a 1 la $y$, que será la segunda componente de $\omega$ y además la vamos a despejar, por lo que tenemos que dividir la solución del PLA entre menos la segunda componente de la solución.
 
@@ -396,7 +395,8 @@ datos <- matrix(1, 50, 3)
 datos[1:50, 1:2] <- m
 sol <- ajusta_PLA(datos, etiquetas, 20, c(0,0,0))
 iter1 <- sol[[2]]
-iter1
+cat("El número de iteraciones necesarias para converger en PLA ha sido:\n")
+print(iter1)
 w <- sol[[1]]
 w <- -w / w[2]
 pinta_particion(lista, etiquetas, TRUE, function(x,y) y-w[3]-w[1]*x, 
@@ -410,7 +410,7 @@ En este caso el número de iteraciones necesario para que el algoritmo converja e
 Vamos a hacerlo ahora generando números aleatorios entre 0 y 1, 10 veces. Lo que he hecho ha sido meter en una lista gracias a la función `lapply` las iteraciones que hacen falta en cada una de las 10 veces que vamos a llamar el algoritmo y hacer la media de todos ellos con la función `mean()`.
 
 ```{r}
-
+# Metemos los 10 vectores iniciales aleatorios en una lista
 waleatorios <- simula_unif(10, 3, c(0,1))
 iteraciones <- lapply(1:10, function(i) {
   wi <- waleatorios[[i]]
@@ -427,7 +427,7 @@ t <- readline()
 ```
 
 Generando números aleatorios entre 0 y 1 para el w inicial, el número medio de iteraciones que son necesarias para que el algoritmo converja es 10.9.
-Hay que tener en cuenta que las iteraciones que necesita para converjer dependen de los datos (en mi caso, de que he fijado la semilla a 237). Con otros datos podría ser mucho más o incluso menos. En mi caso se justifica que tarde tan poco porque el vector inicial es el (0,0,0) y los datos son separables por una recta que está próxima a la inicial.
+Hay que tener en cuenta que las iteraciones que necesita para converjer dependen de los datos (en mi caso, de que he fijado la semilla a 237). Con otros datos podría ser mucho más o incluso menos. En mi caso se justifica que tarde tan poco porque el vector inicial son números aleatorios entre 0 y 1 (o en el caso de antes directamente el (0,0,0)) y los datos son separables por una recta que está próxima al (0,0,0), lo que hace que sea rápido para el PLA separarlos.
 
 ##3. Ejecutar el algoritmo PLA con los datos generados en el apartado 8 del ejercicio 1, usando valores de 10, 100 y 1000 para `max_iter`. Etiquetar los datos de la muestra usando la función solución encontrada y contar el número de errores respecto de las etiquetas originales. Valorar el resultado.
 
@@ -463,7 +463,7 @@ Vamos a ejecutarlo ahora con 10, 100 y 1000 iteraciones y vamos a pintar también
 
 ```{r}
 sol1 <- ajusta_PLA(datos, etiquetas2, 10, c(0,0,0))
-cat("El número de fallos ha sido:\n")
+cat("El número de fallos para 10 iteraciones ha sido:\n")
 print(cuenta_errores(sol1, etiquetas2))
 w1 <- sol1[[1]] 
 w1 <- -w1/w1[2]
@@ -475,7 +475,7 @@ t <- readline()
 
 ```{r}
 sol2 <- ajusta_PLA(datos, etiquetas2, 100, c(0,0,0))
-cat("El número de fallos ha sido:\n")
+cat("El número de fallos para 100 iteraciones ha sido:\n")
 print(cuenta_errores(sol2, etiquetas2))
 w2 <- sol2[[1]] 
 w2 <- -w2/w2[2]
@@ -487,7 +487,7 @@ t <- readline()
 
 ```{r}
 sol3 <- ajusta_PLA(datos, etiquetas2, 1000, c(0,0,0))
-cat("El número de fallos ha sido:\n")
+cat("El número de fallos para 1000 iteraciones ha sido:\n")
 print(cuenta_errores(sol3, etiquetas2))
 w3 <- sol3[[1]] 
 w3 <- -w3/w3[2]
@@ -506,7 +506,7 @@ La función es $f(x,y) = (x-10)^2 + (y-20)^2 - 400$ y tenemos las etiquetas origi
 ```{r}
 cat("Apartado 4\n")
 sol1 <- ajusta_PLA(datos, etiquetasFA, 10, c(0,0,0))
-cat("El número de fallos con la primera función del apartado 7 ha sido:\n")
+cat("El número de fallos con la primera función del apartado 7 y 10 iteraciones ha sido:\n")
 print(cuenta_errores(sol1, etiquetasFA))
 w1 <- sol1[[1]] 
 w1 <- -w1 / w1[2]
@@ -518,7 +518,7 @@ t <- readline()
 
 ```{r}
 sol2 <- ajusta_PLA(datos, etiquetasFA, 100, c(0,0,0))
-cat("El número de fallos con la primera función del apartado 7 ha sido:\n")
+cat("El número de fallos con la primera función del apartado 7 y 100 iteraciones ha sido:\n")
 print(cuenta_errores(sol2, etiquetasFA))
 w2 <- sol2[[1]] 
 w2 <- -w2 / w2[2]
@@ -530,7 +530,7 @@ t <- readline()
 
 ```{r}
 sol3 <- ajusta_PLA(datos, etiquetasFA, 1000, c(0,0,0))
-cat("El número de fallos con la primera función del apartado 7 ha sido:\n")
+cat("El número de fallos con la primera función del apartado 7 y 1000 iteraciones ha sido:\n")
 print(cuenta_errores(sol3, etiquetasFA))
 w3 <- sol3[[1]] 
 w3 <- -w3 / w3[2]
@@ -540,7 +540,7 @@ cat("Presione una tecla para continuar")
 t <- readline()
 ```
 
-En este caso los datos no eran linealmente separables de entrada, ya que se habían clasificado en base a una función cuadrática, con lo que el perceptron no va a llegar a una solución en la que todos los datos estén bien clasificados, de nuevo, da igual el número de iteraciones que le pongamos.
+En este caso los datos no eran linealmente separables de entrada, ya que se habían clasificado en base a una función cuadrática, con lo que el perceptron no va a llegar a una solución en la que todos los datos estén bien clasificados, de nuevo, da igual el número de iteraciones que le pongamos, el número de errores depende de en qué momento estuviera la recta cuando paramos el algoritmo, pero es "aleatorio" en tanto que la recta no pararía de moverse nunca.
 
 ##5. Modifique la función `ajusta_PLA` para que le permita visualizar los datos y soluciones que va encontrando a lo largo de las iteraciones. Ejecute con la nueva versión el apartado 3 del ejericio 2.
 
@@ -570,8 +570,6 @@ ajusta_PLA_sol <- function(datos, label, max_iter, vini) {
     pinta_particion(lista, label, TRUE, function(x,y) -w2[1]*x + y - w2[3])
   
     # Paramos la ejecución para que se pueda ver la gráfica durante medio segundo
-    #cat("Presione una tecla para continuar")
-    #t <- readline()
     Sys.sleep(1)
     
     # Si no se ha entrado en el if, todos los datos estaban bien
@@ -610,7 +608,7 @@ t <- readline()
 
 ##6. A la vista de la conducta de las soluciones observadas en el apartado anterior, proponga e implemente una modificación de la función original `sol = ajusta_PLA_MOD(...)` que permita obtener soluciones razonables sobre datos no linealmente separables. Mostrar y valorar el resultado encontrado usando los datos del apartado 7 del ejercicio 1.
 
-Lo que vamos a hacer es ir contando los errores (con la función que hemos hecho en apartados anteriores) que hay al etiquetar con la solución que va devolviendo el algoritmo en cada iteración (una pasada a los datos) y quedarnos con aquella que tenga menos errores. Además devolvemos como tercer elemento de la lista el número de errores de la mejor solución, que es la que estamos devolviendo como primer elemento de la lista. El resto del algoritmo continúa igual:
+Lo que vamos a hacer es ir contando los errores (con la función que hemos hecho en apartados anteriores) que hay al etiquetar con la solución que va devolviendo el algoritmo en cada iteración (una pasada a los datos) y quedarnos con aquella que tenga menos errores. Además devolvemos como tercer elemento de la lista el número de errores de la mejor solución, (la mejor solución es además la que estamos devolviendo como primer elemento de la lista). El resto del algoritmo continúa igual:
 
 ```{r}
 cat("Apartado 6\n")
@@ -660,7 +658,7 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini) {
   list(wmejor, iter, errores_mejor)
 }
 ```
-Vamos a probarlo ahora con las funciones del ejercicio 7 (es decir, con las etiquetas que tenemos almacenadas en etiquetasFA, etiquetasFB, etiquetasFC y etiquetasFD)
+Vamos a probarlo ahora con las funciones del ejercicio 7 (es decir, con las etiquetas que tenemos almacenadas en `etiquetasFA`, `etiquetasFB`, `etiquetasFC` y `etiquetasFD`)
 
 ```{r}
 sol1_MOD <- ajusta_PLA_MOD(datos, etiquetasFA, 1000, c(0,0,0))
@@ -714,7 +712,9 @@ cat("Presione una tecla para continuar")
 t <- readline()
 ```
 
-Como vemos, en la mayoría de los casos la mejor solución es la recta que se queda a un lado porque sale mejor (en tanto a que hay menos errores) no clasificar bien únicamente los que se quedaban dentro de las regiones de las funciones cuadráticas que clasificar bien algunos de ellos pero a la vez clasificar mal algunos de los que se quedaban fuera.
+Como vemos, en la mayoría de los casos la mejor solución es la recta que se queda a un lado porque sale mejor (en tanto a que hay menos errores) no clasificar bien únicamente los que se quedaban dentro de las regiones de las funciones cuadráticas que clasificar bien algunos de ellos pero a la vez clasificar mal algunos de los que se quedaban fuera.  
+
+Comparando con el apartado anterior, el número de errores es bastante más bajo que cuando paramos la ejecución a las 10, 100 o 1000 iteraciones, sin tener en cuenta el quedarnos con la mejor de las soluciones por las que hemos pasado, lo que tiene sentido.
 
 #3. Ejercicio sobre Regresión Lineal
 
@@ -723,7 +723,7 @@ Como vemos, en la mayoría de los casos la mejor solución es la recta que se qued
 
 ##2. Lea el fichero zip.train dentro de su código y visualice las imágenes. Seleccione sólo las instancias de los números 1 y 5. Guárdelas como matrices de tamaño $16 \times 16$
 
-Utilizamos la función `read_table()` indicándole que la separación es un espacio. Esto nos carga en `data` todas las instancias en un data_frame, una por fila, donde la primera columna es el número que se está representando y el resto de columnas son los datos. Sin embargo nos introduce una última columna en la que todos los datos son NA que vamos a eliminar. Nos quedamos con aquellas filas en las que la primera columa sea un 1 o un 5 y después a estas les eliminamos también la primera columna, para quedarnos sólo con los datos, pero metiendo en dos data_frame distintos las instancias del 1 y las del 5, para poder diferenciarlas. Después pasamos estos dos data_frame a matrices con data.matrix (sigue dejando cada instancia en una fila) y una vez tenemos la matriz podemos utilizar `lapply()` para extraer cada fila y de cada fila hacer una matriz de $16 \times 16$ y meterlas todas en una lista, con lo que nos queda una  lista de matrices con las instancias del 1 y otra lista de matrices con las instancias del 5. A continuación mostramos con la función `image()` la primera instancia del número 1 y la primera del número 5.
+Utilizamos la función `read_table()` indicándole que la separación es un espacio. Esto nos carga en `data` todas las instancias en un data_frame, una por fila, donde la primera columna es el número que se está representando y el resto de columnas son los datos. Sin embargo nos introduce una última columna en la que todos los datos son NA que vamos a eliminar. Nos quedamos con aquellas filas en las que la primera columa sea un 1 o un 5 y después a estas les eliminamos también la primera columna, para quedarnos sólo con los datos, pero metiendo en dos data_frame distintos las instancias del 1 y las del 5, para poder diferenciarlas. Después pasamos estos dos data_frame a matrices con `data.matrix` (sigue dejando cada instancia en una fila) y una vez tenemos la matriz podemos utilizar `lapply()` para extraer cada fila y de cada fila hacer una matriz de $16 \times 16$ y meterlas todas en una lista, con lo que nos queda una  lista de matrices con las instancias del 1 y otra lista de matrices con las instancias del 5. A continuación mostramos con la función `image()` la primera instancia del número 1 y la primera del número 5.
 
 ```{r}
 cat("Ejercicio 3\n")
@@ -788,7 +788,8 @@ Vamos a hacer primero una variante de la función `pinta_particion` de los dos ej
 
 ```{r}
 cat("Apartado 4\n")
-pinta_grafica <- function(coordX, coordY, etiquetas=NULL, visible=FALSE, a=NULL, b=NULL, xlab="Intensidad Promedio", ylab="Simetría", main="") {
+pinta_grafica <- function(coordX, coordY, etiquetas=NULL, visible=FALSE, a=NULL, b=NULL, 
+                          xlab="Intensidad Promedio", ylab="Simetría", main="") {
   if(is.null(etiquetas))
      etiquetas=1
   else etiquetas = etiquetas+3
@@ -835,15 +836,16 @@ t <- readline()
 
 ##5. Implementar la función `sol = Regress_Lin(datos, label)` que permita ajustar un modelo de regresión lineal (usar SVD). Los datos de entrada se interpretan igual que en clasificación.
 
-Formamos primero una matriz con los datos y le calculamos la pseudoinversa haciendo uso de la descomposición en valores singulares y devolvemos después $w = X^{-1}y$ donde $X^{-1}$ es la pseudoinversa de $X$. Utilizamos para ello la función `La.svd()` que devuelve $UDV^T$. Hay que tener en cuenta que la matriz diagonal $D$ la devuelve como un vector, sólo con la diagonal principal, por lo que tenemos que transformarala a una matriz diagonal, puesto que la vamos a multiplicar con otras matrices. Utilizamos el razonamiento seguido en clase y si le calculamos la descomposición en valores singulares una matriz $X$ entonces su pseudoinversa es $V(D^2)^{-1}V^TX^T$, con lo que en el método tenemos que calcular también la inversa del cuadrado de la matriz diagonal, lo que es fácil al ser diagonal (simplemente tenemos que cambiar cada valor por su inverso, o dejarlo a 0 si era 0). Con todo esto, el método es el siguiente:
+Formamos primero una matriz con los datos y le calculamos la pseudoinversa haciendo uso de la descomposición en valores singulares y devolvemos después $w = X^{-1}y$ donde $X^{-1}$ es la pseudoinversa de $X$ e $y$ son las etiquetas. Utilizamos para ello la función `La.svd()` que devuelve la descomposición $UDV^T$.  
+Hay que tener en cuenta que la matriz diagonal $D$ la devuelve como un vector, sólo con la diagonal principal, por lo que tenemos que transformarla a una matriz diagonal, puesto que la vamos a multiplicar con otras matrices. Utilizamos el razonamiento seguido en clase y si le calculamos la descomposición en valores singulares una matriz $X$ entonces su pseudoinversa es $V(D^2)^{-1}V^TX^T$, con lo que en el método tenemos que calcular también la inversa del cuadrado de la matriz diagonal, lo que es fácil al ser diagonal (simplemente tenemos que cambiar cada valor por su inverso, o dejarlo a 0 si era 0). Con todo esto, el método es el siguiente:
 
 ```{r}
 cat("Apartado 5\n")
 Regress_Lin <- function(datos, label) {
   descomp <- La.svd(datos)
   vt <- descomp[[3]]
+  # Creamos la inversa de la matriz diagonal al cuadrado
   diag <- matrix(0, length(descomp[[1]]), length(descomp[[1]]))
-  # Creamos la matriz diagonal
   for (i in 1:length(descomp[[1]])) {
     diag[i,i] = descomp[[1]][i]
     if (diag[i,i] != 0) {
@@ -867,18 +869,19 @@ Como queremos ajustar la intensidad a la simetría lo que hacemos es pasar como d
 ```{r}
 cat("Apartado 6\n")
 w <- Regress_Lin(cbind(intensidad, 1), simetria)
-pinta_grafica(intensidad, simetria, color, TRUE, w[1], w[2])
+pinta_grafica(intensidad, simetria, color, TRUE, w[1], w[2], 
+              main="Regresión")
 cat("Presione una tecla para continuar")
 t <- readline()
 
 ```
 
-Como vemos el resultado tiene sentido puesto que es la recta que mejor se ajusta a los datos (es decir, que menos distancia tiene a ellos en valor absoluto), que es justo lo que queríamos en el método de regresión lineal.
+Como vemos el resultado tiene sentido puesto que es la recta que mejor se ajusta a los datos (es decir, que menos distancia tiene a ellos en valor absoluto), que es justo lo que queríamos en el método de regresión lineal.  
 
 
 ##7. En este ejercicio exploramos cómo funciona la regresión lineal en problemas de clasificación. Para ello generamos datos usando el mismo procedimiento que en ejercicios anteriores. Suponemos $X = [-10,10] \times [-10,10]$ y elegimos muestras aleatorias uniformes dentro de $X$. La función $f$ en cada caso será una recta aleatoria que corta a $X$ y que asigna etiqueta a cada punto con el valor de su signo. En cada ejecución generamos una nueva función $f$.
 
-Como ahora queremos utilizar la regresión para clasficación, tenemos que pasarle como datos lo que obtengamos más una columna de 1 al final para pasarlos a coordenadas homogéneas y como etiquetas las que nos dé la recta aleatoria que generemos.
+Como ahora queremos utilizar la regresión para clasificación, tenemos que pasarle como datos lo que obtengamos más una columna de 1 al final para pasarlos a coordenadas homogéneas y como etiquetas las que nos dé la recta aleatoria que generemos.
 
 ###a) Fijar el tamaño de muestra $N=100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{in}$, (el porcentaje de puntos incorrectamente clasificados). Repetir el experimento 1000 veces y promediar los resultados. ¿Qué valor obtiene para $E_{in}$?
 
@@ -907,7 +910,7 @@ generaEtiquetas <- function() {
 
 ```
 
-Usamos ahora regresión lineal para encontar $g$ 1000 veces y calculamos $E_{in}$ como el porcentaje de puntos mal clasificados.
+Usamos ahora regresión lineal para encontrar $g$ 1000 veces y calculamos $E_{in}$ como el porcentaje de puntos mal clasificados.
 ```{r}
 errores <- 0
 for (i in 1:1000) {
@@ -952,7 +955,7 @@ En efecto, tenemos un porcentaje de error dentro de la muestra de 3.88%, lo que 
 
 ###b) Fijar el tamaño de muestra $N=100$. Usar regresión lineal para encontrar $g$ y evaluar $E_{out}$. Para ello generar 1000 puntos nuevos y usarlos para estimar el error fuera de la muestra, $E_{out}$ (porcentaje de puntos mal clasificados). De nuevo, ejecutar el experimento 1000 veces y tomar el promedio. ¿Qué valor obtiene de $E_{out}$? Valore los resultados.
 
-Generamos un conjunto de datos nuevo, como en el apartado anterior. Vamos a generar una nueva recta aleatoria, etiquetar los datos en base a esta recta y obtener $g$ por regresión lineal. Después generamos 1000 puntos nuevos en `datos_out` y vamos a calcular $E_{out}$ repitíendolo 1000 veces quedándonos con la media de los errores, como hemos hecho en el apartado anterior.
+Generamos un conjunto de datos nuevo, como en el apartado anterior. Vamos a generar una nueva recta aleatoria, etiquetar los datos en base a esta recta y obtener $g$ por regresión lineal. Después generamos 1000 puntos nuevos en `datos_out` y vamos a calcular $E_{out}$ repitiéndolo 1000 veces quedándonos con la media de los errores, como hemos hecho en el apartado anterior.
 
 ```{r}
 N <- 100
@@ -1050,7 +1053,7 @@ t <- readline()
 
 ```
 
-El número medio de iteraciones es alrededor de 9, lo que está bastante bien, como vemos al empezar ya desde una buena solución se acaba antes.
+El número medio de iteraciones es alrededor de 9, lo que está bastante bien, como vemos al empezar ya desde una buena solución se acaba antes. Además coincide con el porcentaje de puntos mal clasificados, lo que tiene bastante sentido.
 
 ##8. En este ejercicio exploramos el uso de transformaciones no lineales. Consideremos la función objetivo $f(x_1,x_2) = sign(x_1^2+x_2^2-25)$. Generar una muestra de entrenamiento de $N=1000$ puntos a partir de $X=[-10,10] \times [-10,10]$ muestreando cada punto $x \in X$ uniformemente. Generar las salidas usando el signo de la función en los puntos muestreados. Generar ruido sobre las etiquetas cambiando el signo de las salidas a un 10% de puntos del conjunto aleatorio generado.
 
@@ -1130,7 +1133,7 @@ w
 
 pinta_particion(lista_puntos, etiquetas_f, TRUE, function(x,y) w[1] + w[2]*x + 
                   w[3]*y + w[4]*x*y + w[5]*x^2 + w[6]*y^2, c(-10,10), 
-                main = "Regresión para clasificación con ruido con curva")
+                main = "Regresión para clasificación con ruido en curva")
 cat("Presione una tecla para continuar")
 t <- readline()
 
