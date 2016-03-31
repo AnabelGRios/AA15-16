@@ -30,6 +30,7 @@ Identificar, para cada una de las siguiente tareas, qué tipo de aprendizaje aut
 \textit{ }\\
 
 
+
 \end{pregunta}
 
 \begin{pregunta}
@@ -46,12 +47,19 @@ Identificar, para cada una de las siguiente tareas, qué tipo de aprendizaje aut
 \begin{pregunta}
 Construir un problema de \textit{aprendizaje desde datos} para un problema de selección de fruta en una explotación agraria (ver transparencias de clase). Identificar y describir cada uno de sus elementos formales. Justificar las decisiones.\\
 
-
+Cada dato $x$ serán las características de la fruta específica que nos interesan para cada pieza de fruta: $x = (color, tamaño, textura,...)$ y por tanto el conjunto $X$ será el conjunto de todos los posibles $x$ y habrá tantos elementos como piezas de la misma fruta tengamos. El conjunto $Y$ de etiquetas que tenemos será discreto: $Y={-1,+1}$ y la función $f:X \rightarrow Y$ será la que para cada pieza de fruta nos dice si debemos clasificarla para la venta ($+1$) o no ($-1$). El conjunto $D$ que tiene los ejemplos de prueba será de la forma $(x_1,y_1),...,(x_N,y_N)$ donde $N$ es el número de ejemplos e $y_i=f(x_i)$.
 \end{pregunta}
 
 \begin{pregunta}
 Suponga un modelo PLA y un dato $x(t)$ mal clasificado respecto de dicho modelo. Probar que la regla de adaptación de pesos del PLA es un movimiento en la dirección correcta para clasificar bien $x(t)$.\\
 
+Vamos a seguir el esquema del ejercicio 3 del apartado PLA de la relación de problemas, que como aparece también en el libro de la bibliografía [1] nos puede servir de ayuda. Recordemos que según nos dice el enunciado $x(t)$ está mal clasificado en este momento, es decir, $w(t)$ está clasificando mal $x(t)$. Recordemos también que de una iteración a otra, $w$ se actualiza de la siguiente forma: $w(t+1) = w(t)+y(t)x(t)$, que es lo que queremos probar que va en la dirección correcta. En concreto dicho ejercicio pide que se pruebe lo siguiente:
+\begin{enumerate}
+\item[a)] $y(t)w^T(t)x(t) < 0$. Como $x(t)$ está mal clasificado por $w(t)$, entonces el signo de $w^T(t)x(t)$ tiene el signo contrario a $y(t)$, que es la verdadera etiqueta de $x(t)$, por lo que la multiplicación $y(t)w^T(t)x(t)$ tiene que ser negativa.\\ 
+Tengamos en cuenta también que si $w(t)$ llega a clasificar bien a $x(t)$, entonces ambos tendrían el mismo signo y la multiplicación sería positiva. Por lo tanto, para que vaya en la dirección correcta lo que tenemos que hacer es irnos acercando con ese producto cada vez más a un número positivo.
+\item[b)] $y(t)w^T(t+1)x(t)>y(t)w^T(t)x(t)$. Ver esto es muy fácil sin más que utilizar la regla de adaptación $w(t+1) = w(t)+y(t)x(t)$. La trasponemos para poder sustituirla en la expresión $y(t)w^T(t+1)x(t)$ y sustituimos. Entonces: $w^(t+1) = x^T(t)y(t)$ ($y(t)$ es un número escalar) y sustituyendo, $y(t)w^T(t+1)x(t) = y(t)(w^T(t)+x^T(t)y(t))x(t) = y(t)W^T(t)x(t) + y(t)^2x^T(t)x(t)$. Ahora, como $y(t)^2$ es siempre positivo y $x^T(t)x(t)$ es la norma al cuadrado de $x(t)$ que es por definición positiva, tenemos que $y(t)^2x^T(t)x(t)$ es un término positivo que está sumando, luego $y(t)W^T(t)x(t) + y(t)^2x^T(t)x(t) > y(t)w^T(t)x(t)$, con lo que demostramos lo que queríamos.
+\end{enumerate}
+Nos queda ya probar por tanto que en efecto la regla de adaptación lleva $w$ en la dirección correcta. Como hemos comentado, ahora mismo $w(t)$ está clasificando mal $x(t)$. Por el apartado b), $y(t)w^T(t+1)x(t) > y(t)w^T(t)x(t)$, que por el apartado a) es negativo. Por lo tanto, como  $y(t)w^T(t+1)x(t)$ es estrictamente mayor que $y(t)w^T(t)x(t)$ se está quedando más cerca de ser un número positivo que $y(t)w^T(t)x(t)$, que es la iteración anterior, y como hemos dicho antes, esto se queda más cerca de clasificar bien $x(t)$, con lo que $w$ se está moviendo en la dirección correcta, como queríamos probar.
 \end{pregunta}
 
 \begin{pregunta}
@@ -62,22 +70,34 @@ Considere el enunciado del ejercicio 2 de la sección FACTIBILIDAD DEL APRENDIZA
 \end{enumerate}
 \textit{ }\\
 
+En dicho ejercicio a partir del apartado b) se da una hipótesis adicional que vamos a utilizar en este ejercicio, que todos los ejemplos en $D$ (que son 25) tienen $y_n=+1$. También nos dice que para el caso probabilístico supongamos que hay una distribución de probabilidad sobre $X$ y que $P[f(x)=+1] = p$
+\begin{enumerate}
+\item[a)] Tenemos que $P[f(x) = +1]=0.9$. Dado que todos los puntos en $D$ tienen etiqueta positiva, $S$ va a elegir la hipótesis $h_1$, que es la función constante igual a 1. Vamos a ver cuál es la distribución de probabilidad que hay sobre $X$. Sabemos que la probabilidad de que cada $x \in X$ sea +1 o -1 es independiente para cada $x$ y además cada etiqueta puede tomar sólo dos valores, +1 ó -1 (lo que se puede tomar como éxito/fracaso), por lo que estamos ante una distribución binomial, que es la que nos dice la probabilidad de que de $n$ sucesos $x$ de ellos sean un éxito (en nuestro caso, +1), donde un éxito tiene una probabilidad $p$ de suceder. La función de probabilidad de la binomial es $q(x) = \left( \begin{array}{c} n \\ x \end{array} \right) p^x(1-p)^{n-x}$, donde $x$ es el número de éxitos. En nuestro caso, $x=E[25/2] +1=13$ como mínimo, donde $E[]$ es la función parte entera, puesto que nos basta con que uno más de la mitad de los datos tengan etiqueta +1 para que $S$ genere mejor hipótesis que la que genera $C$. Por lo tanto, nos sirve que $x$ sea 13, 14, 15,... hasta el total, 25, puesto que en todos estos casos $S$ producirá mejor hipótesis que $C$. Por lo tanto la probabilidad de que esto ocurra (que es la que nos pregunta el ejercicio) es $\sum_{i=13}^{25} q(i)$. Esta cuenta la he hecho haciendo una pequeña función en R que calcula $q$ y el resultado es: $\sum_{i=13}^{25} q(i) = 0.9999998$, que es la probabilidad de que $S$ genere mejor hipótesis que $C$.
+\item[b)] Para que C produzca una mejor hipótesis que la de S hace falta que la probabilidad que acabamos de calcular sea menor que 0.5. Si $p>0.5$ sigue siendo más probable que la hipótesis de $S$ sea mejor. Para $p=0.5$ la probabilidad anterior vale exactamente 0.5, con lo que no podemos decir tampoco que sea más probable que la mejor sea la de $C$. Sin embargo para $p=0.4$ esta probabilidad ya vale 0.1537678, con lo que para $p\leq0.4$ es más probable que $C$ produzca mejor hipótesis que $S$.
 
+\end{enumerate}
 \end{pregunta}
 
 \begin{pregunta}
 La desigualdad de Hoeffding modificada nos da una forma de caracterizar el error de generalización con una cota probabilística
 \begin{equation}
-P[|E_{out}(g) - E_{in}(g)| > \epsilon] \leqslant 2Me^{-2N^2 \epsilon}
+P[|E_{out}(g) - E_{in}(g)| > \epsilon] \leqslant 2Me^{-2N \epsilon^2}
 \end{equation}
-para cualquier $\epsilon > 0$. Si fijamos $\epsilon=0,05$ y queremos que la cota probabilística $2Me^{-2N^2 \epsilon}$ sea como máximo $0,03$, ¿cuál será el valor más pequeño de $N$ que verifique estas condiciones si $M=1$? Repetir para $M=10$ y para $M=100$.\\
+para cualquier $\epsilon > 0$. Si fijamos $\epsilon=0,05$ y queremos que la cota probabilística $2Me^{-2N \epsilon^2}$ sea como máximo $0,03$, ¿cuál será el valor más pequeño de $N$ que verifique estas condiciones si $M=1$? Repetir para $M=10$ y para $M=100$.\\
 
+Queremos que $2Me^{-2N \epsilon^2} \leq 0.03$. Despejamos de esta expresión $N$.\\
+
+Para $M=1$, $2e^{-2N0.05^2} \leq 0.03 \Rightarrow e^{-2N0.05^2} \leq 0.015 \Rightarrow -2N0.05^2 \leq ln(0.015) = -4.199705$. Si multiplicamos por -1 y despejamos $N$, $N \geq \frac{4.199705}{2*0.05^2} = 839.941$. Como $N$ tiene que ser entero, entonces el $N$ más pequeño es 840.\\
+
+Para $M=10$, $e^{-2N0.05^2} \leq 0.0015 \Rightarrow -2N0.05^2 \leq ln(0.0015) = -6.50229$, luego $N \geq \frac{6.50229}{2*0.05^2} = 1300.458$ y por tanto el valor más pequeño de $N$ es 1301.\\
+
+Para $M=100$, $e^{-2N0.05^2} \leq 0.00015 \Rightarrow -2N0.05^2 \leq ln(0.0015) = -8.804875$, luego $N \geq \frac{8.804875}{2*0.05^2} = 1760.975$ y por tanto el valor más pequeño de $N$ es 1761.
 \end{pregunta}
 
 \begin{pregunta}
 Consideremos el modelo de aprendizaje "M-intervalos" \textit{ }donde $h: \mathbb{R} \rightarrow {-1, +1}$ y $h(x)=+1$ si el punto está dentro de cualquiera de $m$ intervalos arbitrariamente elegidos y $-1$ en otro caso. ¿Cuál es el más pequeño punto de ruptura para este conjunto de hipótesis?\\
 
-
+Como $h$ sale de $\mathbb{R}$, los puntos tienen que estar en una recta, uno detrás de otro, y sólo está esta configuración de puntos. Por lo tanto, para encontrar un punto $k$ de ruptura nos basta con encontrar un conjunto de $k$ puntos para el que no se puedan hacer todas las dicotomías para los intervalos. Si el número de puntos es menor o igual que $2m$ es fácil ver que se pueden implementar todas las dicotomías, puesto que tenemos $m$ intervalos disponibles: si hay dos o más puntos seguidos con la etiqueta +1 se meten en el mismo intervalo y se va dejando fuera a los que tienen etiqueta -1. El peor de los casos sería que no hubiera más de un punto seguido con la misma etiqueta, es decir, que las etiquetas fueran +1, -1, +1, -1, etc., pero entonces, como hay $2m$ puntos, habría $m$ de ellos con etiqueta +1, que son lo que meteríamos dentro de los $m$ intervalos, por lo que para $2m$ puntos, se pueden hacer todas las dicotomías. Ahora, para $2m+1$ puntos ya no se pueden hacer todas las dicotomías, por lo que este será el mínimo punto de ruptura. Supongamos que las etiquetas están puestas de la forma +1, -1, +1, -1,...,-1, +1, es decir, de forma que los dos extremos sean positivos y no haya dos puntos seguidos con la misma etiqueta. Como hay $m+1$ puntos con etiqueta positiva, que son los que tienen que ir dentro de los intervalos, separados por uno con etiqueta negativa, no se puede implementar esta dicotomía y por tanto $2m+1$ es el mínimo punto de ruptura.
 \end{pregunta}
 
 \begin{pregunta}
@@ -89,8 +109,14 @@ Suponga un conjunto de $k^*$ puntos $x_1,x_2,...,x_{k^*}$ sobre los cuales la cl
 \item[d)] todos los puntos de ruptura son menores o iguales a $k^*$
 \item[e)] no conocemos nada acerca del punto de ruptura
 \end{enumerate}
-\textit{ }\\
 
+\begin{enumerate}
+\item[a)] Falso. Para que $k^*$ sea un punto de ruptura hace falta que $h$ implemente menos de $2^{k^*}$ dicotomías para todo conjunto de $k^*$ puntos y no sólo para uno de ellos, como tenemos aquí, luego no sabemos si es un punto de ruptura o no.
+\item[b)] Falso. $k^*$ podría ser un punto de ruptura si implementa menos de $2*{k^*}$ dicotomías para todo conjunto de puntos, pero no sabemos si lo hace o no, sólo sabemos para uno no las implementa.
+\item[c)] Falso. De nuevo, no lo sabemos. Puede que $H$ no implemente tampoco $2^{k^*-1}$ dicotomías para ningún conjunto de $k^*-1$ puntos, con lo que $k^*-1$ sería un punto de ruptura.
+\item[d)] Falso. Esto no puede darse porque si $k^*$ es un punto de ruptura, entonces todos los números mayores que $k^*$ son también puntos de ruptura.
+\item[e)] Verdadero. Basándonos en las 4 respuestas anteriores, podemos afirmar que no sabemos nada del punto de ruptura. 
+\end{enumerate}
 \end{pregunta}
 
 \begin{pregunta}
@@ -102,7 +128,14 @@ Para todo conjunto de $k^*$ puntos, $H$ implementa $<2^{k^*}$ dicotomías. ¿Cu�
 \item[d)] todos los $k < k^*$ son puntos de ruptura
 \item[e)] no conocemos nada acerca del punto de ruptura
 \end{enumerate}
-\textit{ }\\
+
+\begin{enumerate}
+\item[a)] Verdadero. Es la definición de punto de ruptura, que se implementen menos (estrictamente) de $2^{k^*}$ dicotomías para todo conjunto de $k^*$ puntos.
+\item[b)] Falso. En base a la respuesta anterior.
+\item[c)] Verdadero. Por a) tenemos que $k^*$ es punto de ruptura, luego todos los números mayores que $k^*$ son puntos de ruptura.
+\item[d)] Falso. No lo sabemos. Puede que $H$ sí implemente $2^p$ dicotomías para $p<k^*$, con lo que $p$ no sería punto de ruptura.
+\item[e)] Falso. Sabemos que $k^*$ y $k>k^*$ son puntos de ruptura.
+\end{enumerate}
 
 \end{pregunta}
 
@@ -112,17 +145,37 @@ Si queremos mostrar que $k^*$ es un punto de ruptura, ¿cuáles de las siguiente
 \item[a)] Mostrar que existe un conjunto de $k^*$ puntos $x_1,...x_{k^*}$ que $H$ puede separar ("shatter").
 \item[b)] Mostrar que $H$ puede separar cualquier conjunto de $k^*$ puntos.
 \item[c)] Mostrar un conjunto de $k^*$ puntos $x_1,...,x_{k^*}$ que $H$ no puede separar.
-\item[d)] Mostrar que $H$ no puede separar ningún conjutno de $k^*$ puntos.
+\item[d)] Mostrar que $H$ no puede separar ningún conjunto de $k^*$ puntos.
 \item[e)] Mostrar que $m_H(k)=2^{k^*}$
 \end{enumerate}
-\textit{ }\\
+
+\begin{enumerate}
+\item[a)] Esto no nos sirve para probar que $k^*$ es un punto de ruptura, pero sí para probar que no lo es, ya que lo que necesitamos para que sea punto de ruptura es que $H$ no pueda separar ningún conjunto de $k^*$ puntos. Si $H$ puede separar un conjunto de $k^*$ puntos, entonces $k^*$ no es punto de ruptura.
+\item[b)] Esto nos vale, por el mismo razonamiento del apartado a), para probar que $k^*$ no es punto de ruptura.
+\item[c)] Esto no nos vale porque aunque haya un conjunto de $k^*$ puntos que no puede separar puede que haya otro que sí, y entonces ya no sería punto de ruptura.
+\item[d)] Esto sí nos vale para probar que es un punto de ruptura puesto que es justo lo que necesitamos por definición.
+\item[e)] Depende del valor de $k$. Si $k=k^*$, nos vale para mostrar que $k^*$ no es un punto de ruptura (aunque no para mostrar que sí), ya que si $m_H(k^*)=2^{k^*}$ es porque hay un conjunto que de $k^*$ puntos que $H$ puede separar. Si $k>k^*$, no tenemos ninguna información sobre $k^*$ para poder decir ni si es un punto de ruptura o no. El caso $k<k^*$ no puede darse puesto que no puede haber más de $2^k$ dicotomías para un conjunto de $k$ puntos.
+\end{enumerate}
 
 \end{pregunta}
 
 \begin{pregunta}
 Para un conjunto $H$ con $d_{VC}=10$, ¿qué tamaño muestral se necesita (según la cota de generalización) para tener un $95\%$ de confianza de que el error de generalización sea como mucho $0,05$?\\
 
-
+Lo hacemos como el ejemplo de las diapositivas de clase, es decir, de forma iterativa. Queremos que
+\begin{equation}
+\sqrt{\frac{8*ln(4((2N)^{d_{VC}} + 1))}{\delta}} \leq \varepsilon
+\end{equation}
+Es decir, que 
+\begin{equation}
+N \geq \frac{8}{\varepsilon^2}ln(\frac{4((2N)^{d_{VC}}+1)}{\delta})
+\end{equation}
+donde $d_{VC}=10$, $\varepsilon=0.05$, $1-\delta=95\%$, con lo que $\delta=0.05$. Sustituyendo nos queda 
+\begin{equation}
+N \geq \frac{8}{0.05^2}ln(\frac{4(2N)^{10}+4}{0.05})
+\end{equation}
+Empezamos probando con $N=1000$ en el segundo miembro a ver qué valor de $N$ nos da y con el valor que nos dé lo volvemos a meter como $N$ en el segundo miembro y repetimos esto hasta que nos salga un valor que cumpla con el mayor o igual.\\
+Para $N=1000$ obtenemos $N\geq257251.4$, con el que obtenemos $N\geq434853.1$, con el que obtenemos $N\geq451651.6$, lo que sigue sin cumplir la desigualdad. Continuamos y nos da $N\geq452864.8$ con el que obtenemos $N\geq452950.3$, con el que obtenemos $N\geq452956.4$, con el que obtenemos $N\geq152956.8$, con el que obtenemos $N\geq452956.9$. Al meter este valor en el segundo miembro de la desigualdad volvemos a obtener $N\geq452956.9$, con lo que ya sí se cumple la igualdad y tenemos que el tamaño muestral que se necesita para tener tal porcentaje de confianza es como mínimo $452957$, ya que $N$ tiene que ser un número entero.
 \end{pregunta}
 
 \begin{pregunta}
@@ -135,4 +188,5 @@ Consideremos un escenario de aprendizaje simple. Supongamos que la dimensión de
 
 
 \end{pregunta}
+
 \end{document}
