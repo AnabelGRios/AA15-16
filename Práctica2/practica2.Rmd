@@ -4,7 +4,125 @@ author: "Anabel Gómez Ríos"
 output: pdf_document
 ---
 
-#1. Modelos Lineales
+#Funciones de la práctica 1 que vamos a reutilizar.
+```{r}
+set.seed(237)
+# Simular números aleatorios uniformes
+simula_unif = function (N=2, dims=2, rango = c(0,1)){
+ matrix(runif(N*dims, min=rango[1], max=rango[2]), nrow = N, ncol=dims, byrow=T)
+}
+
+# Simular recta que corte a un intervalo dado
+simula_recta <- function(intervalo) {
+  m <- simula_unif(2, 2, intervalo)
+  a <- (m[2,2] - m[1,2]) / (m[2,1] - m[1,1])
+  b <- m[1,2] - a * m[1,1]
+  c(a,b)
+}
+
+# Calcular la simetría de una matriz
+calcular_simetria <- function(mat) {
+  # Invertimos la matriz por columnas
+  mat_invertida = apply(mat, 2, function(x) rev(x))
+  # Calulamos el valor absoluto de la diferencia de cada elemento entre las dos
+  # matrices
+  dif = abs(mat - mat_invertida)
+  # Sumamos los elementos de la matriz
+  suma <- sum(dif)
+  # Devolvemos el signo cambiado de la suma
+  -suma
+}
+
+```
+
+```{r}
+# Método de regresión lineal
+Regress_Lin <- function(datos, label) {
+  descomp <- La.svd(datos)
+  vt <- descomp[[3]]
+  # Creamos la inversa de la matriz diagonal al cuadrado
+  diag <- matrix(0, length(descomp[[1]]), length(descomp[[1]]))
+  for (i in 1:length(descomp[[1]])) {
+    diag[i,i] = descomp[[1]][i]
+    if (diag[i,i] != 0) {
+      diag[i,i] = 1/(diag[i,i]^2)
+    }
+  }
+  prod_inv <- t(vt) %*% diag %*% vt
+  pseud_inv <- prod_inv %*% t(datos)
+  w <- pseud_inv %*% label
+  w
+}
+
+# Función para contar diferencias dados dos vectores necesaria en la siguiente
+# función
+cuenta_diferencias <- function(etiquetas1, etiquetas2) {
+  vf <- etiquetas1 == etiquetas2
+  length(vf[vf == FALSE])
+}
+
+# Función para contar errores necesaria en el PLA pocket
+cuenta_errores <- function(w, etiquetas_originales, datos) {
+  w <- -w/w[2]
+  # Etiquetamos con la solución del PLA
+  etiquetas_cambiadas <- unlist(lapply(1:nrow(datos), function(i) {
+    # Obtenemos los puntos uno a uno y los etiquetamos
+    p <- datos[i,]
+    f <- -w[1]*p[1] + p[2] - w[3]
+    sign(f)
+  }))
+  # Devolvemos el número de errores que da la solución
+  cuenta_diferencias(etiquetas_originales, etiquetas_cambiadas)
+}
+
+# Algoritmo PLA pocket
+ajusta_PLA_MOD <- function(datos, label, max_iter, vini) {
+  parada <- F
+  fin <- F
+  w <- vini
+  wmejor <- w
+  iter <- 1
+  errores_mejor <- cuenta_errores(wmejor, label, datos)
+  # Mientras no hayamos superado el máximo de iteraciones o
+  # no se haya encontrado solución
+  while(!parada) {
+    # iteramos sobre los datos
+    for (j in 1:nrow(datos)) {
+      if (sign(crossprod(w, datos[j,])) != label[j]) {
+        w <- w + label[j]*datos[j,]
+        # La variable fin controla si se ha entrado en el if
+        fin <- F
+      }
+    }
+    # Contamos el número de errores que hay en la solución actual y si
+    # es menor que el número de errores en la mejor solución de las que
+    # llevamos, nos quedamos con la actual
+    errores_actual <- cuenta_errores(w, label, datos)
+    if(errores_actual < errores_mejor) {
+      wmejor <- w
+      errores_mejor <- errores_actual
+    }
+    # Si no se ha entrado en el if, todos los datos estaban bien
+    # clasificados y podemos poner a TRUE la variable parada.
+    if(fin == T) {
+      parada = T
+    }
+    else {
+      fin = T
+    }
+    iter <- iter + 1
+    if (iter >= max_iter) parada = T
+  }
+  
+  # Devolvemos el hiperplano, el número máximo de iteraciones al que hemos
+  # llegado y el número de errores de la mejor solución que hemos encontrado
+  list(w = wmejor, numIteraciones = iter, errores = errores_mejor)
+}
+
+```
+
+
+#1. MODELOS LINEALES
 ##1. Gradiente Descendente. Implementar el algoritmo de gradiente descendente.
 
 PREGUNTAR SI CONDICIÓN DE PARADA CUANDO SE MUEVA POCO (DIFERENCIA ENTRE VALORES DE LA FUNCIÓN E) Y CUÁL ES ESE POCO
@@ -208,6 +326,22 @@ POR HACER
 ##4. Regresión Logística. En este  ejercicio crearemos nuestra propia función objetivo $f$ (probabilidad en este caso) y nuestro conjunto de datos $D$ para ver cómo funciona regresión logística. Supondremos por simplicidad que $f$ es una probabilidad con valores 0/1 y por tanto que $y$ es una función determinista de x.
 ##Consideremos $d=2$ para que los datos sean visualizables, y sea $X=[-1,1] \times [-1,1]$ con probabilidad uniforme de elegir cada $x \in X$. Elegir una línea en el plano como la frontera entre $f(x)=1$ (donde $y$ toma valores +1) y $f(x)=0$ (donde $y$ toma valores -1), para ello seleccionar dos puntos aleatorios del plano y calcular la línea que pasa por ambos. Seleccionar $N=100$ puntos aleatorios $\{x_n\}$ de $X$ y evaluar las respuestas de todos ellos $\{y_n\}$ respecto de la frontera elegida.
 
+Generamos la muestra de 100 puntos de manera uniforme:
+```{r}
+muestra <- simula_unif(100, 2, c(-1,1))
+```
+Generamos la recta en el cuadrado dado que separa los datos:
+```{r}
+recta <- simula_recta(c(-1,1))
+```
+Los etiquetamos con respecto a la recta que acabamos de generar:
+```{r}
+etiquetas <- unlist(lapply(1:nrow(muestra), function(i) {
+  p <- muestra[i,]
+  sign(p[2] - recta[1]*p[1] - recta[2])
+}))
+```
+
 
 ###a) Implementar Regresión Logística (RL) con Gradiente Descendente Estocástico (SGD) bajo las siguientes condiciones:
 1. Inicializar el vector de pesos con valores 0.  
@@ -223,3 +357,125 @@ QUÉ NARICES ES EL ERROR DE ENTROPÍA CRUZADA
 
 
 <p> 2) ¿Cuántas épocas tada en promedio RL en converger para $N=100$, usando todas las condiciones anteriormente especificadas? </p>
+
+##5. Clasificación de Dígitos. Considerar el conjunto de datos de los dígitos manuscritos y seleccionar las muestras de los dígitos 1 y 5. Usar los ficheros de entrenamiento (training) y test que se proporcionan. Extraer las características de $\textit{intensidad promedio}$ y $\textit{simetría}$ en la manera que se indicó en el ejercicio 3 del trabajo 1.  
+
+```{r}
+# Leemos los ficheros y extraemos los dígitos 1 y 5
+train <- read.table("datos/zip.train", sep=" ")
+test <- read.table("datos/zip.test", sep=" ")
+numero_train <- train$V1
+numero_test <- test$V1
+frame_train1 <- train[numero_train==1,]
+frame_train5 <- train[numero_train == 5,]
+frame_test1 <- test[numero_test==1,]
+frame_test5 <- test[numero_test==5,]
+# Eliminamos de cada uno la primera columna, que guarda el número del
+# que son los datos, y la última, que tiene NA
+frame_train1 = frame_train1[,-258]
+frame_train1 = frame_train1[,-1]
+frame_train5 = frame_train5[,-258]
+frame_train5 = frame_train5[,-1]
+frame_test1 = frame_test1[,-258]
+frame_test1 = frame_test1[,-1]
+frame_test5 = frame_test5[,-258]
+frame_test5 = frame_test5[,-1]
+# Los pasamos a matrices
+frame_train1 <- data.matrix(frame_train1)
+frame_train5 <- data.matrix(frame_train5)
+frame_test1 <- data.matrix(frame_test1)
+frame_test5 <- data.matrix(frame_test5)
+# Hacemos una lista de matrices
+lista_train1 <- lapply(split(frame_train1, seq(nrow(frame_train1))), function(x) {
+  matrix(x, 16, 16, T)
+})
+lista_train5 <- lapply(split(frame_train5, seq(nrow(frame_train5))), function(x) {
+  matrix(x, 16, 16, T)
+})
+lista_test1 <- lapply(split(frame_test1, seq(nrow(frame_test1))), function(x) {
+  matrix(x, 16, 16, T)
+})
+lista_test5 <- lapply(split(frame_test5, seq(nrow(frame_test5))), function(x) {
+  matrix(x, 16, 16, T)
+})
+
+# Eliminamos lo que no vamos a utilizar
+rm(train)
+rm(test)
+rm(frame_test1)
+rm(frame_train1)
+rm(frame_test5)
+rm(frame_train5)
+rm(numero_train)
+rm(numero_test)
+```
+
+A continuación calculamos las intensidades y las simetrías y las metemos todas juntas (las de las instancias de 1 y las de 5, pero dejamos separados siempre los conjuntos de train y test)
+
+```{r}
+# Calculamos primero las intensidades y las simetrías de todas las matrices,
+# es decir, de todas las instancias de 1's y 5's
+train_simetria1 <- unlist(lapply(lista_train1, function(m) calcular_simetria(m)))
+train_simetria5 <- unlist(lapply(lista_train5, function(m) calcular_simetria(m)))
+train_intensidad1 <- unlist(lapply(lista_train1, function(m) mean(m)))
+train_intensidad5 <- unlist(lapply(lista_train5, function(m) mean(m)))
+
+test_simetria1 <- unlist(lapply(lista_test1, function(m) calcular_simetria(m)))
+test_simetria5 <- unlist(lapply(lista_test5, function(m) calcular_simetria(m)))
+test_intensidad1 <- unlist(lapply(lista_test1, function(m) mean(m)))
+test_intensidad5 <- unlist(lapply(lista_test5, function(m) mean(m)))
+
+train_simetria <- c(train_simetria1, train_simetria5)
+test_simetria <- c(test_simetria1, test_simetria5)
+train_intensidad <- c(train_intensidad1, train_intensidad5)
+test_intensidad <- c(test_intensidad1, test_intensidad5)
+test_num1 <- length(test_simetria1)
+test_num5 <- length(test_simetria5)
+train_num1 <- length(train_simetria1)
+train_num5 <- length(train_simetria5)
+
+# Borramos lo que no necesitamos
+rm(train_simetria5)
+rm(train_simetria1)
+rm(test_simetria5)
+rm(test_simetria1)
+rm(test_intensidad5)
+rm(test_intensidad1)
+rm(train_intensidad5)
+rm(train_intensidad1)
+```
+
+
+##Plantear un problema de clasificación binaria que considere el conjunto de entrenamiento como datos de entrada para aprender la función $g$. Usando el modelo de Regresión Lineal para clasificación seguido por PLA-Pocket como mejora. Responder a las siguientes cuestiones:
+
+Utilizamos primero el algoritmo de regresión lineal para obtener una buena solución inicial para dársela al PLA pocket.   
+Las etiquetas serán 1 o -1 según representen la intensidad o simetría de las instancias de números 1 o 5, respectivamente.  
+Necesitamos poner como tercera coordenada de la matriz de datos que le vamos a pasar al método de regresión lineal un 1, para ponerlo en coordenadas homogéneas. Nos quedará por tanto cada fila de la matriz de datos como (intensidad, simetría, 1).
+
+```{r}
+etiquetas <- c(rep(1, train_num1), rep(-1, train_num5))
+datos <- cbind(train_intensidad, train_simetria, 1)
+w <- Regress_Lin(datos, etiquetas)
+# Le pasamos lo que nos devuelve la regresión lineal al PLA pocket como solución
+# inicial
+sol <- ajusta_PLA_MOD(datos, etiquetas, 1000, w)
+```
+
+COMENTAR QUE LA FUNCIÓN ES LA MISMA PORQUE LO QUE DEVUELVE LA REGRESIÓN YA ES CANELA FINA Y EL POCKET NO LO PUEDE MEJORAR (ES LA MEJOR SOLUCIÓN A LA QUE PUEDE LLEGAR ÉL TAMBIÉN).
+
+###a) Generar gráficos separados (en color) de los datos de entrenamiento y test junto con la función estimada.
+
+
+###b) Calcular $E_{in}$ y $E_{test}$ (error sobre los datos de test).
+
+
+###c) Obtener cotas sobre el verdadero valor de $E_{out}$. Pueden calcularse dos cotas, una basada en $E_{in}$ y otra basada en $E_{test}$. Usar una tolerancia $\delta=0.05$. ¿Qué cota es mejor?
+
+
+###d) Repetir los puntos anteriores pero usando una transformación polinómica de tercer orden ($\Phi_3(x)$ en las transparencias de teoría)
+
+
+###e) Si tuviera que usar los resultados para dárselos a un potencial cliente, ¿usaría la transformación polinómica? Explicar la decisión.
+
+
+#2. SOBREAJUSTE
