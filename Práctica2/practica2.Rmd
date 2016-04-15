@@ -387,35 +387,38 @@ calcularNorma <- function(vec) {
 Regress_LogSGD <- function(datos, label, vini, tasa, maxiter, umbral) {
   parada <- F
   w <- vini
-  iter <- 1
-  errores_mejor <- cuenta_errores(wmejor, label, datos)
+  iter <- 0
   # Mientras no hayamos superado el máximo de iteraciones o
   # no se hayan acercado lo suficiente w y wnew
-  while(!parada || iter > maxiter) {
+  while(!parada && iter < maxiter) {
     # Hacemos una permutación al orden en el que vamos a utilizar los datos
     pos <- sample(1:nrow(datos), nrow(datos))
     # iteramos sobre los datos
+    wold <- w
     for (j in pos) {
       grad <- (-label[j]*datos[j,])/(1+exp(label[j]*crossprod(w, datos[j,])))
-      wnew <- w - tasa*grad
-      if(calcularNorma(w-wnew) < umbral) { 
-        parada = TRUE
-        # Si llegamos a la condición de parada, nos salimos del bucle interno
-        # también.
-        break
-      }
-      w <- wnew
+      w <- w - tasa*grad
     }
+    if(calcularNorma(wold-w) < umbral) { 
+      parada <- TRUE
+    }
+    iter <- iter+1
   }
   
   # Devolvemos los pesos finales
-  return(w)
+  return(list(pesos=w, iteraciones=iter))
 }
 ```
 
 
 ###b) Usar la muestra de datos etiquetada para encontrar $g$ y estimar $E_{out}$ (el error de entropía cruzada) usando para ello un número suficientemente grande de nuevas muestras.
 QUÉ ES EL ERROR DE ENTROPÍA CRUZADA
+
+```{r}
+g <- Regress_LogSGD(cbind(muestra,1), etiquetas, c(0,0,0), 0.01, 400, 0.01)
+g
+```
+
 
 ###c) Repetir el experimento 100 veces con diferentes funciones frontera y calcule el promedio.
 <p> 1) ¿Cuál es el valor de $E_{out}$ para $N=100$? </p>
