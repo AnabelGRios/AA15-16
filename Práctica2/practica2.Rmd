@@ -276,8 +276,6 @@ POR HACER
 
 ##3. Método de Newton. Implementar el algoritmo de minimización de Newton y aplicarlo a la función $f(x,y)$ dada en el ejercicio 1.b. Desarrolle los mismos experimentos usando los mismos puntos de inicio.
 
-PREGUNTAR SI ESTO ESTÁ BIEN
-
 ```{r}
 # Algoritmo del método de Newton. Le pasamos a la función la función de
 # error, su gradiente y la matriz hessiana (que serán funciones), el punto 
@@ -337,10 +335,10 @@ ES ESTO O LO DE DESPUÉS TAMBIÉN?
 ###a) Generar un gráfico de cómo desciende el valor de la función con las iteraciones.
 
 ```{r}
-plot(val[,1], val[,2], type="p", xlab="num iteración", ylab="f(x)", main="Método Newton")
+plot(val[,1], val[,2], type="p", xlab="num iteración", ylab="f(x)", main="Método Newton con tasa 0.01")
 ```
 ```{r}
-plot(val2[,1], val2[,2], type="p", xlab="num iteración", ylab="f(x)", main="Método Newton")
+plot(val2[,1], val2[,2], type="p", xlab="num iteración", ylab="f(x)", main="Método Newton con tasa 0.1")
 ```
 
 ###b) Extraer conclusiones sobre las conductas de los algoritmos comparando la curva de decrecimiento de la función calculada en el apartado anterior y la correspondiente obtenida con gradiente descendente.
@@ -372,6 +370,49 @@ etiquetas <- unlist(lapply(1:nrow(muestra), function(i) {
 2. Parar el algoritmo cuando  $||w^{(t-1)}-w^{(t)}|| < 0.01$, donde $w^{(t)}$ denota el vector de pesos al final de la época $t$. Una época es un pase completo a través de los $N$ datos.  
 3. Aplicar una permutación aleatoria de 1,2,...,$N$ a los datos antes de usarlos en cada época del algoritmo.  
 4. Usar una tasa de aprendizaje de $\eta=0.01$.
+
+Vamos a hacer primero una función auxiliar para calcular la norma euclídea de un vector
+
+```{r}
+calcularNorma <- function(vec) {
+  sqrt(sum(vec^2))
+}
+```
+
+
+```{r}
+# Algoritmo RL con SGD. Recibe los datos en una matriz, las etiquetas de esos
+# datos, el vector inicial, la tasa de aprendizaje, el máximo número de 
+# iteraciones y el umbral para la condición de parada.
+Regress_LogSGD <- function(datos, label, vini, tasa, maxiter, umbral) {
+  parada <- F
+  w <- vini
+  iter <- 1
+  errores_mejor <- cuenta_errores(wmejor, label, datos)
+  # Mientras no hayamos superado el máximo de iteraciones o
+  # no se hayan acercado lo suficiente w y wnew
+  while(!parada || iter > maxiter) {
+    # Hacemos una permutación al orden en el que vamos a utilizar los datos
+    pos <- sample(1:nrow(datos), nrow(datos))
+    # iteramos sobre los datos
+    for (j in pos) {
+      grad <- (-label[j]*datos[j,])/(1+exp(label[j]*crossprod(w, datos[j,])))
+      wnew <- w - tasa*grad
+      if(calcularNorma(w-wnew) < umbral) { 
+        parada = TRUE
+        # Si llegamos a la condición de parada, nos salimos del bucle interno
+        # también.
+        break
+      }
+      w <- wnew
+    }
+  }
+  
+  # Devolvemos los pesos finales
+  return(w)
+}
+```
+
 
 ###b) Usar la muestra de datos etiquetada para encontrar $g$ y estimar $E_{out}$ (el error de entropía cruzada) usando para ello un número suficientemente grande de nuevas muestras.
 QUÉ ES EL ERROR DE ENTROPÍA CRUZADA
