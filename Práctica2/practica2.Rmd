@@ -125,7 +125,6 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini) {
 #1. MODELOS LINEALES
 ##1. Gradiente Descendente. Implementar el algoritmo de gradiente descendente.
 
-PREGUNTAR SI CONDICIÓN DE PARADA CUANDO SE MUEVA POCO (DIFERENCIA ENTRE VALORES DE LA FUNCIÓN E) Y CUÁL ES ESE POCO
 
 ```{r}
 # Algoritmo del gradiente descendente. Le pasamos a la función la función de
@@ -134,24 +133,31 @@ PREGUNTAR SI CONDICIÓN DE PARADA CUANDO SE MUEVA POCO (DIFERENCIA ENTRE VALORES 
 # error al que queremos llegar, en orden.
 # Devuelve los valores de la función de error por los que pasa junto con la
 # iteración.
-gradienteDescendente <- function(ferror, gradiente, pini, tasa, maxiter, tope) {
+gradienteDescendente <- function(ferror, gradiente, pini, tasa, maxiter, umbral) {
   w <- pini
   i <- 1
   valoresError <- c(i, ferror(pini[1], pini[2]))
   mostrar <- TRUE
-  while (i <= maxiter) {
+  mejora <- TRUE
+  while (i <= maxiter && mejora) {
     g <- gradiente(w[1], w[2])
     # Le cambiamos la dirección al gradiente para ir hacia abajo
     v <- -g
     # Nos movemos tanto como indique la tasa
-    w <- w + tasa*v
-    valoresError <- rbind(valoresError, c(i, ferror(w[1], w[2])))
+    wnew <- w + tasa*v
+    valoresError <- rbind(valoresError, c(i, ferror(wnew[1], wnew[2])))
     
-    if (((abs(ferror(w[1], w[2])) < tope) || (i==maxiter)) && mostrar) {
-      cat("He necesitado", i, "iteraciones para llegar al error", ferror(w[1], w[2]),"\n")
-      cat("con valores de u y v:", w[1],",", w[2])
+    if (((abs(ferror(wnew[1], wnew[2])) < umbral) || (i==maxiter)) && mostrar) {
+      cat("He necesitado", i, "iteraciones para llegar al error", ferror(wnew[1], wnew[2]),"\n")
+      cat("con valores de u y v:", wnew[1],",", wnew[2])
       mostrar <- FALSE
     }
+    
+    if (abs(ferror(wnew[1], wnew[2])-ferror(w[1], w[2])) < umbral || 
+        ferror(wnew[1], wnew[2]) < umbral) {
+      mejora <- FALSE
+    }
+    w <- wnew
     i <- i+1
   }
   return(valoresError)
@@ -212,6 +218,7 @@ val <- gradienteDescendente(f, gradF, c(-0.5,-0.5), 0.01, 50, 0)
 val <- gradienteDescendente(f, gradF, c(-1,-1), 0.01, 50, 0)
 ```
 
+
 ##2. Coordenada descendente. En este ejercicio comparamos la eficiencia de la técnica de optimización de "coordenada descendente" usando la misma función del ejercicio 1.1.a. En cada iteración, tenemos dos pasos a lo largo de dos coordenadas. En el paso 1 nos movemos a lo largo de la coordenadas $u$ para reducir el error (suponer que se verifica una aproximación de primer orden como en gradiente descendente), y el paso 2 es para reevaluar y movernos a lo largo de la coordenada $v$ para reducir el error (hacer la misma hipótesis que en el paso 1). Usar una tasa de aprendizaje de $\eta=0.1$.
 
 ```{r}
@@ -219,28 +226,37 @@ val <- gradienteDescendente(f, gradF, c(-1,-1), 0.01, 50, 0)
 # error, su gradiente (que serán funciones), el punto en el que se empieza, la
 # tasa de aprendizaje, el número máximo de iteraciones a realizar, y el mínimo 
 # error al que queremos llegar, en orden.
-coordenadaDescendente <- function(ferror, gradiente, pini, tasa, maxiter, tope) {
+coordenadaDescendente <- function(ferror, gradiente, pini, tasa, maxiter, umbral) {
   w <- pini
   i <- 1
   mostrar <- TRUE
-  while (i <= maxiter) {
+  mejora <- TRUE
+  while (i <= maxiter && mejora) {
     # Paso 1
     g <- gradiente(w[1], w[2])
     # Le cambiamos la dirección al gradiente para ir hacia abajo
     v <- -g
-    w[1] <- w[1] + tasa*v[1]
+    wnew <- w
+    wnew[1] <- w[1] + tasa*v[1]
     
     # Paso 2
-    g <- gradiente(w[1], w[2])
+    g <- gradiente(wnew[1], wnew[2])
     # Le cambiamos la dirección al gradiente para ir hacia abajo
     v <- -g
-    w[2] <- w[2] + tasa*v[2]
+    wnew[2] <- w[2] + tasa*v[2]
     
-    if (((abs(ferror(w[1], w[2])) < tope) || (i==maxiter)) && mostrar) {
-      cat("He necesitado", i, "iteraciones para llegar al error", ferror(w[1], w[2]),"\n")
+    if (((abs(ferror(wnew[1], wnew[2])) < umbral) || (i==maxiter)) && mostrar) {
+      cat("He necesitado", i, "iteraciones para llegar al error", ferror(wnew[1], wnew[2]),"\n")
       cat("con valores de u y v:", w[1],",", w[2])
       mostrar <- FALSE
     }
+    
+    if (abs(ferror(wnew[1],wnew[2]) - ferror(w[1],w[2])) < umbral && 
+        ferror(wnew[1],wnew[2]) < umbral) {
+      mejora <- FALSE
+    }
+    
+    w <- wnew
     i <- i+1
   }
 }
@@ -269,24 +285,32 @@ PREGUNTAR SI ESTO ESTÁ BIEN
 # realizar, y el mínimo error al que queremos llegar, en orden.
 # Devuelve los valores de la función de error por los que pasa junto con la
 # iteración.
-metodoNewton <- function(ferror, gradiente, hessiana, pini, tasa, maxiter, tope) {
+metodoNewton <- function(ferror, gradiente, hessiana, pini, tasa, maxiter, umbral) {
   w <- pini
   i <- 1
   valoresError <- c(i, ferror(pini[1], pini[2]))
   mostrar <- TRUE
-  while (i <= maxiter) {
+  mejora <- TRUE
+  while (i <= maxiter && mejora) {
     hg <- solve(hessiana(w[1], w[2]))%*%gradiente(w[1], w[2])
     # Le cambiamos la dirección al gradiente para ir hacia abajo
     v <- -hg
     # Nos movemos tanto como indique la tasa
-    w <- w + tasa*v
-    valoresError <- rbind(valoresError, c(i, ferror(w[1], w[2])))
+    wnew <- w + tasa*v
+    valoresError <- rbind(valoresError, c(i, ferror(wnew[1], wnew[2])))
     
-    if (((abs(ferror(w[1], w[2])) < tope) || (i==maxiter)) && mostrar) {
-      cat("He necesitado", i, "iteraciones para llegar al error", ferror(w[1], w[2]),"\n")
-      cat("con valores de u y v:", w[1],",", w[2])
+    if (((abs(ferror(wnew[1], wnew[2])) < umbral) || (i==maxiter)) && mostrar) {
+      cat("He necesitado", i, "iteraciones para llegar al error", ferror(wnew[1], wnew[2]),"\n")
+      cat("con valores de u y v:", wnew[1],",", wnew[2])
       mostrar <- FALSE
     }
+    
+    if (abs(ferror(wnew[1], wnew[2]) - ferror(w[1], w[2])) < umbral ||
+        ferror(wnew[1], wnew[2]) < umbral) {
+      mejora <- FALSE
+    }
+    
+    w <- wnew
     i <- i+1
   }
   return(valoresError)
@@ -350,7 +374,7 @@ etiquetas <- unlist(lapply(1:nrow(muestra), function(i) {
 4. Usar una tasa de aprendizaje de $\eta=0.01$.
 
 ###b) Usar la muestra de datos etiquetada para encontrar $g$ y estimar $E_{out}$ (el error de entropía cruzada) usando para ello un número suficientemente grande de nuevas muestras.
-QUÉ NARICES ES EL ERROR DE ENTROPÍA CRUZADA
+QUÉ ES EL ERROR DE ENTROPÍA CRUZADA
 
 ###c) Repetir el experimento 100 veces con diferentes funciones frontera y calcule el promedio.
 <p> 1) ¿Cuál es el valor de $E_{out}$ para $N=100$? </p>
@@ -366,46 +390,41 @@ train <- read.table("datos/zip.train", sep=" ")
 test <- read.table("datos/zip.test", sep=" ")
 numero_train <- train$V1
 numero_test <- test$V1
-frame_train1 <- train[numero_train==1,]
-frame_train5 <- train[numero_train == 5,]
-frame_test1 <- test[numero_test==1,]
-frame_test5 <- test[numero_test==5,]
+frame_train <- train[numero_train==1 | numero_train==5,]
+frame_test <- test[numero_test==1 | numero_test==5,]
+numero_train <- numero_train[numero_train==1 | numero_train==5]
+numero_test <- numero_test[numero_test==1 | numero_test==5]
+
+# Hacemos los vectores de etiquetas
+etiquetas_train = numero_train
+etiquetas_train[numero_train==5] = -1
+etiquetas_test = numero_test
+etiquetas_test[numero_test==5] = -1
+
 # Eliminamos de cada uno la primera columna, que guarda el número del
 # que son los datos, y la última, que tiene NA
-frame_train1 = frame_train1[,-258]
-frame_train1 = frame_train1[,-1]
-frame_train5 = frame_train5[,-258]
-frame_train5 = frame_train5[,-1]
-frame_test1 = frame_test1[,-258]
-frame_test1 = frame_test1[,-1]
-frame_test5 = frame_test5[,-258]
-frame_test5 = frame_test5[,-1]
+frame_train = frame_train[,-258]
+frame_train = frame_train[,-1]
+frame_test = frame_test[,-258]
+frame_test = frame_test[,-1]
+
 # Los pasamos a matrices
-frame_train1 <- data.matrix(frame_train1)
-frame_train5 <- data.matrix(frame_train5)
-frame_test1 <- data.matrix(frame_test1)
-frame_test5 <- data.matrix(frame_test5)
+frame_train <- data.matrix(frame_train)
+frame_test <- data.matrix(frame_test)
+
 # Hacemos una lista de matrices
-lista_train1 <- lapply(split(frame_train1, seq(nrow(frame_train1))), function(x) {
+lista_train <- lapply(split(frame_train, seq(nrow(frame_train))), function(x) {
   matrix(x, 16, 16, T)
 })
-lista_train5 <- lapply(split(frame_train5, seq(nrow(frame_train5))), function(x) {
-  matrix(x, 16, 16, T)
-})
-lista_test1 <- lapply(split(frame_test1, seq(nrow(frame_test1))), function(x) {
-  matrix(x, 16, 16, T)
-})
-lista_test5 <- lapply(split(frame_test5, seq(nrow(frame_test5))), function(x) {
+lista_test <- lapply(split(frame_test, seq(nrow(frame_test))), function(x) {
   matrix(x, 16, 16, T)
 })
 
 # Eliminamos lo que no vamos a utilizar
 rm(train)
 rm(test)
-rm(frame_test1)
-rm(frame_train1)
-rm(frame_test5)
-rm(frame_train5)
+rm(frame_train)
+rm(frame_test)
 rm(numero_train)
 rm(numero_test)
 ```
@@ -415,34 +434,11 @@ A continuación calculamos las intensidades y las simetrías y las metemos todas j
 ```{r}
 # Calculamos primero las intensidades y las simetrías de todas las matrices,
 # es decir, de todas las instancias de 1's y 5's
-train_simetria1 <- unlist(lapply(lista_train1, function(m) calcular_simetria(m)))
-train_simetria5 <- unlist(lapply(lista_train5, function(m) calcular_simetria(m)))
-train_intensidad1 <- unlist(lapply(lista_train1, function(m) mean(m)))
-train_intensidad5 <- unlist(lapply(lista_train5, function(m) mean(m)))
+train_simetria <- unlist(lapply(lista_train, function(m) calcular_simetria(m)))
+train_intensidad <- unlist(lapply(lista_train, function(m) mean(m)))
 
-test_simetria1 <- unlist(lapply(lista_test1, function(m) calcular_simetria(m)))
-test_simetria5 <- unlist(lapply(lista_test5, function(m) calcular_simetria(m)))
-test_intensidad1 <- unlist(lapply(lista_test1, function(m) mean(m)))
-test_intensidad5 <- unlist(lapply(lista_test5, function(m) mean(m)))
-
-train_simetria <- c(train_simetria1, train_simetria5)
-test_simetria <- c(test_simetria1, test_simetria5)
-train_intensidad <- c(train_intensidad1, train_intensidad5)
-test_intensidad <- c(test_intensidad1, test_intensidad5)
-test_num1 <- length(test_simetria1)
-test_num5 <- length(test_simetria5)
-train_num1 <- length(train_simetria1)
-train_num5 <- length(train_simetria5)
-
-# Borramos lo que no necesitamos
-rm(train_simetria5)
-rm(train_simetria1)
-rm(test_simetria5)
-rm(test_simetria1)
-rm(test_intensidad5)
-rm(test_intensidad1)
-rm(train_intensidad5)
-rm(train_intensidad1)
+test_simetria <- unlist(lapply(lista_test, function(m) calcular_simetria(m)))
+test_intensidad <- unlist(lapply(lista_test, function(m) mean(m)))
 ```
 
 
@@ -453,17 +449,30 @@ Las etiquetas serán 1 o -1 según representen la intensidad o simetría de las ins
 Necesitamos poner como tercera coordenada de la matriz de datos que le vamos a pasar al método de regresión lineal un 1, para ponerlo en coordenadas homogéneas. Nos quedará por tanto cada fila de la matriz de datos como (intensidad, simetría, 1).
 
 ```{r}
-etiquetas <- c(rep(1, train_num1), rep(-1, train_num5))
 datos <- cbind(train_intensidad, train_simetria, 1)
-w <- Regress_Lin(datos, etiquetas)
+w <- Regress_Lin(datos, etiquetas_train)
 # Le pasamos lo que nos devuelve la regresión lineal al PLA pocket como solución
 # inicial
-sol <- ajusta_PLA_MOD(datos, etiquetas, 1000, w)
+sol <- ajusta_PLA_MOD(datos, etiquetas_train, 100, w)
 ```
 
 COMENTAR QUE LA FUNCIÓN ES LA MISMA PORQUE LO QUE DEVUELVE LA REGRESIÓN YA ES CANELA FINA Y EL POCKET NO LO PUEDE MEJORAR (ES LA MEJOR SOLUCIÓN A LA QUE PUEDE LLEGAR ÉL TAMBIÉN).
 
 ###a) Generar gráficos separados (en color) de los datos de entrenamiento y test junto con la función estimada.
+
+```{r}
+# Obtenemos la solución devuelta por el PLA
+r <- sol[[1]]
+r <- -r/r[2]
+plot(train_intensidad, train_simetria, type="p", col=etiquetas_train+3, main="Conjunto TRAIN")
+abline(r[3], r[1])
+```
+
+Dibujamos y mostramos el conjunto de test con la función que hemos calculado con el conjunto de train
+```{r}
+plot(test_intensidad, test_simetria, type="p", col=etiquetas_test+3, main="Conjunto TEST")
+abline(r[3], r[1])
+```
 
 
 ###b) Calcular $E_{in}$ y $E_{test}$ (error sobre los datos de test).
