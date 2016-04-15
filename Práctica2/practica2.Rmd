@@ -412,21 +412,76 @@ Regress_LogSGD <- function(datos, label, vini, tasa, maxiter, umbral) {
 
 
 ###b) Usar la muestra de datos etiquetada para encontrar $g$ y estimar $E_{out}$ (el error de entropía cruzada) usando para ello un número suficientemente grande de nuevas muestras.
-QUÉ ES EL ERROR DE ENTROPÍA CRUZADA
+
+PREGUNTAR SI EL ERROR DE ENTROPÍA CRUZADA ES ASÍ:
 
 ```{r}
-g <- Regress_LogSGD(cbind(muestra,1), etiquetas, c(0,0,0), 0.01, 400, 0.01)
-g
+sol <- Regress_LogSGD(cbind(muestra,1), etiquetas, c(0,0,0), 0.01, 400, 0.01)
+sol
+g <- -sol[[1]]/sol[[1]][2]
+muestra_out <- simula_unif(1000, 2, c(-1,1))
+etiquetas_originales <- unlist(lapply(1:nrow(muestra_out), function(i) {
+  p <- muestra_out[i,]
+  sign(p[2] - recta[1]*p[1] - recta[2])
+}))
+etiquetas_g <- unlist(lapply(1:nrow(muestra_out), function(i) {
+  p <- muestra_out[i,]
+  sign(p[2] - g[1]*p[1] - g[3])
+}))
+errores <- cuenta_diferencias(etiquetas_originales, etiquetas_g)
+cat("El error de entropía cruzada es: ", errores)
 ```
 
 
-###c) Repetir el experimento 100 veces con diferentes funciones frontera y calcule el promedio.
+###c) Repetir el experimento 100 veces con diferentes funciones frontera y calcular el promedio.
+¿HAY QUE CAMBIAR SÓLO LA RECTA O LA MUESTRA TAMBIÉN?
 <p> 1) ¿Cuál es el valor de $E_{out}$ para $N=100$? </p>
 
+```{r}
+errores <- 0
+iteraciones <- 0
+for(i in 1:100) {
+  recta_i <- simula_recta(c(-1,1))
+  etiquetas_i <- unlist(lapply(1:nrow(muestra), function(i) {
+    p <- muestra[i,]
+    sign(p[2] - recta_i[1]*p[1] - recta_i[2])
+  }))
+  
+  sol <- Regress_LogSGD(cbind(muestra,1), etiquetas_i, c(0,0,0), 0.01, 500, 0.01)
+  g <- -sol[[1]]/sol[[1]][2]
+  iteraciones <- iteraciones + sol[[2]]
+  
+  etiquetas_originales <- unlist(lapply(1:nrow(muestra_out), function(i) {
+    p <- muestra_out[i,]
+    sign(p[2] - recta_i[1]*p[1] - recta_i[2])
+  }))
+  etiquetas_g <- unlist(lapply(1:nrow(muestra_out), function(i) {
+    p <- muestra_out[i,]
+    sign(p[2] - g[1]*p[1] - g[3])
+  }))
+  errores <- errores + cuenta_diferencias(etiquetas_originales, etiquetas_g)
+}
+
+cat("El número medio de Eout ha sido:", errores/100)
+```
 
 <p> 2) ¿Cuántas épocas tada en promedio RL en converger para $N=100$, usando todas las condiciones anteriormente especificadas? </p>
 
+```{r}
+cat("RL tarda en converger", iteraciones/100, "iteraciones en promedio")
+```
+
+```{r}
+# Borramos lo que no necesitamos
+rm(muestra, muestra_out)
+rm(errores, iteraciones)
+rm(etiquetas, etiquetas_g, etiquetas_originales)
+rm(g, i, recta, recta_i)
+```
+
 ##5. Clasificación de Dígitos. Considerar el conjunto de datos de los dígitos manuscritos y seleccionar las muestras de los dígitos 1 y 5. Usar los ficheros de entrenamiento (training) y test que se proporcionan. Extraer las características de $\textit{intensidad promedio}$ y $\textit{simetría}$ en la manera que se indicó en el ejercicio 3 del trabajo 1.  
+
+DECIRLE EL PROBLEMA CON LOS DATOS DE TEST
 
 ```{r}
 # Leemos los ficheros y extraemos los dígitos 1 y 5
@@ -532,3 +587,11 @@ abline(r[3], r[1])
 
 
 #2. SOBREAJUSTE
+
+##1. Sobreajuste. Vamos a construir un entorno que nos permita experimentar con los problemas de sobreajuste. Consideremos el espacio de entrada $X=[-1,1]$ con una densidad de probabilidad uniforme $P(x)=\frac{1}{2}$. Consideramos dos modelos $\mathcal{H}_2$ y $\mathcal{H}_{10}$ representando el conjunto de todos los polinomios de grado 2 y grado 10 respectivamente. La función objetivo es un polinomio de grafo $Q_f$ que escribimos como $f(x)=\sum_{q=0}^{Q_f}a_qL_q(x)$, donde $L_q(x)$ son los polinomios de Legendre (ver la relación de ejercicios 2). El conjunto de datos es $D=\{(x_1,y_1),...,(x_N,y_N)\}$ donde $y_n=f(x_n)+\sigma \epsilon_n$ y las $\{\epsilon_n\}$ son variables aleatorias i.i.d. $\mathcal{N}(0,1)$ y $\sigma^2$ la varianza del ruido.
+
+##Comenzamos realizando un experimento donde suponemos que los valores de $Q_f$, $N$, $\sigma$ están especificados. Para ello:
+
+###a) Generamos los coeficientes $a_q$ a partir de muestras de una distribución $\mathcal{N}(0,1)$ y escalamos dichos coeficientes de manera que $E_{a,x}[f^2] = 1$ (Ayuda: dividir los coeficientes por $\sqrt{\sum_{q=0}^{Q_f}\frac{1}{2q+1}}$
+
+###b) Generamos un conjunto de datos $x_1,...,x_N$ muestreando de forma independiente $P(x)$ y los valores $y_n=f(x_n)+ \sigma \epsilon_n$
