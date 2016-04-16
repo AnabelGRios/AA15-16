@@ -576,9 +576,37 @@ abline(r[3], r[1])
 
 ###b) Calcular $E_{in}$ y $E_{test}$ (error sobre los datos de test).
 
+$E_{in}$ es el error dentro de la muestra (datos de entrenamiento) y $E_{test}$ el error en los datos de test con la recta que hemos obtenido previamente sobre los datos de entrenamiento. En ambos casos lo que hacemos es calcular las nuevas etiquetas que nos da la g (función obtenida de regresión logística + PLA pocket) y contar los errores de estas con las originales.
+
+```{r}
+etiquetas_g_in <- unlist(lapply(1:nrow(datos), function(i) {
+  p <- datos[i,]
+  sign(p[2] - r[1]*p[1] - r[3])
+}))
+datos_test <- cbind(test_intensidad, test_simetria, 1)
+etiquetas_g_test <- unlist(lapply(1:nrow(datos_test), function(i) {
+  p <- datos_test[i,]
+  sign(p[2] - r[1]*p[1] - r[3])
+}))
+Ein <- 100*cuenta_diferencias(etiquetas_train, etiquetas_g_in)/nrow(datos)
+Etest <- 100*cuenta_diferencias(etiquetas_test, etiquetas_g_test)/nrow(datos_test)
+cat("El error en la muestra Ein ha sido", Ein)
+cat("El error en el test Etest ha sido", Etest)
+```
 
 ###c) Obtener cotas sobre el verdadero valor de $E_{out}$. Pueden calcularse dos cotas, una basada en $E_{in}$ y otra basada en $E_{test}$. Usar una tolerancia $\delta=0.05$. ¿Qué cota es mejor?
 
+Empezamos obteniendo la cota basada en $E_{in}$: la cota de generalización de Vapnik-Chervonenkis para $M=\infty$, como es nuestro caso cuando calculamos la recta que separa los datos para los datos de entrenamiento. Para una tolerancia de $\delta=0.05$, podemos afirmar que $E_{out}(g)\leq E_{in}(g) + \sqrt{\frac{8}{N}ln\frac{4m_H(2N)}{\delta}}$ con probabilidad mayor o igual $1-\delta=0.95$. Tenemos además una cota de $m_H(N)$: $m_H(N)\leq N^{d_{VC}} + 1$, y $d_{VC}$ para este problema, como hemos visto en clase, es 3, con lo que $m_H(2N) \leq (2N)^3+1$ con $N$ el número de datos, que en este caso es 599. Con todo esto podemos calcular dicha cota:
+
+```{r}
+# Cota sobre la función de crecimiento
+mH_cota <- (2*nrow(datos))^3+1
+# Cota basada en Ein
+Eout_cota1 <- Ein + sqrt((8/nrow(datos))*log((4*mH_cota)/0.05))
+cat("La cota basada en Ein es", Eout_cota1)
+```
+
+La cota basada en $E_test$ es la cota de Hoeffding considerando $M=1$ pues cuando llegamos al test ya tenemos escogida la $h$, que es la recta elegida con los datos de entrenamiento.
 
 ###d) Repetir los puntos anteriores pero usando una transformación polinómica de tercer orden ($\Phi_3(x)$ en las transparencias de teoría)
 
@@ -595,3 +623,5 @@ abline(r[3], r[1])
 ###a) Generamos los coeficientes $a_q$ a partir de muestras de una distribución $\mathcal{N}(0,1)$ y escalamos dichos coeficientes de manera que $E_{a,x}[f^2] = 1$ (Ayuda: dividir los coeficientes por $\sqrt{\sum_{q=0}^{Q_f}\frac{1}{2q+1}}$
 
 ###b) Generamos un conjunto de datos $x_1,...,x_N$ muestreando de forma independiente $P(x)$ y los valores $y_n=f(x_n)+ \sigma \epsilon_n$
+
+FALTA ENUNCIADO DE EJERCICIO POR AQUÍ
