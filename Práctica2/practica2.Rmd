@@ -7,6 +7,11 @@ output: pdf_document
 #Funciones de la práctica 1 que vamos a reutilizar.
 ```{r}
 set.seed(237)
+
+######
+# Funciones de la primera práctica
+######
+
 # Simular números aleatorios uniformes
 simula_unif = function (N=2, dims=2, rango = c(0,1)){
  matrix(runif(N*dims, min=rango[1], max=rango[2]), nrow = N, ncol=dims, byrow=T)
@@ -429,7 +434,7 @@ etiquetas_g <- unlist(lapply(1:nrow(muestra_out), function(i) {
   sign(p[2] - g[1]*p[1] - g[3])
 }))
 errores <- cuenta_diferencias(etiquetas_originales, etiquetas_g)
-cat("El error de entropía cruzada es: ", errores)
+cat("El error de entropía cruzada es: ", errores/nrow(muestra))
 ```
 
 
@@ -480,8 +485,6 @@ rm(g, i, recta, recta_i)
 ```
 
 ##5. Clasificación de Dígitos. Considerar el conjunto de datos de los dígitos manuscritos y seleccionar las muestras de los dígitos 1 y 5. Usar los ficheros de entrenamiento (training) y test que se proporcionan. Extraer las características de $\textit{intensidad promedio}$ y $\textit{simetría}$ en la manera que se indicó en el ejercicio 3 del trabajo 1.  
-
-DECIRLE EL PROBLEMA CON LOS DATOS DE TEST
 
 ```{r}
 # Leemos los ficheros y extraemos los dígitos 1 y 5
@@ -606,17 +609,52 @@ Eout_cota1 <- Ein + sqrt((8/nrow(datos))*log((4*mH_cota)/0.05))
 cat("La cota basada en Ein es", Eout_cota1)
 ```
 
-La cota basada en $E_test$ es la cota de Hoeffding considerando $M=1$ pues cuando llegamos al test ya tenemos escogida la $h$, que es la recta elegida con los datos de entrenamiento.
+La cota basada en $E_test$ es la cota de Hoeffding considerando $M=1$, pues cuando llegamos al test ya tenemos escogida la $h$, que es la recta elegida con los datos de entrenamiento. Utilizamos por tanto la cota $P[|E_{test}(g) - E_{out}(g)| > \epsilon] \leq 2Me^{-2\epsilon^2N}$ y queremos que esta probabilidad sea menor o igual que 0.05, con lo que vamos a obtener $\epsilon$: $2e^{-2\epsilon^2N} \leq 0.05 \Rightarrow e^{-2\epsilon^2N} \leq 0.025 \Rightarrow -2\epsilon^2N \leq ln(0.025) \Rightarrow \epsilon^2 \geq ln(0.025)/(-2N) \Rightarrow \epsilon \geq \sqrt{ln(0.025)/(-2N)}$, donde $N=49$, el número de datos que tenemos en test, luego $\epsilon \geq 0.1940145$. Tomamos el $\epsilon$ más pequeño para obtener la cota más fina, y nos queda que la probabilidad de que $|E_{test}-E_{out}| \geq 0.1940145$ es 0.039682.  
+
+FALTA DECIR CUÁL ES MEJOR
 
 ###d) Repetir los puntos anteriores pero usando una transformación polinómica de tercer orden ($\Phi_3(x)$ en las transparencias de teoría)
+$\Phi_3(x)=(1,x_1,x_2,x_1^2, x_2^2,x_1x_2,x_1^3,x_2^3,x_1x_2^2,x_1^2x_2)$
 
+```{r}
+x1 <- train_intensidad
+x2 <- train_simetria
+datos <- cbind(1, x1, x2, x1^2, x2^2, x1*x2, x1^3, x2^3, x1*x2^2, x2*x1^2)
+etiquetas_g_in <- unlist(lapply(1:nrow(datos), function(i) {
+  p <- datos[i,]
+  sign(p[2] - r[1]*p[1] - r[3])
+}))
+
+x1 <- test_intensidad
+x2 <- test_simetria
+datos_test <- cbind(1, x1, x2, x1^2, x2^2, x1*x2, x1^3, x2^3, x1*x2^2, x2*x1^2)
+etiquetas_g_test <- unlist(lapply(1:nrow(datos_test), function(i) {
+  p <- datos_test[i,]
+  sign(p[2] - r[1]*p[1] - r[3])
+}))
+
+Ein <- 100*cuenta_diferencias(etiquetas_train, etiquetas_g_in)/nrow(datos)
+Etest <- 100*cuenta_diferencias(etiquetas_test, etiquetas_g_test)/nrow(datos_test)
+cat("El error en la muestra Ein ha sido", Ein)
+cat("El error en el test Etest ha sido", Etest)
+```
+
+```{r}
+# Cota sobre la función de crecimiento
+mH_cota <- (2*nrow(datos))^3+1
+# Cota basada en Ein
+Eout_cota1 <- Ein + sqrt((8/nrow(datos))*log((4*mH_cota)/0.05))
+cat("La cota basada en Ein es", Eout_cota1)
+```
+
+AQUÍ FALTAN COSAS FIJO
 
 ###e) Si tuviera que usar los resultados para dárselos a un potencial cliente, ¿usaría la transformación polinómica? Explicar la decisión.
-
+POR HACER
 
 #2. SOBREAJUSTE
 
-##1. Sobreajuste. Vamos a construir un entorno que nos permita experimentar con los problemas de sobreajuste. Consideremos el espacio de entrada $X=[-1,1]$ con una densidad de probabilidad uniforme $P(x)=\frac{1}{2}$. Consideramos dos modelos $\mathcal{H}_2$ y $\mathcal{H}_{10}$ representando el conjunto de todos los polinomios de grado 2 y grado 10 respectivamente. La función objetivo es un polinomio de grafo $Q_f$ que escribimos como $f(x)=\sum_{q=0}^{Q_f}a_qL_q(x)$, donde $L_q(x)$ son los polinomios de Legendre (ver la relación de ejercicios 2). El conjunto de datos es $D=\{(x_1,y_1),...,(x_N,y_N)\}$ donde $y_n=f(x_n)+\sigma \epsilon_n$ y las $\{\epsilon_n\}$ son variables aleatorias i.i.d. $\mathcal{N}(0,1)$ y $\sigma^2$ la varianza del ruido.
+##1. Sobreajuste. Vamos a construir un entorno que nos permita experimentar con los problemas de sobreajuste. Consideremos el espacio de entrada $X=[-1,1]$ con una densidad de probabilidad uniforme $P(x)=\frac{1}{2}$. Consideramos dos modelos $\mathcal{H}_2$ y $\mathcal{H}_{10}$ representando el conjunto de todos los polinomios de grado 2 y grado 10 respectivamente. La función objetivo es un polinomio de grado $Q_f$ que escribimos como $f(x)=\sum_{q=0}^{Q_f}a_qL_q(x)$, donde $L_q(x)$ son los polinomios de Legendre (ver la relación de ejercicios 2). El conjunto de datos es $D=\{(x_1,y_1),...,(x_N,y_N)\}$ donde $y_n=f(x_n)+\sigma \epsilon_n$ y las $\{\epsilon_n\}$ son variables aleatorias i.i.d. $\mathcal{N}(0,1)$ y $\sigma^2$ la varianza del ruido.
 
 ##Comenzamos realizando un experimento donde suponemos que los valores de $Q_f$, $N$, $\sigma$ están especificados. Para ello:
 
@@ -624,4 +662,21 @@ La cota basada en $E_test$ es la cota de Hoeffding considerando $M=1$ pues cuand
 
 ###b) Generamos un conjunto de datos $x_1,...,x_N$ muestreando de forma independiente $P(x)$ y los valores $y_n=f(x_n)+ \sigma \epsilon_n$
 
-FALTA ENUNCIADO DE EJERCICIO POR AQUÍ
+##Sean $g_2$ y $g_{10}$ los mejores ajustes a los datos usando $\mathcal{H}_2$ y $\mathcal{H}_{10}$ respectivamente, y sean $E_{out}(g_2)$ y $E_{out}(g_{10})$ sus respectivos errores fuera de la muestra.
+
+###a) Calcular $g_2$ y $g_{10$}$
+
+###b) ¿Por qué normalizamos f? (Ayuda: interpretar el significado de $\sigma$)
+
+###c) ¿Cómo podemos obtener $E_{out}$ analíticamente para una $g_{10}$ dada?
+
+
+##2. Siguiendo con el punto anterior, generar múltiples combinaciones de $Q_f$, $N$, $\sigma$ y para cada combinación de parámetros ejecutar un número grande de experimentos (>1000) calculando en cada caso $E_{out}(g_2)$ y $E_{out}(g_{10})$. Promediar todos los valores de error obtenidos para cada conjunto de hipótesis, es decir $E_{out}(\mathcal(H)_2) =$ promedio sobre experimentos$(E_{out}(g_2))$ y $E_{out}(\mathcal(H)_{10}) =$ promedio sobre experimentos$(E_{out}(g_{10}))$.
+##Definimos una medida de sobreajuste como $E_{out}(\mathcal(H)_{10})-E_{out}(\mathcal(H)_2)$.
+
+###a) Argumentar por qué la medida dada puede medir el sobreajuste.
+
+###b) ¿Bajo qué condiciones es esta medida significativamente positiva (i.e. sobreajuste alto) y lo opuesto, significativamente negativa? Usar los valores $Q_f \in \{1,2,...,100\}$, $N \in \{20,25,...,100\}$, $\sigma \in \{0:0.05;0.1;...;2\}$. Explicar lo que se observa.
+
+
+##3. Repetir el experimento descrito en los puntos anteriores pero para el caso de clasificación donde la función objetivo es un perceptron ruidoso $f(x)=sign(\sum_{q=1}^{Q_f}a_qL_q(x)+\epsilon)$. Notemos que $a_0=0$ y que las $a_q$ deben ser normalizadas para que $E_{a,x}[(\sum_{q=1}^{Q_f}a_qL_q(x))^2]=1$. En este caso los modelos $\mathcal{H}_2$ y $\mathcal{H}_10$ contienen el signo de los polinomios de segundo y décimo orden respectivamente. (Atención: los datos no serán separables) (Ayuda: para la normalización adaptar la regla dada en el punto anterior).
