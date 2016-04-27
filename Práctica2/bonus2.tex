@@ -1,0 +1,157 @@
+\documentclass[12pt]{article}
+
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,activeacute]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{mathtools}
+\usepackage{enumerate}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage[hidelinks]{hyperref}
+
+\title{Aprendizaje Automático: Bonus 2}
+\author{Anabel G\'omez R\'ios}
+
+\theoremstyle{definition}
+
+\begin{document}
+\maketitle
+
+\newtheorem{pregunta}{Pregunta}
+
+\subsection{Matrices y optimización}
+\begin{pregunta}[Multiplicadores de Lagrange]
+Lagrange propuso una técnica para resolver el siguiente problema de optimización:
+    \[ \max_{x,y} g(x,y) \]
+    \[ \text{Sujeto a } f(x,y)=0 \]
+    Es decir, buscar el máximo de la función $g$ en un recinto del plano $x-y$ definido por los valores nulos de la función $f$. La solución es transformar este problema de optimización con restricciones en un problema de optimización sin restricciones y resolver este último derivando e igualando a cero. Para ello construye una nueva función denominada lagrangiana que se define como
+    \[
+    \mathcal{L}(x,y,\lambda)=g(x,y)-\lambda f(x,y)
+    \]
+    siendo $\lambda$ una constante y prueba que la solución de óptimo de $\mathcal{L}$ es la misma que la del problema inicial. Por ello para obtener dicha solución sólo hay que calcular la solución del sistema de ecuaciones dado por $\nabla_{x,y,\lambda}\mathcal{L}(x,y,\lambda)=0$. En el caso de que exista más de una restricción en igualdad cada una de ellas se añade a la lagrangiana de la misma manera pero con un $\lambda$ diferente.
+    \[
+    \mathcal{L}(x,y,\lambda_1,\dots,\lambda_n)=
+    			g(x,y)-\sum_{i=1}^n \lambda_i f_i(x,y)
+    \]
+    Resolver el siguiente problema:\\
+    La distancia entre dos curvas en el plano está dada por el mínimo de la expresión $\sqrt{(x_1-x_2)^2+(y_1-y_2)^2}$ donde $(x_1,y_1)$ está sobre una de las curvas y $(x_2,y_2)$ está sobre la otra. Calcular la distancia entre la línea $x+y=4$ y la elipse $x^2+2y^2=1$.\\
+    
+    En el caso de que algunas de las condiciones de restricción estén definidas en términos de desigualdad ($<$, $ \leq$, etc), entonces las condiciones para que la solución del problema sin restricción coincida con la solución del problema con restricciones cambian respecto del caso lagrangiano, dichas condiciones se denominan las condiciones de \textrm{Karush-Kuhn-Tucker}.\\
+\textit{ }\\
+    
+Vamos a definir por tanto para nuestro caso el operador $\mathcal{L}$. Necesitamos dos parejas de puntos, una sujeta a pertenecer a la recta $x_1+y_1=4$ y otra sujeta a pertenecer a la elipse $x_2^2+2y_2^2=1$ (necesitamos por tantos dos $\lambda$ distintos: $\lambda_1$, $\lambda_2$). Por tanto en nuestro caso tenemos
+\begin{equation}
+\mathcal{L}(x_1,y_1,x_2,y_2,\lambda_1, \lambda_2) = \sqrt{(x_1-x_2)^2+(y_1-y_2)^2} - \lambda_1(x_1+y_1-4) - \lambda_2(x_2^2+2y_2^2-1)
+\end{equation}
+    
+Como nos dice el enunciado del problema, tenemos ahora que calcular el gradiente con respecto a todas las variables (las dos parejas de puntos y los dos parámetros) y resolver el sistema resultante de igualar este gradiente a cero. Calculamos el gradiente, derivando $\mathcal{L}$ con respecto a todas las variables y dando como resultado un vector de 6 componentes:
+\[
+	\nabla_{x_1,y_1,x_2,y_2,\lambda_1, \lambda_2} \mathcal{L}(x_1,y_1,x_2,y_2,\lambda_1, \lambda_2)=
+\]
+\[
+	=(\frac{2(x_1-x_2)}{2\sqrt{(x_1-x_2)^2+(y_1-y_2)^2}} - \lambda_1, \frac{2(y_1-y_2)}{2\sqrt{(x_1-x_2)^2+(y_1-y_2)^2}} - \lambda_1,
+\]
+\[
+	\frac{2(x_1-x_2)}{2\sqrt{(x_1-x_2)^2+(y_1-y_2)^2}} - 2\lambda_2x_2, \frac{2(y_1-y_2)}{2\sqrt{(x_1-x_2)^2+(y_1-y_2)^2}} - 4\lambda_2y_2,
+\]
+\[
+	-x_1-y_1+4, -x_2^2-2y_2^2+1)
+\]
+
+Por simplicidad, vamos a notar a la raíz cuadrada $\sqrt{(x_1-x_2)^2+(y_1-y_2)^2}$ como $A$. Nos queda, simplificando un poco, el siguiente sistema de 6 ecuaciones con 6 incógnitas:
+\[
+	\frac{x_1-x_2}{A}-\lambda_1=0
+\]
+\[
+	\frac{y_1-y_2}{A}-\lambda_1=0
+\]
+\[
+	\frac{-x_1+x_2}{A}-2\lambda_2x_2=0
+\]
+\[
+	\frac{-y_1+y_2}{A}-4\lambda_2y_2=0
+\]
+\[
+	-x_1-y_1+4=0
+\]
+\[
+	-x_2^2-2y_2^2+1=0
+\]
+
+De las dos primeras ecuaciones, vamos a despejar $\lambda_1$ y a igualar, y nos queda por tanto $\frac{x_1-x_2}{A} = \frac{y_1-y_2}{A} \Rightarrow x_1-x_2=y_1-y_2 \Rightarrow x_1=x_2+y_1-y_2$\\
+
+De las dos siguientes ecuaciones vamos a despejar los numeradores en ambas, con lo que nos queda lo siguiente: $x_1-x_2=-2\lambda_2x_2A$ en la primera y $y_1-y_2=-4\lambda_2y_2A$ en la segunda. Como acabamos de obtener de las dos primeras ecuaciones que $x_1-x_2=y_1-y_2$ podemos igualar los segundos miembros y dividiendo por 2 nos queda $\lambda_2x_2A=2\lambda_2y_2A \Rightarrow x_2=2y_2$.\\
+
+Ahora en la última ecuación vamos a utilizar que $x_2=2y_2$ y a sustituir, de forma que tenemos $-x_2^2-2y_2^2+1=0 \Rightarrow -4y_2^2-2y_2^2+1=0 \Rightarrow 6y_2^2=1 \Rightarrow y_2^2 = \frac{1}{6} \Rightarrow y=\pm\frac{1}{\sqrt{6}}$ con lo que obtenemos dos valores para $y_2$.\\
+
+Ahora que tenemos $y_2$ vamos a la penúltima ecuación y a utilizarlo junto con que $x_1=x_2+y_1-y_2$ y que $x_2=2y_2$: $-x_1-y_1+4=0 \Rightarrow -x_2-y_1+y_2-y_1+4=0 \Rightarrow -2y_2+y_2-2y_1+4=0 \Rightarrow 2y_1+y_2=4 \Rightarrow y_1=2-\frac{y_2}{2}$.\\
+Con esto obtenemos el valor de de $y_1$, que serán también dos valores, dependiendo de si cogemos el signo negativo o el positivo de $y_2$: $y_1=2-(\pm\frac{1}{2\sqrt{6}})$.\\
+
+Como tenemos $y_2$ podemos obtener también $x_2=2y_2=\pm\frac{2}{\sqrt{6}}$.\\
+Una vez tenemos $x_2,y_1,y_2$ podemos obtener $x_1$, $x_1=x_2+y_1-y_2=y_1+y_2=2-(\pm\frac{1}{2\sqrt{6}})\pm\frac{1}{\sqrt{6}}$. Tenemos que tener en cuenta que el signo de estos tres ($x_1,x_2,y_1$), cuando hemos puesto $\pm$ hasta ahora, es siempre el mismo puesto que todos dependen del signo de $y_2$ (es decir, para $y_2$ positivo todos los $\pm$ serán un $+$ y si es negativo todos serán un $-$).\\
+
+Cabe destacar que una vez tenemos los dos puntos obtener $\lambda_1$ y $\lambda_2$ es fácil, pero no es necesario para nuestro problema ya que hemos llegado a una solución sin la necesidad de calcularlos, es decir, nosotros lo que necesitamos es justo estos dos puntos. Hemos llegado por tanto a dos soluciones distintas:
+\[
+	(x_1,y_1,x_2,y_2)=(2-\frac{1}{2\sqrt{6}}+\frac{1}{\sqrt{6}},2-\frac{1}{2\sqrt{6}}, \frac{2}{\sqrt{6}}, \frac{1}{\sqrt{6}}) =  (2+\frac{1}{2\sqrt{6}},2-\frac{1}{2\sqrt{6}}, \frac{2}{\sqrt{6}}, \frac{1}{\sqrt{6}})
+\]
+\[
+	(x_1,y_1,x_2,y_2)=(2+\frac{1}{2\sqrt{6}}-\frac{1}{\sqrt{6}},2+\frac{1}{2\sqrt{6}}, -\frac{2}{\sqrt{6}}, -\frac{1}{\sqrt{6}}) =  (2-\frac{1}{2\sqrt{6}},2+\frac{1}{2\sqrt{6}}, -\frac{2}{\sqrt{6}}, -\frac{1}{\sqrt{6}})
+\]
+
+Vamos a ver cuál de estas dos soluciones nos da una distancia más pequeña, puesto que lo que queríamos calcular era la mínima distancia entre la recta y la elipse.\\
+Para la primera solución, tenemos:
+\[
+	\sqrt{(x_1-x_2)^2+(y_1-y_2)^2} = 1.435341
+\]
+y para la segunda solución tenemos:
+\[
+	\sqrt{(x_1-x_2)^2+(y_1-y_2)^2} = 4.474721
+\]
+
+Con lo que vemos que la distancia más pequeña es la de la primera solución y por tanto la solución a nuestro problema de minimización es 
+\[
+	(x_1,y_1,x_2,y_2)=(2+\frac{1}{2\sqrt{6}},2-\frac{1}{2\sqrt{6}}, \frac{2}{\sqrt{6}}, \frac{1}{\sqrt{6}})
+\]
+\end{pregunta}
+
+\subsection{Regresión Logística}
+
+\begin{pregunta}
+Consideremos el caso de la verificación de la huella digital (ver transparencias de clase). Tras aprender con un modelo de regresión logística a partir de datos obtenemos una función una hipótesis final
+    \[  g(x)=\mathbb{P} [y=+1 | \mathbf{x}] \]
+    que representa la estimación de la probabilidad de que $y=+1$. Suponga que la matriz de coste está dada por 
+    \vspace{10pt}
+    
+    \centerline{
+    \begin{tabular}{c r| c c}
+         &  &  \multicolumn{2}{c} {Verdadera Clasificación}\\
+         &  &  +1 (persona correcta) & -1 (intruso)\\\hline
+         decisión  & {+1} & 0 & $c_a$ \\
+         decisión & {-1} & $c_r$ & 0 \\\\
+    \end{tabular}}
+    
+Para una nueva persona con huella digital $\mathbf{x}$, calculamos $g(\mathbf{x})$ y tenemos que decidir si aceptar o rechazar a la persona ( i.e. tenemos que usar una decisión $1/0$). Por tanto aceptaremos si $g(\mathbf{x}) \geq \kappa$, donde $\kappa$ es un umbral.
+\begin{enumerate}[a)]
+    \item Definir la función de costo (aceptar) como el costo esperado si se acepta la persona. Definir de forma similar el costo (rechazo). Mostrar que
+     \vspace{10pt}
+     
+    \centerline{
+    \begin{tabular}{rcc}
+    	costo(aceptar) & = & $(1-g(\mathbf{x}))c_a$\\
+     	costo(rechazar) & = & $g(\mathbf{x})c_r$ \\
+    \end{tabular}}
+    \item Usar el apartado anterior para derivar una condición sobre $g(x)$ para aceptar la persona y mostrar que
+    \[
+    \kappa=\frac{c_a}{c_a+c_r}
+    \]
+    \item Usar las matrices de costo para la aplicación del supermercado y la CIA (transparencias de clase) para calcular el umbral $\kappa$ para cada una de las dos clases. Dar alguna interpretación del umbral obtenido.
+\end{enumerate}
+\textit{ }\\
+\begin{enumerate}[a)]
+\item $g$ es la probabilidad de que, ante una huella digital $\mathbf{x}$ 
+\end{enumerate}
+
+
+\end{pregunta}
+\end{document}
