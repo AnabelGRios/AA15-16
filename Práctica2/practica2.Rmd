@@ -17,6 +17,11 @@ simula_unif = function (N=2, dims=2, rango = c(0,1)){
  matrix(runif(N*dims, min=rango[1], max=rango[2]), nrow = N, ncol=dims, byrow=T)
 }
 
+# Simular números aleatorios en una normal
+simula_gauss <- function(N, dim, sigma) {
+  lapply(1:N, function(x) rnorm(dim, mean = 0, sqrt(sigma)))
+}
+
 # Simular recta que corte a un intervalo dado
 simula_recta <- function(intervalo) {
   m <- simula_unif(2, 2, intervalo)
@@ -142,7 +147,6 @@ gradienteDescendente <- function(ferror, gradiente, pini, tasa, maxiter, umbral)
   w <- pini
   i <- 1
   valoresError <- c(i, ferror(pini[1], pini[2]))
-  mostrar <- TRUE
   mejora <- TRUE
   while (i <= maxiter && mejora) {
     g <- gradiente(w[1], w[2])
@@ -152,15 +156,13 @@ gradienteDescendente <- function(ferror, gradiente, pini, tasa, maxiter, umbral)
     wnew <- w + tasa*v
     valoresError <- rbind(valoresError, c(i, ferror(wnew[1], wnew[2])))
     
-    if (((abs(ferror(wnew[1], wnew[2])) < umbral) || (i==maxiter)) && mostrar) {
-      cat("He necesitado", i, "iteraciones para llegar al error", ferror(wnew[1], wnew[2]),"\n")
+    if (abs(ferror(wnew[1], wnew[2])-ferror(w[1], w[2])) < umbral || 
+        ferror(wnew[1], wnew[2]) < umbral || i==maxiter) {
+      mejora <- FALSE
+      cat("He necesitado", i, "iteraciones para llegar al error", 
+          ferror(wnew[1], wnew[2]),"\n")
       cat("con valores de u y v:", wnew[1],",", wnew[2])
       mostrar <- FALSE
-    }
-    
-    if (abs(ferror(wnew[1], wnew[2])-ferror(w[1], w[2])) < umbral || 
-        ferror(wnew[1], wnew[2]) < umbral) {
-      mejora <- FALSE
     }
     w <- wnew
     i <- i+1
@@ -176,7 +178,7 @@ gradienteDescendente <- function(ferror, gradiente, pini, tasa, maxiter, umbral)
 
 Calculamos el gradiente de $E(u,v)$: $\nabla E(u,v) = (\frac{\partial E}{\partial u}, \frac{\partial E}{\partial v}) = (2(ue^v - 2ve^{-u})(e^v + 2ve^{-u}), 2(ue^v - 2e^{-u})(ue^v - 2e^{-u})) = 2(ue^v - 2ve^{-u})(e^v + 2ve^{-u}, ue^v - 2e^{-u})$
 
-<p> 2) ¿Cuántas iteraciones tarda el algoritmo en obtener por primera vez un valor de $E(u,v) inferior a $10^{-14}$? (Usar flotantes de 64 bits) </p>
+<p> 2) ¿Cuántas iteraciones tarda el algoritmo en obtener por primera vez un valor de $E(u,v)$ inferior a $10^{-14}$? (Usar flotantes de 64 bits) </p>
 
 ```{r}
 E <- function(u,v) (u*exp(v) - 2*v*exp(-u))^2
@@ -214,7 +216,7 @@ plot(val[,1], val[,2], type="p", xlab="num iteración", ylab="f(x)", main="Gradie
 
 <p> 2) Obtener el valor mínimo y los valores de las variables que lo alcanzan cuando el punto de inicio se fija: (0.1,0.1), (1,1), (-0.5, -0.5), (-1, -1). Generar una tabla con los valores obtenidos. ¿Cuál sería su conclusión sobre la verdadera dificultad de encontrar el mínimo global de una función arbitraria? </p>
 
-PARA QUÉ TASA DE APRENDIZAJE
+Utilizamos la tasa de aprendizaje $\eta=0.01$, ya que hemos visto que con la otra no converge.
 
 ```{r}
 val <- gradienteDescendente(f, gradF, c(0.1,0.1), 0.01, 50, 0)
@@ -223,6 +225,7 @@ val <- gradienteDescendente(f, gradF, c(-0.5,-0.5), 0.01, 50, 0)
 val <- gradienteDescendente(f, gradF, c(-1,-1), 0.01, 50, 0)
 ```
 
+El problema de encontrar un mínimo global con esta técnica de gradiente descendente es que se queda estancada en mínimos locales. Esto significa que que encontremos el mínimo global o no depende únicamente del punto de inicio que le damos: si éste está lo suficientemente cerca del mínimo global como para que no haya mínimos locales entre ambos, lo encontrará, pero de haber algún mínimo local, se quedará en el primero que encuentre y será incapaz de salir de ahí.
 
 ##2. Coordenada descendente. En este ejercicio comparamos la eficiencia de la técnica de optimización de "coordenada descendente" usando la misma función del ejercicio 1.1.a. En cada iteración, tenemos dos pasos a lo largo de dos coordenadas. En el paso 1 nos movemos a lo largo de la coordenadas $u$ para reducir el error (suponer que se verifica una aproximación de primer orden como en gradiente descendente), y el paso 2 es para reevaluar y movernos a lo largo de la coordenada $v$ para reducir el error (hacer la misma hipótesis que en el paso 1). Usar una tasa de aprendizaje de $\eta=0.1$.
 
@@ -234,7 +237,6 @@ val <- gradienteDescendente(f, gradF, c(-1,-1), 0.01, 50, 0)
 coordenadaDescendente <- function(ferror, gradiente, pini, tasa, maxiter, umbral) {
   w <- pini
   i <- 1
-  mostrar <- TRUE
   mejora <- TRUE
   while (i <= maxiter && mejora) {
     # Paso 1
@@ -250,15 +252,12 @@ coordenadaDescendente <- function(ferror, gradiente, pini, tasa, maxiter, umbral
     v <- -g
     wnew[2] <- w[2] + tasa*v[2]
     
-    if (((abs(ferror(wnew[1], wnew[2])) < umbral) || (i==maxiter)) && mostrar) {
-      cat("He necesitado", i, "iteraciones para llegar al error", ferror(wnew[1], wnew[2]),"\n")
-      cat("con valores de u y v:", w[1],",", w[2])
-      mostrar <- FALSE
-    }
-    
     if (abs(ferror(wnew[1],wnew[2]) - ferror(w[1],w[2])) < umbral && 
-        ferror(wnew[1],wnew[2]) < umbral) {
+        ferror(wnew[1],wnew[2]) < umbral || i==maxiter) {
       mejora <- FALSE
+      cat("He necesitado", i, "iteraciones para llegar al error", 
+          ferror(wnew[1], wnew[2]),"\n")
+      cat("con valores de u y v:", w[1],",", w[2])
     }
     
     w <- wnew
@@ -277,7 +276,7 @@ val <- coordenadaDescendente(E, gradE, c(1,1), 0.1, 15, 0)
 
 ###b) Establezca una comparación entre esta técnica y la técnica de gradiente descendente.
 
-POR HACER
+Como vemos, es mucho mejor la técnica del gradiente descendente, ya que éste, para la misma función, con la misma tasa de aprendizaje y con el mismo punto inicial necesita 10 iteraciones para obtener un error de $1.2*10^{-15}$ (hecho en el apartado anterior) mientras que ésta en 15 iteraciones sólo llega a un error de 1.1398.
 
 ##3. Método de Newton. Implementar el algoritmo de minimización de Newton y aplicarlo a la función $f(x,y)$ dada en el ejercicio 1.b. Desarrolle los mismos experimentos usando los mismos puntos de inicio.
 
@@ -292,7 +291,6 @@ metodoNewton <- function(ferror, gradiente, hessiana, pini, tasa, maxiter, umbra
   w <- pini
   i <- 1
   valoresError <- c(i, ferror(pini[1], pini[2]))
-  mostrar <- TRUE
   mejora <- TRUE
   while (i <= maxiter && mejora) {
     hg <- solve(hessiana(w[1], w[2]))%*%gradiente(w[1], w[2])
@@ -300,17 +298,15 @@ metodoNewton <- function(ferror, gradiente, hessiana, pini, tasa, maxiter, umbra
     v <- -hg
     # Nos movemos tanto como indique la tasa
     wnew <- w + tasa*v
+    # Vamos guardando los valores de error por los que vamos pasando
     valoresError <- rbind(valoresError, c(i, ferror(wnew[1], wnew[2])))
     
-    if (((abs(ferror(wnew[1], wnew[2])) < umbral) || (i==maxiter)) && mostrar) {
-      cat("He necesitado", i, "iteraciones para llegar al error", ferror(wnew[1], wnew[2]),"\n")
-      cat("con valores de u y v:", wnew[1],",", wnew[2])
-      mostrar <- FALSE
-    }
-    
     if (abs(ferror(wnew[1], wnew[2]) - ferror(w[1], w[2])) < umbral ||
-        ferror(wnew[1], wnew[2]) < umbral) {
+        ferror(wnew[1], wnew[2]) < umbral || i==maxiter) {
       mejora <- FALSE
+      cat("He necesitado", i, "iteraciones para llegar al error", 
+          ferror(wnew[1], wnew[2]),"\n")
+      cat("con valores de u y v:", wnew[1],",", wnew[2])
     }
     
     w <- wnew
@@ -335,7 +331,6 @@ val <- metodoNewton(f, gradF, hess, c(1,1), 0.01, 50, 0)
 val2 <- metodoNewton(f, gradF, hess, c(1,1), 0.1, 50, 0)
 ```
 
-ES ESTO O LO DE DESPUÉS TAMBIÉN?
 
 ###a) Generar un gráfico de cómo desciende el valor de la función con las iteraciones.
 
@@ -348,7 +343,7 @@ plot(val2[,1], val2[,2], type="p", xlab="num iteración", ylab="f(x)", main="Méto
 
 ###b) Extraer conclusiones sobre las conductas de los algoritmos comparando la curva de decrecimiento de la función calculada en el apartado anterior y la correspondiente obtenida con gradiente descendente.
 
-POR HACER
+Como vemos, para tasa 0.01, el método de gradiente descendente converge mucho más rápido a un error bastante más pequeño (0.5 frente a 2.94). En contraposición, con tasa de aprendizaje 0.1, el método de gradiente descendente no converge mientras que el de Newton sí, a error 2.90. Aun así, creo que es mejor el método de gradiente descendente, sólo hay que probar y ajustar bien la tasa de aprendizaje, pero converge más rápido y mejor.
 
 ##4. Regresión Logística. En este  ejercicio crearemos nuestra propia función objetivo $f$ (probabilidad en este caso) y nuestro conjunto de datos $D$ para ver cómo funciona regresión logística. Supondremos por simplicidad que $f$ es una probabilidad con valores 0/1 y por tanto que $y$ es una función determinista de x.
 ##Consideremos $d=2$ para que los datos sean visualizables, y sea $X=[-1,1] \times [-1,1]$ con probabilidad uniforme de elegir cada $x \in X$. Elegir una línea en el plano como la frontera entre $f(x)=1$ (donde $y$ toma valores +1) y $f(x)=0$ (donde $y$ toma valores -1), para ello seleccionar dos puntos aleatorios del plano y calcular la línea que pasa por ambos. Seleccionar $N=100$ puntos aleatorios $\{x_n\}$ de $X$ y evaluar las respuestas de todos ellos $\{y_n\}$ respecto de la frontera elegida.
@@ -384,7 +379,7 @@ calcularNorma <- function(vec) {
 }
 ```
 
-
+Implementamos ahora regresión logística con las condiciones dadas:
 ```{r}
 # Algoritmo RL con SGD. Recibe los datos en una matriz, las etiquetas de esos
 # datos, el vector inicial, la tasa de aprendizaje, el máximo número de 
@@ -416,46 +411,56 @@ Regress_LogSGD <- function(datos, label, vini, tasa, maxiter, umbral) {
 ```
 
 
-###b) Usar la muestra de datos etiquetada para encontrar $g$ y estimar $E_{out}$ (el error de entropía cruzada) usando para ello un número suficientemente grande de nuevas muestras.
+###b) Usar la muestra de datos etiquetada para encontrar $g$ y estimar $E_{out}$ usando para ello un número suficientemente grande de nuevas muestras.
 
-PREGUNTAR SI EL ERROR DE ENTROPÍA CRUZADA ES ASÍ:
+He usado un número de 1000 muestras, las he etiquetado con la verdadera función, he obtenido la g aproximada por regresión lineal y las he vuelto a etiquetar con esta g para poder contar los errores en estas 1000 muestras y poder calcular después el porcentaje de error:
 
 ```{r}
 sol <- Regress_LogSGD(cbind(muestra,1), etiquetas, c(0,0,0), 0.01, 400, 0.01)
 sol
 g <- -sol[[1]]/sol[[1]][2]
 muestra_out <- simula_unif(1000, 2, c(-1,1))
+# Etiquetamos con la función original
 etiquetas_originales <- unlist(lapply(1:nrow(muestra_out), function(i) {
   p <- muestra_out[i,]
   sign(p[2] - recta[1]*p[1] - recta[2])
 }))
+# Etiquetamos con la g estimada
 etiquetas_g <- unlist(lapply(1:nrow(muestra_out), function(i) {
   p <- muestra_out[i,]
   sign(p[2] - g[1]*p[1] - g[3])
 }))
+# Contamos los errores
 errores <- cuenta_diferencias(etiquetas_originales, etiquetas_g)
-cat("El error de entropía cruzada es: ", errores/nrow(muestra))
+cat("El error Eout es: ", 100*(errores/nrow(muestra)))
 ```
 
 
 ###c) Repetir el experimento 100 veces con diferentes funciones frontera y calcular el promedio.
-¿HAY QUE CAMBIAR SÓLO LA RECTA O LA MUESTRA TAMBIÉN?
+
+Hacemos un bucle de 1 a 100 generando en cada iteración una recta que divida a los datos distinta, estimamos la g con regresión logística y vamos acumulando los errores para hacer la media.
+
 <p> 1) ¿Cuál es el valor de $E_{out}$ para $N=100$? </p>
 
 ```{r}
 errores <- 0
 iteraciones <- 0
 for(i in 1:100) {
+  # Generamos una nueva recta que separe
   recta_i <- simula_recta(c(-1,1))
+  # Etiquetamos con esta recta
   etiquetas_i <- unlist(lapply(1:nrow(muestra), function(i) {
     p <- muestra[i,]
     sign(p[2] - recta_i[1]*p[1] - recta_i[2])
   }))
   
+  # Estimamos g
   sol <- Regress_LogSGD(cbind(muestra,1), etiquetas_i, c(0,0,0), 0.01, 500, 0.01)
   g <- -sol[[1]]/sol[[1]][2]
+  # Acumulamos las iteraciones que tarda en converger
   iteraciones <- iteraciones + sol[[2]]
   
+  # Calculamos las etiquetas originales y las estimadas fuera de la muestra
   etiquetas_originales <- unlist(lapply(1:nrow(muestra_out), function(i) {
     p <- muestra_out[i,]
     sign(p[2] - recta_i[1]*p[1] - recta_i[2])
@@ -464,6 +469,7 @@ for(i in 1:100) {
     p <- muestra_out[i,]
     sign(p[2] - g[1]*p[1] - g[3])
   }))
+  # Contamos errores y acumulamos
   errores <- errores + cuenta_diferencias(etiquetas_originales, etiquetas_g)
 }
 
@@ -472,6 +478,7 @@ cat("El número medio de Eout ha sido:", errores/100)
 
 <p> 2) ¿Cuántas épocas tada en promedio RL en converger para $N=100$, usando todas las condiciones anteriormente especificadas? </p>
 
+En el trozo anterior, dentro del bucle, hemos ido acumulando el número de iteraciones que el método tarda en converger para las 100 iteraciones. Sólo nos queda hacer la media, es decir, dividir por 100:
 ```{r}
 cat("RL tarda en converger", iteraciones/100, "iteraciones en promedio")
 ```
@@ -482,6 +489,8 @@ rm(muestra, muestra_out)
 rm(errores, iteraciones)
 rm(etiquetas, etiquetas_g, etiquetas_originales)
 rm(g, i, recta, recta_i)
+rm(val, val2, etiquetas_i, sol, hess)
+rm(d11, d12, d22, E, f, gradE, gradF)
 ```
 
 ##5. Clasificación de Dígitos. Considerar el conjunto de datos de los dígitos manuscritos y seleccionar las muestras de los dígitos 1 y 5. Usar los ficheros de entrenamiento (training) y test que se proporcionan. Extraer las características de $\textit{intensidad promedio}$ y $\textit{simetría}$ en la manera que se indicó en el ejercicio 3 del trabajo 1.  
@@ -553,12 +562,14 @@ Necesitamos poner como tercera coordenada de la matriz de datos que le vamos a p
 ```{r}
 datos <- cbind(train_intensidad, train_simetria, 1)
 w <- Regress_Lin(datos, etiquetas_train)
+cat(w)
 # Le pasamos lo que nos devuelve la regresión lineal al PLA pocket como solución
 # inicial
 sol <- ajusta_PLA_MOD(datos, etiquetas_train, 100, w)
+cat(sol[[1]])
 ```
 
-COMENTAR QUE LA FUNCIÓN ES LA MISMA PORQUE LO QUE DEVUELVE LA REGRESIÓN YA ES CANELA FINA Y EL POCKET NO LO PUEDE MEJORAR (ES LA MEJOR SOLUCIÓN A LA QUE PUEDE LLEGAR ÉL TAMBIÉN).
+Como vemos, la solución que nos devuelve la regresión lineal es la misma que la que nos devuelve el PLA pocket, es decir, que el PLA pocket no puede mejorar la solución que da la regresión lineal. Esto es así porque como vemos en el siguiente apartado, el único error no hay forma de arreglarlo ya que no es separable y la regresión ya nos está ofreciendo la mejor solución.
 
 ###a) Generar gráficos separados (en color) de los datos de entrenamiento y test junto con la función estimada.
 
@@ -609,9 +620,9 @@ Eout_cota1 <- Ein + sqrt((8/nrow(datos))*log((4*mH_cota)/0.05))
 cat("La cota basada en Ein es", Eout_cota1)
 ```
 
-La cota basada en $E_test$ es la cota de Hoeffding considerando $M=1$, pues cuando llegamos al test ya tenemos escogida la $h$, que es la recta elegida con los datos de entrenamiento. Utilizamos por tanto la cota $P[|E_{test}(g) - E_{out}(g)| > \epsilon] \leq 2Me^{-2\epsilon^2N}$ y queremos que esta probabilidad sea menor o igual que 0.05, con lo que vamos a obtener $\epsilon$: $2e^{-2\epsilon^2N} \leq 0.05 \Rightarrow e^{-2\epsilon^2N} \leq 0.025 \Rightarrow -2\epsilon^2N \leq ln(0.025) \Rightarrow \epsilon^2 \geq ln(0.025)/(-2N) \Rightarrow \epsilon \geq \sqrt{ln(0.025)/(-2N)}$, donde $N=49$, el número de datos que tenemos en test, luego $\epsilon \geq 0.1940145$. Tomamos el $\epsilon$ más pequeño para obtener la cota más fina, y nos queda que la probabilidad de que $|E_{test}-E_{out}| \geq 0.1940145$ es 0.039682.  
+La cota basada en $E_test$ es la cota de Hoeffding considerando $M=1$, pues cuando llegamos al test ya tenemos escogida la $h$, que es la recta elegida con los datos de entrenamiento. Utilizamos por tanto la cota $P[|E_{test}(g) - E_{out}(g)| > \epsilon] \leq 2Me^{-2\epsilon^2N}$ y queremos que esta probabilidad sea menor o igual que 0.05, con lo que vamos a obtener $\epsilon$: $2e^{-2\epsilon^2N} \leq 0.05 \Rightarrow e^{-2\epsilon^2N} \leq 0.025 \Rightarrow -2\epsilon^2N \leq ln(0.025) \Rightarrow \epsilon^2 \geq ln(0.025)/(-2N) \Rightarrow \epsilon \geq \sqrt{ln(0.025)/(-2N)}$, donde $N=49$, el número de datos que tenemos en test, luego $\epsilon \geq 0.1940145$. Tomamos el $\epsilon$ más pequeño para obtener la cota más fina, y nos queda que la probabilidad de que $|E_{test}-E_{out}| \geq 0.1940145$ es 0.039682.   
 
-FALTA DECIR CUÁL ES MEJOR
+La cota basada en $E_{test}$ es mejor ya que es más fina, es decir, nos restringe más el error fuera de la muestra, ya que nos dice que la diferencia entre el error que hemos obtenido en test y el que podemos obtener fuera de la muestra es muy probable (1-0.03968 de probabilidad) que sea muy pequeño (0.19). Como conocemos $E_{test}$, es fácil saber más o menos el error que tendremos fuera de la muestra.
 
 ###d) Repetir los puntos anteriores pero usando una transformación polinómica de tercer orden ($\Phi_3(x)$ en las transparencias de teoría)
 $\Phi_3(x)=(1,x_1,x_2,x_1^2, x_2^2,x_1x_2,x_1^3,x_2^3,x_1x_2^2,x_1^2x_2)$
@@ -647,10 +658,19 @@ Eout_cota1 <- Ein + sqrt((8/nrow(datos))*log((4*mH_cota)/0.05))
 cat("La cota basada en Ein es", Eout_cota1)
 ```
 
-AQUÍ FALTAN COSAS FIJO
-
 ###e) Si tuviera que usar los resultados para dárselos a un potencial cliente, ¿usaría la transformación polinómica? Explicar la decisión.
-POR HACER
+
+No, es demasiado complejo para unos datos que son prácticamente separables y pueden resolverse de forma más cómoda con unas cotas sobre $E_{out}$ buenas con una recta.
+
+```{r}
+# Borramos lo que no necesitamos
+rm(datos, datos_test, g, muestra_out, r, w)
+rm(Ein, Eout_cota1, Etest, etiquetas_g, etiquetas_g_in)
+rm(etiquetas_g_test, etiquetas_test, etiquetas_train)
+rm(lista_test, lista_train, mH_cota, sol, test_intensidad)
+rm(test_simetria, train_intensidad, train_simetria, x1, x2)
+```
+
 
 #2. SOBREAJUSTE
 
@@ -660,11 +680,44 @@ POR HACER
 
 ###a) Generamos los coeficientes $a_q$ a partir de muestras de una distribución $\mathcal{N}(0,1)$ y escalamos dichos coeficientes de manera que $E_{a,x}[f^2] = 1$ (Ayuda: dividir los coeficientes por $\sqrt{\sum_{q=0}^{Q_f}\frac{1}{2q+1}}$
 
+Fijamos $N=10$, $\sigma=0.2$, $Q_f=3$ y generamos $a_q$ con la función de la práctica anterior que extraía de una normal y los escalamos como nos pide.
+```{r}
+# Fijamos parámetros y extraemos los aq
+N <- 10
+sigma <- 0.2^2
+Qf <- 3
+aq <- unlist(simula_gauss(N, 1, sigma))
+# Escalamos
+escalado <- unlist(lapply(0:(N-1), function(x) 1/(2*x+1)))
+escalado <- sum(sqrt(escalado))
+aq <- aq/escalado
+```
+
 ###b) Generamos un conjunto de datos $x_1,...,x_N$ muestreando de forma independiente $P(x)$ y los valores $y_n=f(x_n)+ \sigma \epsilon_n$
+
+Los datos, como tenemos la probabilidad $1/2$, los tenemos que extraer de la uniforme en el rango $[-1,1]$, que es el espacio que nos han dado previamente. Generamos también $y_n$ en órdenes distintas para hacerlo de forma independiente. Para esto último va a ser necesario primero crear los polinomios de Legendre y multiplicarlos por los coeficientes $a_q$ que acabamos de calcular para obtener $f(x_n)$ y generar también los $\epsilon_n$, extrayéndolos de una normal 0,1.
+
+Vamos a hacer por tanto previamente una función para obtener los polinomios de Legendre de grado k.
+
+```{r}
+polLegendre <- function(x, k) {
+  L <- vector("numeric", k+1)
+  L[1] <- 1
+  L[2] <- x
+  
+}
+```
+
+
+```{r}
+datos <- simula_unif(N, 2, c(-1,1))
+epsilon_n <- unlist(simula_gauss(N, 1, 1))
+
+```
 
 ##Sean $g_2$ y $g_{10}$ los mejores ajustes a los datos usando $\mathcal{H}_2$ y $\mathcal{H}_{10}$ respectivamente, y sean $E_{out}(g_2)$ y $E_{out}(g_{10})$ sus respectivos errores fuera de la muestra.
 
-###a) Calcular $g_2$ y $g_{10$}$
+###a) Calcular $g_2$ y $g_{10}$
 
 ###b) ¿Por qué normalizamos f? (Ayuda: interpretar el significado de $\sigma$)
 
