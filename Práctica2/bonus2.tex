@@ -20,7 +20,7 @@
 
 \newtheorem{pregunta}{Pregunta}
 
-\subsection{Matrices y optimización}
+\subsection{Matrices y optimización. Problema 3.c}
 \begin{pregunta}[Multiplicadores de Lagrange]
 Lagrange propuso una técnica para resolver el siguiente problema de optimización:
     \[ \max_{x,y} g(x,y) \]
@@ -115,7 +115,7 @@ Con lo que vemos que la distancia más pequeña es la de la primera solución y 
 \]
 \end{pregunta}
 
-\subsection{Regresión Logística}
+\subsection{Regresión Logística. Problema 3}
 
 \begin{pregunta}
 Consideremos el caso de la verificación de la huella digital (ver transparencias de clase). Tras aprender con un modelo de regresión logística a partir de datos obtenemos una función una hipótesis final
@@ -149,7 +149,12 @@ Para una nueva persona con huella digital $\mathbf{x}$, calculamos $g(\mathbf{x}
 \end{enumerate}
 \textit{ }\\
 \begin{enumerate}[a)]
-\item $g$ es la probabilidad de que, ante una huella digital $\mathbf{x}$ 
+\item $g$ es la probabilidad de que, ante una huella digital $\mathbf{x}$, se le permita a la persona entrar (es decir, se dé la salida $y_n=+1$). Como vemos en la matriz de costos, el coste de aceptar a una persona cuando no deberíamos haberla aceptado es $c_a$ y el coste de rechazar a una persona cuando no deberíamos haberla rechazado es $c_r$. El costo esperado por tanto de aceptar a una persona es el coste de aceptarla y equivocarnos (aceptar a un intruso) por la probabilidad de que la persona efectivamente sea un intruso, es decir, $1-g(x)$, con lo que el coste estimado de aceptar es $c_a(1-g(x))$.\\
+Volviendo de nuevo a la matriz de costos, vemos que el coste de rechazar a una persona cuando deberíamos haberla aceptado es $c_r$. Entonces, el coste esperado de rechazar a una persona es el coste de rechazarla y equivocarnos por la probabilidad de que efectivamente la huella fuera correcta, que es exactamente $g(x)$, es decir, coste(rechazo)=$c_rg(x)$.\\
+Con esto obtenemos como vemos lo que se nos pedía.
+\item De forma intuitiva, podemos pensar que si queremos que se acepte a poca gente, tendremos que subir el umbral para el que se acepta a alguien y si queremos aceptar a mucha gente, bajarlo. Este umbral es exactamente $\kappa$. Como nos pide una condición sobre la $g(x)$ vamos a pensar primero sobre ella. Esta probabilidad (que es la probabilidad de aceptar a una persona) nos interesa que sea mayor cuando el coste de aceptar a una persona y equivocarnos ($c_a$) sea bajo y cuando el coste de rechazar a alguien y equivocarnos ($c_r$) sea alto, ya que estamos minimizando así el coste total (habrá menos probabilidad de rechazar a alguien). Del mismo modo, nos interesa que sea menor cuando la probabilidad de equivocarnos aceptando a alguien($c_a$) sea alta y la probabilidad de equivocarnos rechazando a alguien ($c_r$) sea baja, puesto que estaremos permitiendo la entrada de menos personas y estaremos minimizando así el coste total de nuevo. Sin embargo nosotros no podemos tocar esta probabilidad, lo que sí podemos hacer es cambiar el umbral a partir del cual vamos a aceptar a alguien, como hemos comentado previamente, de forma que éste subirá cuando queramos aceptar a pocas personas y bajará cuando queramos aceptar a muchas. Tenemos que razonar por tanto de manera inversa que como lo hemos hecho con $g(x)$, ya que se mueven al revés. De esta forma tenemos que si $c_a$ es bajo o $c_r$ es alto, queremos que $\kappa$ sea alto y si $c_a$ es alto o $c_r$ es bajo, que $\kappa$ suba.\\
+Por tanto, si ponemos $\kappa$ como un cociente y queremos que sea pequeño cuando $c_a$ sea pequeño y $c_r$ grande, tendremos que poner $c_a$ en el numerador y $c_r$ en el denominador. De las otras condiciones deducimos lo mismo, ya que si queremos que $\kappa$ sea alto cuando $c_a$ es alto y $c_r$ bajo, tenemos que poner $c_a$ en el numerador y $c_r$ en el denominador. Tenemos ahora mismo $\kappa = \frac{c_a}{c_r}$. Sin embargo tenemos que tener en cuenta que $\kappa$ está acotando por debajo una probabilidad, que será siempre un número entre 0 y 1, por lo que $\kappa$ tendrá que estar también entre 0 y 1. Esto se consigue sumándole al denominador el numerador: $\kappa=\frac{c_a}{c_r+c_a}$, ya que así el denominador es más grande siempre (asumiendo que los costes serán siempre positivos) y valdrá como mucho 1 y se tenderá a 1 cuanto más grande sea $c_a$, mientras que si $c_r$ es más grande, tenderá a 0, que es justo lo que queríamos.
+\item Vamos a calcular $\kappa$ para las dos aplicaciones. Empezamos con la del supermercado, donde $c_a=1$ y $c_r=10$, entonces $\kappa=\frac{1}{10+1}=0.0909$. En el caso de la CIA, $c_a=1000$ y $c_r=1$ con lo que $\kappa=\frac{1000}{1000+1}=0.999$. Como vemos, en el supermercado el umbral es mucho más bajo, ya que no nos importa aceptar a una persona que no sea cliente habitual tanto como no aceptar a una que sí lo sea, por lo que el umbral de la probabilidad está cercano a 0, mientras que en el de la CIA es extremadamente importante no aceptar a nadie que no sea miembro, por lo que el umbral está cerca de 1, en el sentido en el que hemos comentado en el apartado anterior.
 \end{enumerate}
 
 
