@@ -722,17 +722,17 @@ Los datos, como tenemos la probabilidad $1/2$, los tenemos que extraer de la uni
 Vamos a hacer por tanto previamente una función para obtener los polinomios de Legendre de grado k.
 
 ```{r}
-# Función para calcular los polinomios de Legendre, con una ecuación en 
+# Función para calcular los polinomios de Legendre, con una ecuación en
 # diferencias, de hasta grado k en función del valor en el que evaluemos x.
 polLegendre <- function(x, k) {
   L <- vector("numeric", k+1)
   if(k == 0) {
-    L[1] <- 1 
+    L[1] <- 1
   }
   else {
     L[1] <- 1
     L[2] <- x
-    if (k > 1){
+    if (k > 2){
       for(i in 2:k) {
         L[i+1] <- ((2*i-1)/i)*x*L[i] - ((i-1)/i)*L[i-1]
       }
@@ -863,31 +863,178 @@ Dicha medida puede medir el sobreajuste de $g_{10}$ porque estamos comparando su
 ###b) Usando la combinación de valores $Q_f \in \{1,2,...,100\}$, $N \in \{20,25,...,100\}$, $\sigma \in \{0;0.05;0.1;...;2\}$, se obtiene una gráfica como la que aparece en la figura 4.3 del libro "Learning from data", capítulo 4. Interpreta la gráfica respecto a las condiciones en las que se da el sobreajuste. (Nota: No es necesario la implementación).
 OPCIONAL
 
+```{r}
+# Borramos lo que no necesitamos
+rm(datos, datos_out, w, w10, w2)
+rm(aq, epsilon_n, error10, error2, escalado)
+rm(i, j, N, Qf, sigma, sobreajuste, valor_real)
+rm(valorg10, valorg2, y_n)
+```
+
 ##3. Repetir el experimento descrito en los puntos anteriores pero para el caso de clasificación donde la función objetivo es un perceptron ruidoso $f(x)=sign(\sum_{q=1}^{Q_f}a_qL_q(x)+\epsilon)$. Notemos que $a_0=0$ y que las $a_q$ deben ser normalizadas para que $E_{a,x}[(\sum_{q=1}^{Q_f}a_qL_q(x))^2]=1$. En este caso los modelos $\mathcal{H}_2$ y $\mathcal{H}_10$ contienen el signo de los polinomios de segundo y décimo orden respectivamente. (Atención: los datos no serán separables) (Ayuda: para la normalización adaptar la regla dada en el punto anterior).
 OPCIONAL 0.4
 
 #3. REGULARIZACIÓN Y SELECCIÓN DE MODELOS
 
-##1. Para $d=3$ (dimensión) generar un conjunto de $N$ datos aleatorios $\{x_n,y_n\}$ de la sigiuente forma. Para cada punto $x_n$ generamos sus coordenadas muestreando de forma independiente una $\mathcal{N}(0,1)$. De forma similar generamos un vector de pesos de $(d+1)$ dimensiones $\mathbf{w}_f$, y el conjunto de valores $y_n = \mathbf{w}_f^Tx_n+\sigma\epsilon_n$, donde $\epsilon_n$ es un ruido que sigue también una $\mathcal{N}(0,1)$ y $\sigma^2$ es la varianza del ruido; fijar $\sigma=0.5$
+##1. Para $d=3$ (dimensión) generar un conjunto de $N$ datos aleatorios $\{x_n,y_n\}$ de la sigiuente forma. Para cada punto $x_n$ generamos sus coordenadas muestreando de forma independiente una $\mathcal{N}(0,1)$. De forma similar generamos un vector de pesos de $(d+1)$ dimensiones $\mathbf{w}_f$, y el conjunto de valores $y_n = \mathbf{w}_f^Tx_n+\sigma\epsilon_n$, donde $\epsilon_n$ es un ruido que sigue también una $\mathcal{N}(0,1)$ y $\sigma^2$ es la varianza del ruido; fijar $\sigma=0.5$ 
 
 ##Usar regresión lineal con regularización "weight decay" para estimar $\mathbf{w}_f$ con $\mathbf{w}_{reg}$. Fijar el parámetro de regularización a $0.05/N$.
 
+Creamos un método nuevo de regresión lineal con weigth decay:
+```{r}
+# Método de regresión lineal con weigth decay. Recibe los datos y las etiquetas
+# por parámetros, junto con el weigth decay lambda.
+Regress_Lin_WD <- function(datos, label, lambda) {
+  Z <- t(datos)%*%datos
+  dim <- nrow(Z)
+  Z <- Z + diag(lambda, dim, dim)
+  inversa <- solve(Z)
+  wreg <- inversa %*% t(datos) %*% label
+  return(wreg)
+}
+```
+
+
 ###a) Para $N in \{d+15,d+25,...,d+115\}$ calcular los errores $e_1,...,e_N$ de validación cruzada y $E_{ev}$.
+
+```{r}
+d <- 3
+sigma <- 0.5
+
+wf <- unlist(simula_gauss(1, d+1, 1))
+N <- 18
+errores <- vector("list", 11)
+i <- 1
+while (N <= 118) {
+  lambda <- 0.05/N
+  datos <- simula_gauss(N, 3, sigma^2)
+  datos <- matrix(unlist(datos), N, 3, T)
+  datos <- cbind(datos,1)
+  # Generamos los y_n
+  y_n <- sapply(1:N, function(i) crossprod(datos[i,],wf)+sigma*rnorm(1))
+  
+  e <- vector("numeric", N)
+  
+  # Hacemos leave one out
+  for(j in 1:N) {
+    datos_loo <- datos[-j,]
+    yn_loo <- y_n[-j]
+    xn <- datos[j,]
+    # Estimamos wreg con regresión lineal con weigth decay
+    wreg <- Regress_Lin_WD(datos_loo, yn_loo, lambda)
+    # Calculamos el error de validación cruzada
+    valor_real <- crossprod(wf,xn)
+    valor_estimado <- crossprod(wreg,xn)
+    e_n <- (valor_real - valor_estimado)^2
+    e[j] <- e_n
+  }
+  errores[[i]] <- e
+  
+  N <- N+10
+  i <- i+1
+}
+```
+
+Los valores $e_1,...,e_N$ pedidos están en la lista `errores`, donde cada elemento de la lista se corresponde con los $e_1,...,e_N$ para cada $N$. Calculamos ahora $E_{cv}$ como la media de cada elemento de la lista:
+```{r}
+listaEcv <- sapply(errores, function(i) mean(i))
+cat("La media de los errores de validación cruzada, Ecv, son los siguientes (para cada N)
+    ", listaEcv)
+```
 
 
 ###b) Repetir el experimento $10^3$ veces, anotando el promedio y la varianza de $e_1,e_2$ y $E_{ev}$ en todos los experimentos.
+```{r}
+wf <- unlist(simula_gauss(1, d+1, 1))
+N <- 18
+errores <- vector("list", 11)
+varianzas <- vector("list", 11)
+i <- 1
+while (N <= 118) {
+  e1 <- vector("numeric", 10^3)
+  e2 <- vector("numeric", 10^3)
+  Ecv <- vector("numeric", 10^3)
+  for(k in 1:10^3) {
+    lambda <- 0.05/N
+    datos <- simula_gauss(N, 3, sigma^2)
+    datos <- matrix(unlist(datos), N, 3, T)
+    datos <- cbind(datos,1)
+    # Generamos los y_n
+    y_n <- sapply(1:N, function(i) crossprod(datos[i,],wf)+sigma*rnorm(1))
+    
+    e <- vector("numeric", N)
+    
+    # Hacemos leave one out
+    for(j in 1:N) {
+      datos_loo <- datos[-j,]
+      yn_loo <- y_n[-j]
+      xn <- datos[j,]
+      # Estimamos wreg con regresión lineal con weigth decay
+      wreg <- Regress_Lin_WD(datos_loo, yn_loo, lambda)
+      # Calculamos el error de validación cruzada
+      valor_real <- crossprod(wf,xn)
+      valor_estimado <- crossprod(wreg,xn)
+      e_n <- (valor_real - valor_estimado)^2
+      e[j] <- e_n
+    }
+    e1[k] <- e[1]
+    e2[k] <- e[2]
+    Ecv[k] <- mean(e)
+  }
+  
+  errores[[i]] <- c(mean(e1), mean(e2), mean(Ecv))
+  varianzas[[i]] <- c(var(e1), var(e2), var(Ecv))
+  i <- i+1
+  N <- N+10
+}
+```
+
+```{r}
+print("La media de e1, e2 y Ecv ha sido, para cada N y por orden:")
+print(errores)
+print("La varianza de e1, e2 y Ecv ha sido, para cada N y por orden:")
+print(varianzas)
+```
 
 
 ###c) ¿Cuál debería ser la relación entre el promedio de los valores de $e_1$ y el de los valores de $E_{ev}$? ¿Y el de los valores de $e_2$? Argumentar la respuesta en base a los resultados de los experimentos.
 
+Como tenemos que argumentar en base a los resultados de los experimentos anteriores, vamos a mostrar una gráfica con los valores $e_1$, $e_2$ y $E_{cv}$ en media por cada $N$ (el negro es el color para los valores de $e_1$, el rojo es el color para los valores de $e_2$ y el verde el color para los valores de $E_{cv}$):
+```{r}
+color <- rep(6:8,11)
+N <- c(rep(18,3), rep(28,3), rep(38,3), rep(48, 3), rep(58,3), rep(68,3),
+       rep(78,3), rep(88,3), rep(98,3), rep(108,3), rep(118,3))
+pinta_particion(N, unlist(errores), color, xlab="Valor de N", 
+                ylab="Valores medios de e1, e2 y Ecv", 
+                main="Valores medios de e1, e2 y Ecv")
+```
+Como vemos, la diferencia entre el promedio de los valores de $e_1$, $e_2$ y $E_{cv}$ es muy pequeña (y se va haciendo incluso más pequeña cuanto mayor es la $N$), que es algo que tiene sentido ya que lo que aquí se está representando son las medias de los 1000 valores que nos han salido de $e_1$, $e_2$ y $E_{cv}$ para cada valor de $N$. Es lógico que las medias de $e_1$ y $e_2$ se parezcan si pensamos en lo que estamos haciendo: para cada valor en la muestra, lo sacamos de la misma y calculamos una función que ajuste los demás, y $e_i$ es el valor de error cuadrático que tiene el valor que hemos sacado fuera. Puede que algún valor esté muy lejos de la función estimada o que alguno caiga dentro, pero en media quedarán más o menos todos a la misma distancia, sin importar que el valor que hemos sacado sea el primero, el segundo o el último, por lo que las medias de $e_i$ serán parecidas y, como es lógico, cuanto mayor sea el número de datos en la muestra ($N$), mejor estimaremos la función y menor error habrá, como se puede apreciar en la gráfica. Habiendo visto que todos los $e_i$, al ser medias, se parecerán, es lógico que se parezcan también a $E_{cv}$, ya que es la media de todos ellos.
 
 ###d) ¿Qué es lo que contribuye a la varianza de los valores de $e_1$?
 
+Vamos a mostrar otra gráfica, ahora con los valores para las varianzas, con el mismo código de colores.
+```{r}
+pinta_particion(N, unlist(varianzas), color, xlab="Valor de N", 
+                ylab="Varianzas de e1, e2 y Ecv", 
+                main="Varianzas de e1, e2 y Ecv")
+```
 
-###e) Si los errores de valodación cruzada fueran verdaderamente independientes, ¿cuál sería la relación entre la varianza de los valores de $e_1$ y la varianza de los de $E_{ev}$?
+Lo que contribuye a la varianza tanto de $e_1$ como de $e_2$ y $E_{cv}$ son los valores que se quedan lejos de la media. Como vemos en la gráfica, las varianzas de $e_1$ y $e_2$ están más o menos cercanas (excepto para $N=18$) y cada vez se van acercando más a la varianza de $E_{cv}$ cuando mayor es $N$. Esto también es lógico. Vamos a centrarnos primero en valores pequeños de $N$: los valores que se quedan lejos de la media influyen más porque tenemos pocos datos. Puede darse que haya más valores que se quedan lejos de la media y tienen más error, como es el caso de $e_1$ o que haya menos, como le pasa a $e_2$, pero si cogemos la varianza de la media de todos los $e_i$ será menor que la de todos ellos, puesto que es la media de todos. Además, cuanto mayor sea $N$, más datos habrá, mejor será el ajuste y menor será el error de un dato frente a todos los demás y por tanto menor será la varianza de ese dato. Si de nuevo hacemos la media, la varianza de $e_1$ y $e_2$ bajará también.
+
+###e) Si los errores de validación cruzada fueran verdaderamente independientes, ¿cuál sería la relación entre la varianza de los valores de $e_1$ y la varianza de los de $E_{ev}$?
+
 
 
 ###f) Una medida del número efectivo de muestras nuevas usadas en el cálculo de $E_{ev}$ es el cociente entre la varianza de $e_1$ y la varianza de $E_{ev}$. Explicar por qué, y dibujar, respecto de $N$, el número efectivo de nuevos ejemplos $(N_{eff})$ como un porcentaje de $N$. NOTA: Debería encontrarse que $N_{eff}$ está cercano a $N$.
+
+Hacemos una gráfica como las de los apartados anteriores pero ahora dibujando el cociente entre $e_1$ y $E_{cv}$ para cada $N$.
+```{r}
+e_1 <- rapply(varianzas, function(x) x[1])
+Ecv <- rapply(varianzas, function(x) x[3])
+N <- seq(18, 118, by=10)
+Neff <- 100*(e_1/Ecv)/N
+pinta_particion(N, Neff, rep(1,11), main="Neff", xlab="Valor de N", ylab="Neff")
+```
 
 
 ###g) Si se incrementa la cantidad de regularización, ¿debería $N_{eff}$ subir o bajar?. Argumentar la respuesta. Ejecutar el mismo experimento con $\lambda=2.5/N$ y comparar los resultados del punto anterior para verificar la conjetura.
