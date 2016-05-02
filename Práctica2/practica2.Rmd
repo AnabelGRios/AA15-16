@@ -73,12 +73,11 @@ cuenta_diferencias <- function(etiquetas1, etiquetas2) {
 
 # Función para contar errores necesaria en el PLA pocket
 cuenta_errores <- function(w, etiquetas_originales, datos) {
-  w <- -w/w[2]
   # Etiquetamos con la solución del PLA
   etiquetas_cambiadas <- unlist(lapply(1:nrow(datos), function(i) {
     # Obtenemos los puntos uno a uno y los etiquetamos
     p <- datos[i,]
-    f <- -w[1]*p[1] + p[2] - w[3]
+    f <- crossprod(w,p)
     sign(f)
   }))
   # Devolvemos el número de errores que da la solución
@@ -134,7 +133,8 @@ ajusta_PLA_MOD <- function(datos, label, max_iter, vini) {
 ```{r}
 # Función para pintar datos junto con gráficas
 pinta_particion <- function(coordX, coordY, etiquetas=NULL, visible=FALSE, 
-                            f=NULL, main="", xlab="Eje X", ylab="Eje Y") {
+                            f=NULL, main="", xlab="Eje X", ylab="Eje Y",
+                            rango=1) {
   if(is.null(etiquetas))
     etiquetas=1
   else etiquetas = etiquetas+3
@@ -144,9 +144,9 @@ pinta_particion <- function(coordX, coordY, etiquetas=NULL, visible=FALSE,
   
   # Si queremos pintar función junto con los datos
   if(visible) {
-    sec <- seq(-1, 1, length.out = 500)
-    z <- outer(sec, sec, f)
-    contour(sec, sec, z, col = "blue", levels = 0, add = TRUE, drawlabels = F)
+    sec <- seq(-rango, rango, length.out = 1500)
+    z <- outer(seq(-1,1,length.out=1000), sec, f)
+    contour(seq(-1,1,length.out=1000), sec, z, col = "blue", levels = 0, add = TRUE, drawlabels = F)
   }
 }
 ```
@@ -211,7 +211,7 @@ val <- gradienteDescendente(E, gradE, c(1,1), 0.1, 20, 10^{-14})
 
 <p> 3) ¿Qué valores de (u,v) obtuvo en el apartado anterior cuando alcanzó el error de $10^{-14}$ </p>
 
-Como podemos ver en la salida por pantalla anterior, el valor de u ha sido 0.04473628 y el de v ha sido 0.02395873
+Como podemos ver en la salida por pantalla anterior, el valor de u ha sido 0.04473629 y el de v ha sido 0.02395871
 
 ###b) Considerar ahora la función $f(x,y) = x^2 + 2y^2 + 2*sin(2\pi x)*sin(2\pi y)$
 <p> 1) Usar gradiente descendente para minimizar esta función. Usar como valores iniciales $x_0 = 1$, $y_0 = 1$, la tasa de aprendizaje $\eta = 0.01$ y un máximo de 50 iteraciones. Generar un gráfico de cómo desciende el valor de la función con las iteraciones. Repetir el experimento pero usando $\eta = 0.1$. Comentar las diferencias. </p>
@@ -224,13 +224,15 @@ gradF <- function(x,y) c(2*x + 4*pi*sin(2*pi*y)*cos(2*pi*x),
                          4*y + 4*pi*sin(2*pi*x)*cos(2*pi*y))
 
 val <- gradienteDescendente(f, gradF, c(1,1), 0.01, 50, 0)
-plot(val[,1], val[,2], type="p", xlab="num iteración", ylab="f(x)", main="Gradiente Descendente")
+pinta_particion(val[,1], val[,2], xlab="num iteración", ylab="f(x)", 
+                main="Gradiente Descendente")
 ```
 
 Repetimos con $\eta=0.1$:
 ```{r}
 val <- gradienteDescendente(f, gradF, c(1,1), 0.1, 50, 0)
-plot(val[,1], val[,2], type="p", xlab="num iteración", ylab="f(x)", main="Gradiente Descendente")
+pinta_particion(val[,1], val[,2], xlab="num iteración", ylab="f(x)", 
+                main="Gradiente Descendente")
 ```
 
 
@@ -296,15 +298,15 @@ val <- coordenadaDescendente(E, gradE, c(1,1), 0.1, 15, 0)
 
 ###b) Establezca una comparación entre esta técnica y la técnica de gradiente descendente.
 
-Como vemos, es mucho mejor la técnica del gradiente descendente, ya que éste, para la misma función, con la misma tasa de aprendizaje y con el mismo punto inicial necesita 10 iteraciones para obtener un error de $1.2*10^{-15}$ (hecho en el apartado anterior) mientras que ésta en 15 iteraciones sólo llega a un error de 1.1398.
+Como vemos, es mejor la técnica del gradiente descendente, ya que éste, para la misma función, con la misma tasa de aprendizaje y con el mismo punto inicial necesita 10 iteraciones para obtener un error de $1.2*10^{-15}$ (hecho en el apartado anterior) mientras que ésta en 15 iteraciones sólo llega a un error de 0.1398138.
 
 ##3. Método de Newton. Implementar el algoritmo de minimización de Newton y aplicarlo a la función $f(x,y)$ dada en el ejercicio 1.b. Desarrolle los mismos experimentos usando los mismos puntos de inicio.
 
 ```{r}
 # Algoritmo del método de Newton. Le pasamos a la función la función de
 # error, su gradiente y la matriz hessiana (que serán funciones), el punto 
-# en el que se empieza, la tasa de aprendizaje, el número máximo de iteraciones a
-# realizar, y el mínimo error al que queremos llegar, en orden.
+# en el que se empieza, la tasa de aprendizaje, el número máximo de iteraciones
+# a realizar, y el mínimo error al que queremos llegar, en orden.
 # Devuelve los valores de la función de error por los que pasa junto con la
 # iteración.
 metodoNewton <- function(ferror, gradiente, hessiana, pini, tasa, maxiter, umbral) {
@@ -355,10 +357,12 @@ val2 <- metodoNewton(f, gradF, hess, c(1,1), 0.1, 50, 0)
 ###a) Generar un gráfico de cómo desciende el valor de la función con las iteraciones.
 
 ```{r}
-plot(val[,1], val[,2], type="p", xlab="num iteración", ylab="f(x)", main="Método Newton con tasa 0.01")
+pinta_particion(val[,1], val[,2], xlab="num iteración", ylab="f(x)",
+                main="Método Newton con tasa 0.01")
 ```
 ```{r}
-plot(val2[,1], val2[,2], type="p", xlab="num iteración", ylab="f(x)", main="Método Newton con tasa 0.1")
+pinta_particion(val2[,1], val2[,2], xlab="num iteración", ylab="f(x)",
+                main="Método Newton con tasa 0.1")
 ```
 
 ###b) Extraer conclusiones sobre las conductas de los algoritmos comparando la curva de decrecimiento de la función calculada en el apartado anterior y la correspondiente obtenida con gradiente descendente.
@@ -391,9 +395,9 @@ etiquetas <- unlist(lapply(1:nrow(muestra), function(i) {
 3. Aplicar una permutación aleatoria de 1,2,...,$N$ a los datos antes de usarlos en cada época del algoritmo.  
 4. Usar una tasa de aprendizaje de $\eta=0.01$.
 
-Vamos a hacer primero una función auxiliar para calcular la norma euclídea de un vector
-
+Vamos a hacer primero una función auxiliar para calcular la norma euclídea de un vector:
 ```{r}
+# Función para calcular la norma euclídea de un vector
 calcularNorma <- function(vec) {
   sqrt(sum(vec^2))
 }
@@ -515,6 +519,7 @@ rm(d11, d12, d22, E, f, gradE, gradF)
 
 ##5. Clasificación de Dígitos. Considerar el conjunto de datos de los dígitos manuscritos y seleccionar las muestras de los dígitos 1 y 5. Usar los ficheros de entrenamiento (training) y test que se proporcionan. Extraer las características de $\textit{intensidad promedio}$ y $\textit{simetría}$ en la manera que se indicó en el ejercicio 3 del trabajo 1.  
 
+Comenzamos leyendo los datos tanto de test como de train, quedándonos sólo con las instancias de de unos y cincos y calculando simetrías e intensidad. Formateamos los datos de forma que al final nos quede una lista de matrices para las instancias de test y otra lista de matrices para las instancias de train:
 ```{r}
 # Leemos los ficheros y extraemos los dígitos 1 y 5
 train <- read.table("datos/zip.train", sep=" ")
@@ -589,7 +594,7 @@ sol <- ajusta_PLA_MOD(datos, etiquetas_train, 100, w)
 cat(sol[[1]])
 ```
 
-Como vemos, la solución que nos devuelve la regresión lineal es la misma que la que nos devuelve el PLA pocket, es decir, que el PLA pocket no puede mejorar la solución que da la regresión lineal. Esto es así porque como vemos en el siguiente apartado, el único error no hay forma de arreglarlo ya que no es separable y la regresión ya nos está ofreciendo la mejor solución.
+Como vemos, la solución que nos devuelve la regresión lineal es la misma que la que nos devuelve el PLA pocket, es decir, que el PLA pocket no puede mejorar la solución que da la regresión lineal. Esto es así porque como vemos en la gráfica del siguiente apartado, el único error que hay no hay forma de arreglarlo ya que los datos no son separables y la regresión ya nos está ofreciendo la mejor solución.
 
 ###a) Generar gráficos separados (en color) de los datos de entrenamiento y test junto con la función estimada.
 
@@ -597,20 +602,23 @@ Como vemos, la solución que nos devuelve la regresión lineal es la misma que la 
 # Obtenemos la solución devuelta por el PLA
 r <- sol[[1]]
 r <- -r/r[2]
-plot(train_intensidad, train_simetria, type="p", col=etiquetas_train+3, main="Conjunto TRAIN")
-abline(r[3], r[1])
+plot(train_intensidad, train_simetria, col=etiquetas_train+3, type="p", 
+     main="Conjunto TRAIN", xlab="Intensidad", ylab="Simetría")
+abline(r[3],r[1])
+
 ```
 
 Dibujamos y mostramos el conjunto de test con la función que hemos calculado con el conjunto de train
 ```{r}
-plot(test_intensidad, test_simetria, type="p", col=etiquetas_test+3, main="Conjunto TEST")
+plot(test_intensidad, test_simetria, type="p", col=etiquetas_test+3,
+     main="Conjunto TEST", xlab="Intensidad", ylab="Simetría")
 abline(r[3], r[1])
 ```
 
 
 ###b) Calcular $E_{in}$ y $E_{test}$ (error sobre los datos de test).
 
-$E_{in}$ es el error dentro de la muestra (datos de entrenamiento) y $E_{test}$ el error en los datos de test con la recta que hemos obtenido previamente sobre los datos de entrenamiento. En ambos casos lo que hacemos es calcular las nuevas etiquetas que nos da la g (función obtenida de regresión logística + PLA pocket) y contar los errores de estas con las originales.
+$E_{in}$ es el error dentro de la muestra (datos de entrenamiento) y $E_{test}$ el error en los datos de test con la recta que hemos obtenido previamente sobre los datos de entrenamiento. En ambos casos lo que hacemos es calcular las nuevas etiquetas que nos da la g (función obtenida de regresión logística + PLA pocket) y contar los errores de estas con las originales, para después hacer el porcentaje, de forma que son el porcentaje de puntos mal etiquetados dentro de la muestra y el porcentaje de puntos mal etiquetados en los datos de test.
 
 ```{r}
 etiquetas_g_in <- unlist(lapply(1:nrow(datos), function(i) {
@@ -651,17 +659,28 @@ $\Phi_3(x)=(1,x_1,x_2,x_1^2, x_2^2,x_1x_2,x_1^3,x_2^3,x_1x_2^2,x_1^2x_2)$
 x1 <- train_intensidad
 x2 <- train_simetria
 datos <- cbind(1, x1, x2, x1^2, x2^2, x1*x2, x1^3, x2^3, x1*x2^2, x2*x1^2)
+
+# Hacemos regresión lineal
+w <- Regress_Lin(datos, etiquetas_train)
+# Le pasamos el PLA
+g_pol <- ajusta_PLA_MOD(datos, etiquetas_train, 100, w)[[1]]
+
 etiquetas_g_in <- unlist(lapply(1:nrow(datos), function(i) {
   p <- datos[i,]
-  sign(p[2] - r[1]*p[1] - r[3])
+  sign(g_pol[1]+g_pol[2]*p[2]+g_pol[3]*p[3]+g_pol[4]*p[4]+g_pol[5]*p[5]+
+         g_pol[6]*p[6]+g_pol[7]*p[7]+g_pol[8]*p[8]+g_pol[9]*p[9]+
+         g_pol[10]*p[10])
 }))
 
 x1 <- test_intensidad
 x2 <- test_simetria
 datos_test <- cbind(1, x1, x2, x1^2, x2^2, x1*x2, x1^3, x2^3, x1*x2^2, x2*x1^2)
+
 etiquetas_g_test <- unlist(lapply(1:nrow(datos_test), function(i) {
   p <- datos_test[i,]
-  sign(p[2] - r[1]*p[1] - r[3])
+ sign(g_pol[1]+g_pol[2]*p[2]+g_pol[3]*p[3]+g_pol[4]*p[4]+g_pol[5]*p[5]+
+         g_pol[6]*p[6]+g_pol[7]*p[7]+g_pol[8]*p[8]+g_pol[9]*p[9]+
+         g_pol[10]*p[10])
 }))
 
 Ein <- 100*cuenta_diferencias(etiquetas_train, etiquetas_g_in)/nrow(datos)
@@ -670,6 +689,24 @@ cat("El error en la muestra Ein ha sido", Ein)
 cat("El error en el test Etest ha sido", Etest)
 ```
 
+Pintamos también esta transformación por ver cómo está clasificando:
+```{r}
+# Pintamos el conjunto de train
+funcion <- function(x,y) g_pol[1]+g_pol[2]*x+g_pol[3]*y+g_pol[4]*x^2+
+  g_pol[5]*y^2+g_pol[6]*x*y+g_pol[7]*x^3+g_pol[8]*y^3+g_pol[9]*x*y^2+
+  g_pol[10]*y*x^2
+pinta_particion(train_intensidad, train_simetria, etiquetas_train, T, f=funcion,
+                main="Conjunto TRAIN con transformación polinómica", 
+                xlab="Intensidad", ylab="Simetría", rango=250)
+```
+```{r}
+# Pintamos el conjunto de test
+pinta_particion(test_intensidad, test_simetria, etiquetas_test, T, f=funcion,
+                main="Conjunto TEST con transformación polinómica", 
+                xlab="Intensidad", ylab="Simetría", rango=250)
+```
+
+Hacemos ahora las cotas pedidas en el apartado anterior:
 ```{r}
 # Cota sobre la función de crecimiento
 mH_cota <- (2*nrow(datos))^3+1
@@ -678,9 +715,11 @@ Eout_cota1 <- Ein + sqrt((8/nrow(datos))*log((4*mH_cota)/0.05))
 cat("La cota basada en Ein es", Eout_cota1)
 ```
 
+La cota sobre $E_{test}$ es la misma que la que hemos calculado previamente, ya que ahí lo único que influye es el número de datos que tenemos en test, que es algo que no ha cambiado.
+
 ###e) Si tuviera que usar los resultados para dárselos a un potencial cliente, ¿usaría la transformación polinómica? Explicar la decisión.
 
-No, es demasiado complejo para unos datos que son prácticamente separables y pueden resolverse de forma más cómoda con unas cotas sobre $E_{out}$ buenas con una recta.
+No, es demasiado complejo para unos datos que son prácticamente separables y pueden resolverse de forma más cómoda con unas cotas sobre $E_{out}$ buenas con una recta (y de hecho son mejores las cotas con la recta que con la transformación polinómica).
 
 ```{r}
 # Borramos lo que no necesitamos
@@ -689,6 +728,7 @@ rm(Ein, Eout_cota1, Etest, etiquetas_g, etiquetas_g_in)
 rm(etiquetas_g_test, etiquetas_test, etiquetas_train)
 rm(lista_test, lista_train, mH_cota, sol, test_intensidad)
 rm(test_simetria, train_intensidad, train_simetria, x1, x2)
+rm(g_pol)
 ```
 
 
@@ -700,7 +740,7 @@ rm(test_simetria, train_intensidad, train_simetria, x1, x2)
 
 ###a) Generamos los coeficientes $a_q$ a partir de muestras de una distribución $\mathcal{N}(0,1)$ y escalamos dichos coeficientes de manera que $E_{a,x}[f^2] = 1$ (Ayuda: dividir los coeficientes por $\sqrt{\sum_{q=0}^{Q_f}\frac{1}{2q+1}}$
 
-Fijamos $N=10$, $\sigma=0.2$, $Q_f=3$ y generamos $a_q$ con la función de la práctica anterior que extraía de una normal y los escalamos como nos pide.
+Fijamos $N=10$, $\sigma=0.2$, $Q_f=3$ y generamos $a_q$ con la función de la práctica anterior que extraía valores aleatorios de una normal y los escalamos como nos pide.
 ```{r}
 # Reinicializamos la semilla
 set.seed(27172)
@@ -742,8 +782,7 @@ polLegendre <- function(x, k) {
 }
 ```
 
-Hacemos también una función auxiliar para calcular f:
-
+Hacemos también una función auxiliar para calcular f, dados los coeficientes escalados aq y Qf:
 ```{r}
 f <- function(x, aq, Qf) {
   sapply(x, function(x_i){
@@ -752,8 +791,7 @@ f <- function(x, aq, Qf) {
 }
 ```
 
-Calculamos los y_n con la fórmula dada.
-
+Calculamos los y_n como el valor real de los datos en f más un ruido dado por un escalado $\sigma$ por unos datos extraídos de una normal 0,1.
 ```{r}
 datos <- unlist(simula_unif(N, 1, c(-1,1)))
 epsilon_n <- unlist(simula_gauss(N, 1, 1))
@@ -783,23 +821,10 @@ pinta_particion(datos, y_n, etiquetas=NULL, visible=T,
 ```
 
 ###b) ¿Por qué normalizamos f? (Ayuda: interpretar el significado de $\sigma$)
-$\sigma$ es el factor por el que multiplicamos unos datos uniformes entre -1 y 1, que juntos hacen el ruido que le damos a las $y_n$. Vamos a repetir el experimento para $g_2$ pero sin normalizar los coeficientes de f, es decir, los $a_q$:
-```{r}
-aq <- aq*escalado
-y_n <- f(datos, aq, Qf) + sqrt(sigma)*epsilon_n
-w <- Regress_Lin(cbind(1, datos, datos^2), y_n)
-# Pintamos el resultado
-pinta_particion(datos, y_n, etiquetas=NULL, visible=T, 
-                            function(x,y) w[1]+w[2]*x+w[3]*x^2-y, main="",
-                xlab="Eje X", ylab="Eje Y")
-# Volvemos a normalizar aq
-aq <- aq/escalado
-```
-
-ESTO NO HACE NADA, NO SÉ PA QUÉ SE NORMALIZA.
+$\sigma$ es el factor por el que multiplicamos unos datos uniformes entre -1 y 1, que juntos hacen el ruido que le damos a las $y_n$. Al calibrar $f$ de forma que $\mathcal{E}[f^2]=1$, estamos calibrando el ruido $\sigma^2$ con la función $f$.
 
 ###c) ¿Cómo podemos obtener $E_{out}$ analíticamente para una $g_{10}$ dada?
-OPCIONAL
+La forma de obtener $E_{out}$ analíticamente para una $g_{10}$ dada es calcular la integral definida en el conjunto donde varían las coordenadas $x$ de los puntos, de la diferencia entre $g_{10}$ y la función $f$ original (sin ruido).
 
 ##2. Siguiendo con el punto anterior, usando la combinación de parámetros $Q_f=20$, $N=50$, $\sigma=1$ ejecutar un número grande de experimentos (>100) calculando en cada caso $E_{out}(g_2)$ y $E_{out}(g_{10})$. Promediar todos los valores de error obtenidos para cada conjunto de hipótesis, es decir $E_{out}(\mathcal(H)_2) =$ promedio sobre experimentos$(E_{out}(g_2))$ y $E_{out}(\mathcal(H)_{10}) =$ promedio sobre experimentos$(E_{out}(g_{10}))$.
 
@@ -823,12 +848,16 @@ w10 <- Regress_Lin(cbind(1, datos, datos^2, datos^3, datos^4, datos^5, datos^6,
                          datos^7, datos^8, datos^9, datos^10), y_n)
 ```
 
+Como vamos a calcular el error fuera de la muestra, estamos suponiendo que conocemos la función $f$ original, por lo que para calcular error lo vamos a hacer tomando la diferencia al cuadrado entre el valor real de $f$ y la función obtenida.  
+Lo que hacemos es un bucle exterior de 101 iteraciones en el que en cada uno generamos unos datos distintos que serán los datos fuera de la muestra y en cada iteración de este bucle pasamos por todos los datos calculando el error de cada uno de estos datos para $g_2$ y para $g_{10}$, acumulándolos para después hacer la media, y posteriormente el porcentaje de puntos mal etiquetados ($E_{out}$), que será lo que mostraremos.
+
 ```{r}
 error2 <- 0
 error10 <- 0
 for(i in 0:100) {
   # Generamos 100 datos fuera de la muestra inicial
   datos_out <- unlist(simula_unif(100, 1, c(-1,1)))
+  
   for(j in 1:100) {
     # Calculamos lo que vale cada punto en realidad con la función objetivo
     valor_real <- f(datos_out[j], aq, Qf)
@@ -844,12 +873,15 @@ for(i in 0:100) {
   }
 }
 error2 <- error2/100
+Eout2 <- 100*error2/nrow(datos_out)
 error10 <- error10/100
+Eout10 <- 100*error10/nrow(datos_out)
 
-cat("El error fuera de la muestra para el polinomio de grado 2 ha sido", error2)
-cat("El error fuera de la muestra para el polinomio de grado 10 ha sido", error10)
+cat("Eout para el polinomio de grado 2 ha sido", error2)
+cat("Eout para el polinomio de grado 10 ha sido", error10)
 ```
 
+Como vemos, hay mucho más error en el polinomio de grado 10 que en el polinomio de grado 2, pese a que como hemos visto en las gráficas anteriores, el polinomio de grado 10 pasaba por todos los puntos que teníamos y el de grado 2 no pasaba por ninguno de ellos: esta es la principal consecuencia del sobreajuste.
 
 ##Definimos una medida de sobreajuste como $E_{out}(\mathcal(H)_{10})-E_{out}(\mathcal(H)_2)$.
 ###a) Argumentar por qué la medida dada puede medir el sobreajuste.
@@ -858,21 +890,24 @@ Calculamos la medida de sobreajuste:
 sobreajuste <- error10 - error2
 cat("La medida de sobreajuste ha salido:", sobreajuste)
 ```
-Dicha medida puede medir el sobreajuste de $g_{10}$ porque estamos comparando su error fuera de la muestra con el error fuera de la muestra de otro polinomio también ajustado, no el original. Si este polinomio $g_{10}$ tiene menos error dentro de la muestra que otro pero a la vez más error fuera que éste mismo (es decir, dicha medida anterior es positiva), entonces hay sobreajuste, por misma definición de lo que es el sobreajuste, como es el caso que tenemos ahora mismo. Además, cuando mayor sea la medida anterior, más sobreajuste habrá.
+Dicha medida puede medir el sobreajuste de $g_{10}$ porque estamos comparando su error fuera de la muestra con el error fuera de la muestra de otro polinomio también ajustado, no el original. Si este polinomio $g_{10}$ tiene menos error dentro de la muestra que otro pero a la vez más error fuera que éste mismo (es decir, dicha medida anterior es positiva), entonces hay sobreajuste, pues estamos ajustando tanto para los datos dentro de la muestra que estamos obviando la función real que queríamos ajustar (debido al error presente en las y_n), de forma que el error fuera de la muestra aumenta mucho, como es el caso que tenemos ahora mismo. Además, cuando mayor sea la medida anterior, más sobreajuste habrá.
 
 ###b) Usando la combinación de valores $Q_f \in \{1,2,...,100\}$, $N \in \{20,25,...,100\}$, $\sigma \in \{0;0.05;0.1;...;2\}$, se obtiene una gráfica como la que aparece en la figura 4.3 del libro "Learning from data", capítulo 4. Interpreta la gráfica respecto a las condiciones en las que se da el sobreajuste. (Nota: No es necesario la implementación).
-OPCIONAL
+
+En la página 124 tenemos dos gráficas, puesto que hay tres variables distintas. En una de ellas está fijada $\sigma^2$ y en la otra $Q_f$.  
+Pensemos primero en qué se supone que debería pasar. Para un número pequeño de datos (como por ejemplo, para 10 datos, como hemos hecho el experimento en los apartados anteriores) el polinomio de orden 10 va a ir a pasar exactamente por los datos (o muy cerca, si aumentamos un poco el número de datos) sobreajustando así mucho, mientras que el polinomio de orden 2 no puede hacer esto y ajustará mejor la función original. Sin embargo si aumentamos el número de datos de forma considerable el polinomio de orden 10 se irá comportando cada vez mejor ya que no puede pasar por todos los datos. Si ahora variamos también la complejidad, el polinomio de orden 10 ajustará mejor que el de orden 2 para mayor complejidad y muchos datos.  
+
+Vamos a fijarnos ahora en la primera gráfica, que deja fijo $Q_f=20$. La zona roja oscura significa que hay sobreajuste, mientras que la azul oscura, que el polinomio de orden 10 da mejor resultado fuera de la muestra que el de grado 2. Efectivamente, cuando crece $N$ $g_{10}$ acaba comportándose mejor que $g_2$ cuando hay poco ruido. Cuando el ruido crece sigue comportándose mejor el polinomio de orden 2 ya que el de orden 10 intentará ajustar los datos que tienen mucho ruido más que el de grado 2.  
+En la segunda gráfica se deja fijo $\sigma^2=0.1$. Para complejidad menor que 10, como no hay mucho error, el polinomio de orden 10 puede acercarse más a los datos y por tanto ajusta mejor que el de orden 2. Sin embargo para mayor complejidad y pocos datos ocurre lo mismo que hemos mencionado antes, y es que el polinomio de orden 10 se ve más afectado por el ruido que el de orden 2 y por tanto el de orden 2 ajusta mejor. Como hay poco error el número de datos para que el polinomio de orden 10 ajuste mejor es menor que antes: con 100 datos ya ajusta mejor y con 120 es mejor para cualquier complejidad.
 
 ```{r}
 # Borramos lo que no necesitamos
 rm(datos, datos_out, w, w10, w2)
 rm(aq, epsilon_n, error10, error2, escalado)
 rm(i, j, N, Qf, sigma, sobreajuste, valor_real)
-rm(valorg10, valorg2, y_n)
+rm(valorg10, valorg2, y_n, f)
+rm(Eout2, Eout10)
 ```
-
-##3. Repetir el experimento descrito en los puntos anteriores pero para el caso de clasificación donde la función objetivo es un perceptron ruidoso $f(x)=sign(\sum_{q=1}^{Q_f}a_qL_q(x)+\epsilon)$. Notemos que $a_0=0$ y que las $a_q$ deben ser normalizadas para que $E_{a,x}[(\sum_{q=1}^{Q_f}a_qL_q(x))^2]=1$. En este caso los modelos $\mathcal{H}_2$ y $\mathcal{H}_10$ contienen el signo de los polinomios de segundo y décimo orden respectivamente. (Atención: los datos no serán separables) (Ayuda: para la normalización adaptar la regla dada en el punto anterior).
-OPCIONAL 0.4
 
 #3. REGULARIZACIÓN Y SELECCIÓN DE MODELOS
 
@@ -882,6 +917,9 @@ OPCIONAL 0.4
 
 Creamos un método nuevo de regresión lineal con weigth decay:
 ```{r}
+# Volvemos a fijar la semilla
+set.seed(12345)
+
 # Método de regresión lineal con weigth decay. Recibe los datos y las etiquetas
 # por parámetros, junto con el weigth decay lambda.
 Regress_Lin_WD <- function(datos, label, lambda) {
@@ -896,6 +934,8 @@ Regress_Lin_WD <- function(datos, label, lambda) {
 
 
 ###a) Para $N in \{d+15,d+25,...,d+115\}$ calcular los errores $e_1,...,e_N$ de validación cruzada y $E_{ev}$.
+
+Como ahora estamos calculando errores de validación cruzada con los datos de dentro de la muestra, nosotros en realidad no conocemos la función objetivo real, sólo conocemos las y_n calculadas con ruido y es con estas y_n con las que tenemos que calcular la diferencia al cuadrado para calcular los $e_i$.
 
 ```{r}
 d <- 3
@@ -923,9 +963,8 @@ while (N <= 118) {
     # Estimamos wreg con regresión lineal con weigth decay
     wreg <- Regress_Lin_WD(datos_loo, yn_loo, lambda)
     # Calculamos el error de validación cruzada
-    valor_real <- crossprod(wf,xn)
     valor_estimado <- crossprod(wreg,xn)
-    e_n <- (valor_real - valor_estimado)^2
+    e_n <- (y_n[j] - valor_estimado)^2
     e[j] <- e_n
   }
   errores[[i]] <- e
@@ -938,8 +977,8 @@ while (N <= 118) {
 Los valores $e_1,...,e_N$ pedidos están en la lista `errores`, donde cada elemento de la lista se corresponde con los $e_1,...,e_N$ para cada $N$. Calculamos ahora $E_{cv}$ como la media de cada elemento de la lista:
 ```{r}
 listaEcv <- sapply(errores, function(i) mean(i))
-cat("La media de los errores de validación cruzada, Ecv, son los siguientes (para cada N)
-    ", listaEcv)
+cat("La media de los errores de validación cruzada, Ecv, son los siguientes (para cada N)"
+    , listaEcv)
 ```
 
 
@@ -972,9 +1011,8 @@ while (N <= 118) {
       # Estimamos wreg con regresión lineal con weigth decay
       wreg <- Regress_Lin_WD(datos_loo, yn_loo, lambda)
       # Calculamos el error de validación cruzada
-      valor_real <- crossprod(wf,xn)
       valor_estimado <- crossprod(wreg,xn)
-      e_n <- (valor_real - valor_estimado)^2
+      e_n <- (y_n[j] - valor_estimado)^2
       e[j] <- e_n
     }
     e1[k] <- e[1]
@@ -990,9 +1028,9 @@ while (N <= 118) {
 ```
 
 ```{r}
-print("La media de e1, e2 y Ecv ha sido, para cada N y por orden:")
+print("La media de e1, e2 y Ecv ha sido, para cada N y en este orden:")
 print(errores)
-print("La varianza de e1, e2 y Ecv ha sido, para cada N y por orden:")
+print("La varianza de e1, e2 y Ecv ha sido, para cada N y este orden:")
 print(varianzas)
 ```
 
@@ -1008,7 +1046,8 @@ pinta_particion(N, unlist(errores), color, xlab="Valor de N",
                 ylab="Valores medios de e1, e2 y Ecv", 
                 main="Valores medios de e1, e2 y Ecv")
 ```
-Como vemos, la diferencia entre el promedio de los valores de $e_1$, $e_2$ y $E_{cv}$ es muy pequeña (y se va haciendo incluso más pequeña cuanto mayor es la $N$), que es algo que tiene sentido ya que lo que aquí se está representando son las medias de los 1000 valores que nos han salido de $e_1$, $e_2$ y $E_{cv}$ para cada valor de $N$. Es lógico que las medias de $e_1$ y $e_2$ se parezcan si pensamos en lo que estamos haciendo: para cada valor en la muestra, lo sacamos de la misma y calculamos una función que ajuste los demás, y $e_i$ es el valor de error cuadrático que tiene el valor que hemos sacado fuera. Puede que algún valor esté muy lejos de la función estimada o que alguno caiga dentro, pero en media quedarán más o menos todos a la misma distancia, sin importar que el valor que hemos sacado sea el primero, el segundo o el último, por lo que las medias de $e_i$ serán parecidas y, como es lógico, cuanto mayor sea el número de datos en la muestra ($N$), mejor estimaremos la función y menor error habrá, como se puede apreciar en la gráfica. Habiendo visto que todos los $e_i$, al ser medias, se parecerán, es lógico que se parezcan también a $E_{cv}$, ya que es la media de todos ellos.
+Como vemos, la diferencia entre el promedio de los valores de $e_1$, $e_2$ y $E_{cv}$ es pequeña (y se va haciendo más pequeña cuanto mayor es la $N$), que es algo que tiene sentido ya que lo que aquí se está representando son las medias de los 1000 valores que nos han salido de $e_1$, $e_2$ y $E_{cv}$ para cada valor de $N$. Es lógico que las medias de $e_1$ y $e_2$ se parezcan (todo lo que el ruido nos permite) si pensamos en lo que estamos haciendo: para cada valor en la muestra, lo sacamos de la misma y calculamos una función que ajuste los demás, y $e_i$ es el valor de error cuadrático que tiene el punto que hemos sacado fuera. Puede que algún punto esté muy lejos de la función estimada o que alguno caiga dentro, pero en media quedarán más o menos todos a la misma distancia, sin importar que el punto que hemos sacado sea el primero, el segundo o el último, por lo que las medias de $e_i$ serán parecidas y, como es lógico, cuanto mayor sea el número de datos en la muestra ($N$), mejor estimaremos la función y menor error habrá, como se puede apreciar en la gráfica, de hecho, esto se ve muy bien cuando tomamos la media de todos los $e_i$, es decir, $E_{cv}$, que son los puntos verdes, y vemos que se van acercando cada vez más a cero cuando $N$ crece de forma más o menos regular, dando menos saltos que $e_1$ y $e_2$.  
+De hecho ya hemos visto en teoría que $\mathcal{E}_{\mathcal{D}}[e_n]=E_{out}(N-1)$.
 
 ###d) ¿Qué es lo que contribuye a la varianza de los valores de $e_1$?
 
@@ -1019,11 +1058,16 @@ pinta_particion(N, unlist(varianzas), color, xlab="Valor de N",
                 main="Varianzas de e1, e2 y Ecv")
 ```
 
-Lo que contribuye a la varianza tanto de $e_1$ como de $e_2$ y $E_{cv}$ son los valores que se quedan lejos de la media. Como vemos en la gráfica, las varianzas de $e_1$ y $e_2$ están más o menos cercanas (excepto para $N=18$) y cada vez se van acercando más a la varianza de $E_{cv}$ cuando mayor es $N$. Esto también es lógico. Vamos a centrarnos primero en valores pequeños de $N$: los valores que se quedan lejos de la media influyen más porque tenemos pocos datos. Puede darse que haya más valores que se quedan lejos de la media y tienen más error, como es el caso de $e_1$ o que haya menos, como le pasa a $e_2$, pero si cogemos la varianza de la media de todos los $e_i$ será menor que la de todos ellos, puesto que es la media de todos. Además, cuanto mayor sea $N$, más datos habrá, mejor será el ajuste y menor será el error de un dato frente a todos los demás y por tanto menor será la varianza de ese dato. Si de nuevo hacemos la media, la varianza de $e_1$ y $e_2$ bajará también.
+Lo que contribuye a la varianza tanto de $e_1$ como de $e_2$ y $E_{cv}$ son los valores que se quedan lejos de la media. Como vemos en la gráfica, las varianzas de $e_1$ y $e_2$ están más o menos cercanas y las varianzas de $E_{cv}$ están siempre cercanas a cero. Esto también es lógico. Vamos a centrarnos primero en valores pequeños de $N$: los valores que se quedan lejos de la media influyen más porque tenemos pocos datos, que es por lo que las varianzas son un poco más altas para $N=18$. Ahora, las varianzas de $e_i$ van a ser más altas que la varianza de $E_{cv}$ porque $E_{cv}$ es la media de todos los $e_i$ y en media los errores, por lo que hemos comentado en el punto anterior, son parecidos (muy parecidos, como vemos en la gráfica, ya que la varianza se queda muy cerca de cero), es decir, ovbiamente va a haber menos varianza entre dos medias (caso de $E_{cv}$) que entre varios datos (caso de $e_i$).
 
 ###e) Si los errores de validación cruzada fueran verdaderamente independientes, ¿cuál sería la relación entre la varianza de los valores de $e_1$ y la varianza de los de $E_{ev}$?
 
+La relación es fácil de sacar si recordamos dos propiedades de la varianza: la primera es que la varianza de un escalar por una variable aleatoria es ese escalar al cuadrado por la varianza de la variable aleatoria y la segunda que la varianza de la suma de dos variables aleatorias es la suma de las varianzas más dos veces la covarianza entre ambas variables aleatorias.  
+Como estamos suponiendo que las variables son de verdad independientes, la covarianza entre dos $e_i$ o cualquier $e_i$ y $E_{cv}$ es cero, con lo que nos queda que la varianza de la suma es la suma de las varianzas.  
 
+Vamos ahora a partir de la varianza de $E_{cv}$: $Var(E_{cv}) = Var(\frac{1}{N}\sum_{i=1}^Ne_i)$ por ser $E_{cv}$ la media de los $e_i$ y $Var(\frac{1}{N}\sum_{i=1}^Ne_i) = \frac{1}{N^2}Var(\sum_{i=0}^Ne_i)$ por la primera propiedad y $\frac{1}{N^2}Var(\sum_{i=0}^Ne_i)=\frac{1}{N^2}\sum_{i=0}^NVar(e_i)$ por la segunda propiedad.  
+
+Hemos llegado así a una relación entre la varianza de $E_{cv}$ y la suma de las varianzas de $e_i$. Supongamos que las varianzas de $e_i$ son lo suficientemente parecidas (algo que experimentalmente hemos visto que ocurre en el apartado anterior) como para poder suponer que $Var(e_1)=Var(e_2)=...=Var(e_N)$ de forma que $\sum_{i=0}^N(Var(e_i)) = NVar(e_1)$, entonces encontramos una relación entre las dos varianzas pedidas: $Var(E_{cv}) = \frac{1}{N}Var(e_1)$.
 
 ###f) Una medida del número efectivo de muestras nuevas usadas en el cálculo de $E_{ev}$ es el cociente entre la varianza de $e_1$ y la varianza de $E_{ev}$. Explicar por qué, y dibujar, respecto de $N$, el número efectivo de nuevos ejemplos $(N_{eff})$ como un porcentaje de $N$. NOTA: Debería encontrarse que $N_{eff}$ está cercano a $N$.
 
@@ -1033,8 +1077,10 @@ e_1 <- rapply(varianzas, function(x) x[1])
 Ecv <- rapply(varianzas, function(x) x[3])
 N <- seq(18, 118, by=10)
 Neff <- 100*(e_1/Ecv)/N
-pinta_particion(N, Neff, rep(1,11), main="Neff", xlab="Valor de N", ylab="Neff")
+pinta_particion(N, Neff, rep(1,11), main="Neff", xlab="Valor de N",
+                ylab="Neff como porcentaje de N")
 ```
 
+Podemos ver que $N_{eff}$ como porcentaje de $N$ se queda en una franja alredador del 100%, que es lo que el ejercicio nos decía que debíamos encontrar, en concreto entre el 70% y el 120%.
 
 ###g) Si se incrementa la cantidad de regularización, ¿debería $N_{eff}$ subir o bajar?. Argumentar la respuesta. Ejecutar el mismo experimento con $\lambda=2.5/N$ y comparar los resultados del punto anterior para verificar la conjetura.
