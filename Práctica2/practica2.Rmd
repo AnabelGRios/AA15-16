@@ -151,8 +151,23 @@ pinta_particion <- function(coordX, coordY, etiquetas=NULL, visible=FALSE,
 }
 ```
 
+```{r}
+# Función para provocar la parada de la ejecución
+parada <- function(){
+  cat("Presione una tecla para continuar")
+  t <- readline()
+}
+```
+
 
 #1. MODELOS LINEALES
+
+```{r}
+###########
+cat("EJERCICIO 1")
+###########
+```
+
 
 Todos los algoritmos dentro de este apartado tienen los siguientes criterios de parada (a no ser que se especifiquen otros en el enunciado): que se llegue a un número máximo de iteraciones prefijado, que la función de error en algún $w$ calculado esté por debajo de un umbral (teniendo en cuenta que las funciones dadas tienen los mínimos en cero) o que la diferencia de dos valores consecutivos de $w$ calculados esté por debajo del mismo umbral anterior.
 
@@ -161,6 +176,8 @@ Todos los algoritmos dentro de este apartado tienen los siguientes criterios de 
 Lo he implementado de forma que se le pueda pasar la función de error y la función gradiente como funciones, de forma que se evalúan dentro de la función con los valores $w$ que se van calculando. Hay que pasarle el punto inicial, la tasa de aprendizaje, el número máximo de iteraciones a realizar y el umbral para las otras dos condiciones de parada.
 
 ```{r}
+cat("APARTADO 1: GRADIENTE DESCENDENTE")
+
 # Algoritmo del gradiente descendente. Le pasamos a la función la función de
 # error, su gradiente (que serán funciones), el punto en el que se empieza, la
 # tasa de aprendizaje, el número máximo de iteraciones a realizar, y el mínimo 
@@ -210,6 +227,7 @@ gradE <- function(u,v) {(2*(u*exp(v) - 2*v*exp(-u)))*c(exp(v) + 2*v*exp(-u),
                                                        u*exp(v) - 2*exp(-u))}
 
 val <- gradienteDescendente(E, gradE, c(1,1), 0.1, 20, 10^{-14})
+parada()
 ```
 
 
@@ -230,8 +248,10 @@ gradF <- function(x,y) c(2*x + 4*pi*sin(2*pi*y)*cos(2*pi*x),
                          4*y + 4*pi*sin(2*pi*x)*cos(2*pi*y))
 
 val <- gradienteDescendente(f, gradF, c(1,1), 0.01, 50, 0)
+parada()
 pinta_particion(val[,1], val[,2], xlab="num iteración", ylab="f(x)", 
                 main="Gradiente Descendente")
+parada()
 ```
 
 Repetimos con $\eta=0.1$:
@@ -239,6 +259,7 @@ Repetimos con $\eta=0.1$:
 val <- gradienteDescendente(f, gradF, c(1,1), 0.1, 50, 0)
 pinta_particion(val[,1], val[,2], xlab="num iteración", ylab="f(x)", 
                 main="Gradiente Descendente")
+parada
 ```
 
 Como vemos, las diferencias son enormes puesto que para el caso $\eta=0.1$ el método no converge, mientras que para $\eta=0.01$ converge muy pronto a un valor muy bajo (0.5). Esto nos da una idea de lo importante que es elegir bien la tasa de aprendizaje.
@@ -248,10 +269,18 @@ Como vemos, las diferencias son enormes puesto que para el caso $\eta=0.1$ el mé
 Utilizamos la tasa de aprendizaje $\eta=0.01$, ya que hemos visto que con la otra no converge.
 
 ```{r}
+cat("Punto de inicio (0.1,0.1")
 val <- gradienteDescendente(f, gradF, c(0.1,0.1), 0.01, 50, 0)
+parada()
+cat("Punto de inicio (1,1)")
 val <- gradienteDescendente(f, gradF, c(1,1), 0.01, 50, 0)
+parada()
+cat("Punto de inicio (-0.5,-0.5")
 val <- gradienteDescendente(f, gradF, c(-0.5,-0.5), 0.01, 50, 0)
+parada()
+cat("Punto de inicio (-1,-1)")
 val <- gradienteDescendente(f, gradF, c(-1,-1), 0.01, 50, 0)
+parada()
 ```
 
 El problema de encontrar un mínimo global con esta técnica de gradiente descendente es que se queda estancada en mínimos locales. Esto significa que que encontremos el mínimo global o no depende únicamente del punto de inicio que le damos: si éste está lo suficientemente cerca del mínimo global como para que no haya mínimos locales entre ambos, lo encontrará, pero de haber algún mínimo local, se quedará en el primero que encuentre y será incapaz de salir de ahí.
@@ -261,6 +290,8 @@ El problema de encontrar un mínimo global con esta técnica de gradiente descende
 De nuevo, tenemos que pasarle al método la función de error y la gradiente, como funciones, para poder evaluarlas dentro.
 
 ```{r}
+cat("APARTADO 2: COORDENADA DESCENDENTE")
+
 # Algoritmo de coordenada descendente. Le pasamos a la función la función de
 # error, su gradiente (que serán funciones), el punto en el que se empieza, la
 # tasa de aprendizaje, el número máximo de iteraciones a realizar, y el mínimo 
@@ -303,6 +334,7 @@ coordenadaDescendente <- function(ferror, gradiente, pini, tasa, maxiter, umbral
 
 ```{r}
 val <- coordenadaDescendente(E, gradE, c(1,1), 0.1, 15, 0)
+parada()
 ```
 
 ###b) Establezca una comparación entre esta técnica y la técnica de gradiente descendente.
@@ -314,6 +346,8 @@ Como vemos, es mejor la técnica del gradiente descendente, ya que éste, para la 
 En este caso, además de la función de error y la gradiente, tenemos que pasarle la función hessiana, también para que se pueda evaluar dentro del método. En el método de Newton cómo nos vemos lo da el producto matricial entre la hessiana (que será una matriz 2x2) y el gradiente (que será un vector 2x1), de forma que obtenemos un vector 2x1, como en los métodos anteriores.
 
 ```{r}
+cat("APARTADO 3: MÉTODO DE NEWTON")
+
 # Algoritmo del método de Newton. Le pasamos a la función la función de
 # error, su gradiente y la matriz hessiana (que serán funciones), el punto 
 # en el que se empieza, la tasa de aprendizaje, el número máximo de iteraciones
@@ -351,6 +385,7 @@ metodoNewton <- function(ferror, gradiente, hessiana, pini, tasa, maxiter, umbra
 
 Calculamos la matriz hessiana de la f. Recordemos que las derivadas parciales cruzadas (de existir y ser continuas, como es nuestro caso) son iguales, por el teorema de Schwarz.
 ```{r}
+# Cálculo de f, el gradiente y la hessiana
 f <- function(x,y) x^2 + 2*y^2 + 2*sin(2*pi*x)*sin(2*pi*y)
 gradF <- function(x,y) c(2*x + 4*pi*sin(2*pi*y)*cos(2*pi*x),
                          4*y + 4*pi*sin(2*pi*x)*cos(2*pi*y))
@@ -361,7 +396,9 @@ d22 <- function(x,y) 4 - 8*pi^2*sin(2*pi*x)*sin(2*pi*y)
 hess <- function(x,y) rbind(c(d11(x,y), d12(x,y)), c(d12(x,y), d22(x,y)))
 
 val <- metodoNewton(f, gradF, hess, c(1,1), 0.01, 50, 0)
+parada()
 val2 <- metodoNewton(f, gradF, hess, c(1,1), 0.1, 50, 0)
+parada()
 ```
 
 
@@ -370,10 +407,12 @@ val2 <- metodoNewton(f, gradF, hess, c(1,1), 0.1, 50, 0)
 ```{r}
 pinta_particion(val[,1], val[,2], xlab="num iteración", ylab="f(x)",
                 main="Método Newton con tasa 0.01")
+parada()
 ```
 ```{r}
 pinta_particion(val2[,1], val2[,2], xlab="num iteración", ylab="f(x)",
                 main="Método Newton con tasa 0.1")
+parada()
 ```
 
 ###b) Extraer conclusiones sobre las conductas de los algoritmos comparando la curva de decrecimiento de la función calculada en el apartado anterior y la correspondiente obtenida con gradiente descendente.
@@ -385,6 +424,8 @@ Como vemos, para tasa 0.01, el método de gradiente descendente converge mucho má
 
 Generamos la muestra de 100 puntos de manera uniforme:
 ```{r}
+cat("APARTADO 4: REGRESIÓN LOGÍSTICA")
+
 muestra <- simula_unif(100, 2, c(-1,1))
 ```
 Generamos la recta en el cuadrado dado que separa los datos:
@@ -451,8 +492,11 @@ Regress_LogSGD <- function(datos, label, vini, tasa, maxiter, umbral) {
 He usado un número de 1000 muestras, las he etiquetado con la verdadera función, he obtenido la g aproximada por regresión lineal y las he vuelto a etiquetar con esta g para poder contar los errores en estas 1000 muestras y poder calcular después el porcentaje de error:
 
 ```{r}
+cat("Solución con regresión logística")
 sol <- Regress_LogSGD(cbind(muestra,1), etiquetas, c(0,0,0), 0.01, 400, 0.01)
 sol
+parada()
+
 g <- -sol[[1]]/sol[[1]][2]
 muestra_out <- simula_unif(1000, 2, c(-1,1))
 # Etiquetamos con la función original
@@ -468,6 +512,7 @@ etiquetas_g <- unlist(lapply(1:nrow(muestra_out), function(i) {
 # Contamos los errores
 errores <- cuenta_diferencias(etiquetas_originales, etiquetas_g)
 cat("El error Eout es: ", 100*(errores/nrow(muestra)))
+parada()
 ```
 
 
@@ -509,6 +554,7 @@ for(i in 1:100) {
 }
 
 cat("El número medio de Eout ha sido:", errores/100)
+parada()
 ```
 
 <p> 2) ¿Cuántas épocas tada en promedio RL en converger para $N=100$, usando todas las condiciones anteriormente especificadas? </p>
@@ -516,6 +562,7 @@ cat("El número medio de Eout ha sido:", errores/100)
 En el trozo anterior, dentro del bucle, hemos ido acumulando el número de iteraciones que el método tarda en converger para las 100 iteraciones. Sólo nos queda hacer la media, es decir, dividir por 100:
 ```{r}
 cat("RL tarda en converger", iteraciones/100, "iteraciones en promedio")
+parada()
 ```
 
 ```{r}
@@ -534,6 +581,8 @@ rm(d11, d12, d22, E, f, gradE, gradF)
 
 Comenzamos leyendo los datos tanto de test como de train, quedándonos sólo con las instancias de de unos y cincos y calculando simetrías e intensidad. Formateamos los datos de forma que al final nos quede una lista de matrices para las instancias de test y otra lista de matrices para las instancias de train:
 ```{r}
+cat("APARTADO 5: CLASIFICACIÓN DE DÍGITOS")
+
 # Leemos los ficheros y extraemos los dígitos 1 y 5
 train <- read.table("datos/zip.train", sep=" ")
 test <- read.table("datos/zip.test", sep=" ")
@@ -600,11 +649,12 @@ Necesitamos poner como tercera coordenada de la matriz de datos que le vamos a p
 ```{r}
 datos <- cbind(train_intensidad, train_simetria, 1)
 w <- Regress_Lin(datos, etiquetas_train)
-cat(w)
+cat("Solución con regresión lineal:", w)
 # Le pasamos lo que nos devuelve la regresión lineal al PLA pocket como solución
 # inicial
 sol <- ajusta_PLA_MOD(datos, etiquetas_train, 100, w)
-cat(sol[[1]])
+cat("Solución después de PLA pocket:", sol[[1]])
+parada()
 ```
 
 Como vemos, la solución que nos devuelve la regresión lineal es la misma que la que nos devuelve el PLA pocket, es decir, que el PLA pocket no puede mejorar la solución que da la regresión lineal. Esto es así porque como vemos en la gráfica del siguiente apartado, el único error que hay no hay forma de arreglarlo ya que los datos no son separables y la regresión ya nos está ofreciendo la mejor solución.
@@ -618,7 +668,7 @@ r <- -r/r[2]
 plot(train_intensidad, train_simetria, col=etiquetas_train+3, type="p", 
      main="Conjunto TRAIN", xlab="Intensidad", ylab="Simetría")
 abline(r[3],r[1])
-
+parada()
 ```
 
 Dibujamos y mostramos el conjunto de test con la función que hemos calculado con el conjunto de train
@@ -626,6 +676,7 @@ Dibujamos y mostramos el conjunto de test con la función que hemos calculado con
 plot(test_intensidad, test_simetria, type="p", col=etiquetas_test+3,
      main="Conjunto TEST", xlab="Intensidad", ylab="Simetría")
 abline(r[3], r[1])
+parada()
 ```
 
 
@@ -647,6 +698,7 @@ Ein <- 100*cuenta_diferencias(etiquetas_train, etiquetas_g_in)/nrow(datos)
 Etest <- 100*cuenta_diferencias(etiquetas_test, etiquetas_g_test)/nrow(datos_test)
 cat("El error en la muestra Ein ha sido", Ein)
 cat("El error en el test Etest ha sido", Etest)
+parada()
 ```
 
 ###c) Obtener cotas sobre el verdadero valor de $E_{out}$. Pueden calcularse dos cotas, una basada en $E_{in}$ y otra basada en $E_{test}$. Usar una tolerancia $\delta=0.05$. ¿Qué cota es mejor?
@@ -659,6 +711,7 @@ mH_cota <- (2*nrow(datos))^3+1
 # Cota basada en Ein
 Eout_cota1 <- Ein + sqrt((8/nrow(datos))*log((4*mH_cota)/0.05))
 cat("La cota basada en Ein es", Eout_cota1)
+parada()
 ```
 
 La cota basada en $E_test$ es la cota de Hoeffding considerando $M=1$, pues cuando llegamos al test ya tenemos escogida la $h$, que es la recta elegida con los datos de entrenamiento. Utilizamos por tanto la cota $P[|E_{test}(g) - E_{out}(g)| > \epsilon] \leq 2Me^{-2\epsilon^2N}$ y queremos que esta probabilidad sea menor o igual que 0.05, con lo que vamos a obtener $\epsilon$: $2e^{-2\epsilon^2N} \leq 0.05 \Rightarrow e^{-2\epsilon^2N} \leq 0.025 \Rightarrow -2\epsilon^2N \leq ln(0.025) \Rightarrow \epsilon^2 \geq ln(0.025)/(-2N) \Rightarrow \epsilon \geq \sqrt{ln(0.025)/(-2N)}$, donde $N=49$, el número de datos que tenemos en test, luego $\epsilon \geq 0.1940145$. Tomamos el $\epsilon$ más pequeño para obtener la cota más fina, y nos queda que la probabilidad de que $|E_{test}-E_{out}| \geq 0.1940145$ es 0.039682.   
@@ -701,6 +754,7 @@ Ein <- 100*cuenta_diferencias(etiquetas_train, etiquetas_g_in)/nrow(datos)
 Etest <- 100*cuenta_diferencias(etiquetas_test, etiquetas_g_test)/nrow(datos_test)
 cat("El error en la muestra Ein ha sido", Ein)
 cat("El error en el test Etest ha sido", Etest)
+parada()
 ```
 
 Pintamos también esta transformación por ver cómo está clasificando:
@@ -712,12 +766,14 @@ funcion <- function(x,y) g_pol[1]+g_pol[2]*x+g_pol[3]*y+g_pol[4]*x^2+
 pinta_particion(train_intensidad, train_simetria, etiquetas_train, T, f=funcion,
                 main="Conjunto TRAIN con transformación polinómica", 
                 xlab="Intensidad", ylab="Simetría", rango=250)
+parada()
 ```
 ```{r}
 # Pintamos el conjunto de test
 pinta_particion(test_intensidad, test_simetria, etiquetas_test, T, f=funcion,
                 main="Conjunto TEST con transformación polinómica", 
                 xlab="Intensidad", ylab="Simetría", rango=250)
+parada()
 ```
 
 Hacemos ahora las cotas pedidas en el apartado anterior:
@@ -727,6 +783,7 @@ mH_cota <- (2*nrow(datos))^3+1
 # Cota basada en Ein
 Eout_cota1 <- Ein + sqrt((8/nrow(datos))*log((4*mH_cota)/0.05))
 cat("La cota basada en Ein es", Eout_cota1)
+parada()
 ```
 
 La cota sobre $E_{test}$ es la misma que la que hemos calculado previamente, ya que ahí lo único que influye es el número de datos que tenemos en test, que es algo que no ha cambiado.
@@ -748,6 +805,13 @@ rm(g_pol)
 
 #2. SOBREAJUSTE
 
+```{r}
+#############
+cat("EJERCICIO 2")
+#############
+```
+
+
 ##1. Sobreajuste. Vamos a construir un entorno que nos permita experimentar con los problemas de sobreajuste. Consideremos el espacio de entrada $X=[-1,1]$ con una densidad de probabilidad uniforme $P(x)=\frac{1}{2}$. Consideramos dos modelos $\mathcal{H}_2$ y $\mathcal{H}_{10}$ representando el conjunto de todos los polinomios de grado 2 y grado 10 respectivamente. La función objetivo es un polinomio de grado $Q_f$ que escribimos como $f(x)=\sum_{q=0}^{Q_f}a_qL_q(x)$, donde $L_q(x)$ son los polinomios de Legendre (ver la relación de ejercicios 2). El conjunto de datos es $D=\{(x_1,y_1),...,(x_N,y_N)\}$ donde $y_n=f(x_n)+\sigma \epsilon_n$ y las $\{\epsilon_n\}$ son variables aleatorias i.i.d. $\mathcal{N}(0,1)$ y $\sigma^2$ la varianza del ruido.
 
 ##Comenzamos realizando un experimento donde suponemos que los valores de $Q_f$, $N$, $\sigma$ están especificados. Para ello:
@@ -756,6 +820,8 @@ rm(g_pol)
 
 Fijamos $N=10$, $\sigma=0.2$, $Q_f=3$ y generamos $a_q$ con la función de la práctica anterior que extraía valores aleatorios de una normal y los escalamos como nos pide.
 ```{r}
+cat("APARTADO 1")
+
 # Reinicializamos la semilla
 set.seed(27172)
 # Fijamos parámetros y extraemos los aq
@@ -823,6 +889,7 @@ w <- Regress_Lin(cbind(1, datos, datos^2), y_n)
 pinta_particion(datos, y_n, etiquetas=NULL, visible=T, 
                             function(x,y) w[1]+w[2]*x+w[3]*x^2-y, 
                 main="Polinomio de orden 2", xlab="Eje X", ylab="Eje Y")
+parada()
 ```
 ```{r}
 w10 <- Regress_Lin(cbind(1, datos, datos^2, datos^3, datos^4, datos^5, datos^6, 
@@ -832,6 +899,7 @@ pinta_particion(datos, y_n, etiquetas=NULL, visible=T,
                   w10[5]*x^4+w10[6]*x^5+w10[7]*x^6+w10[8]*x^7+w10[9]*x^8+
                   w10[10]*x^9+w10[11]*x^10-y, main="Polinomio de orden 10",
                 xlab="Eje X", ylab="Eje Y")
+parada()
 ```
 
 ###b) ¿Por qué normalizamos f? (Ayuda: interpretar el significado de $\sigma$)
@@ -844,6 +912,8 @@ La forma de obtener $E_{out}$ analíticamente para una $g_{10}$ dada es calcular 
 
 Cambiamos los parámetros como nos pide, volvemos a calcular aq y normalizarlos y obtenemos una muestra de 50 datos.
 ```{r}
+cat("APARTADO 2")
+
 Qf <- 20
 N <- 50
 sigma <- 1
@@ -891,6 +961,7 @@ Eout10 <- error10/100
 
 cat("Eout para el polinomio de grado 2 ha sido", Eout2)
 cat("Eout para el polinomio de grado 10 ha sido", Eout10)
+parada()
 ```
 
 Como vemos, hay mucho más error en el polinomio de grado 10 que en el polinomio de grado 2, pese a que como hemos visto en las gráficas anteriores, el polinomio de grado 10 pasaba por todos los puntos que teníamos y el de grado 2 no pasaba por ninguno de ellos: esta es la principal consecuencia del sobreajuste.
@@ -899,8 +970,9 @@ Como vemos, hay mucho más error en el polinomio de grado 10 que en el polinomio 
 ###a) Argumentar por qué la medida dada puede medir el sobreajuste.
 Calculamos la medida de sobreajuste:
 ```{r}
-sobreajuste <- error10 - error2
+sobreajuste <- Eout10 - Eout2
 cat("La medida de sobreajuste ha salido:", sobreajuste)
+parada()
 ```
 Dicha medida puede medir el sobreajuste de $g_{10}$ porque estamos comparando su error fuera de la muestra con el error fuera de la muestra de otro polinomio también ajustado, no el original. Si este polinomio $g_{10}$ tiene menos error dentro de la muestra que otro pero a la vez más error fuera que éste mismo (es decir, dicha medida anterior es positiva), entonces hay sobreajuste, pues estamos ajustando tanto para los datos dentro de la muestra que estamos obviando la función real que queríamos ajustar (debido al error presente en las y_n), de forma que el error fuera de la muestra aumenta mucho, como es el caso que tenemos ahora mismo. Además, cuando mayor sea la medida anterior, más sobreajuste habrá.
 
@@ -923,12 +995,21 @@ rm(Eout2, Eout10)
 
 #3. REGULARIZACIÓN Y SELECCIÓN DE MODELOS
 
+```{r}
+#############
+cat("EJERCICIO 3")
+#############
+```
+
+
 ##1. Para $d=3$ (dimensión) generar un conjunto de $N$ datos aleatorios $\{x_n,y_n\}$ de la sigiuente forma. Para cada punto $x_n$ generamos sus coordenadas muestreando de forma independiente una $\mathcal{N}(0,1)$. De forma similar generamos un vector de pesos de $(d+1)$ dimensiones $\mathbf{w}_f$, y el conjunto de valores $y_n = \mathbf{w}_f^Tx_n+\sigma\epsilon_n$, donde $\epsilon_n$ es un ruido que sigue también una $\mathcal{N}(0,1)$ y $\sigma^2$ es la varianza del ruido; fijar $\sigma=0.5$ 
 
 ##Usar regresión lineal con regularización "weight decay" para estimar $\mathbf{w}_f$ con $\mathbf{w}_{reg}$. Fijar el parámetro de regularización a $0.05/N$.
 
 Creamos un método nuevo de regresión lineal con weigth decay:
 ```{r}
+cat("APARTADO 1")
+
 # Volvemos a fijar la semilla
 set.seed(12345)
 
@@ -988,9 +1069,10 @@ while (N <= 118) {
 
 Los valores $e_1,...,e_N$ pedidos están en la lista `errores`, donde cada elemento de la lista se corresponde con los $e_1,...,e_N$ para cada $N$. Calculamos ahora $E_{cv}$ como la media de cada elemento de la lista:
 ```{r}
-listaEcv <- sapply(errores, function(i) mean(i))
-cat("La media de los errores de validación cruzada, Ecv, son los siguientes (para cada N)"
-    , listaEcv)
+listaEcv <- lapply(errores, function(i) mean(i))
+cat("La media de los errores de validación cruzada, Ecv, son los siguientes (para cada N)")
+print(listaEcv)
+parada()
 ```
 
 
@@ -1045,8 +1127,10 @@ while (N <= 118) {
 ```{r}
 print("La media de e1, e2 y Ecv ha sido, para cada N y en este orden:")
 print(errores)
+parada()
 print("La varianza de e1, e2 y Ecv ha sido, para cada N y este orden:")
 print(varianzas)
+parada()
 ```
 
 
@@ -1060,6 +1144,7 @@ N <- c(rep(18,3), rep(28,3), rep(38,3), rep(48, 3), rep(58,3), rep(68,3),
 pinta_particion(N, unlist(errores), color, xlab="Valor de N", 
                 ylab="Valores medios de e1, e2 y Ecv", 
                 main="Valores medios de e1, e2 y Ecv")
+parada()
 ```
 Como vemos, la diferencia entre el promedio de los valores de $e_1$, $e_2$ y $E_{cv}$ es pequeña (y se va haciendo más pequeña cuanto mayor es la $N$), que es algo que tiene sentido ya que lo que aquí se está representando son las medias de los 1000 valores que nos han salido de $e_1$, $e_2$ y $E_{cv}$ para cada valor de $N$. Es lógico que las medias de $e_1$ y $e_2$ se parezcan (todo lo que el ruido nos permite) si pensamos en lo que estamos haciendo: para cada valor en la muestra, lo sacamos de la misma y calculamos una función que ajuste los demás, y $e_i$ es el valor de error cuadrático que tiene el punto que hemos sacado fuera. Puede que algún punto esté muy lejos de la función estimada o que alguno caiga dentro, pero en media quedarán más o menos todos a la misma distancia, sin importar que el punto que hemos sacado sea el primero, el segundo o el último, por lo que las medias de $e_i$ serán parecidas y, como es lógico, cuanto mayor sea el número de datos en la muestra ($N$), mejor estimaremos la función y menor error habrá, como se puede apreciar en la gráfica, de hecho, esto se ve muy bien cuando tomamos la media de todos los $e_i$, es decir, $E_{cv}$, que son los puntos verdes, y vemos que se van acercando cada vez más a cero cuando $N$ crece de forma más o menos regular, dando menos saltos que $e_1$ y $e_2$.  
 
@@ -1070,6 +1155,7 @@ Vamos a mostrar otra gráfica, ahora con los valores para las varianzas, con el m
 pinta_particion(N, unlist(varianzas), color, xlab="Valor de N", 
                 ylab="Varianzas de e1, e2 y Ecv", 
                 main="Varianzas de e1, e2 y Ecv")
+parada()
 ```
 
 Lo que contribuye a la varianza tanto de $e_1$ como de $e_2$ y $E_{cv}$ son los valores que se quedan lejos de la media. Como vemos en la gráfica, las varianzas de $e_1$ y $e_2$ están más o menos cercanas y las varianzas de $E_{cv}$ están siempre cercanas a cero. Esto también es lógico. Vamos a centrarnos primero en valores pequeños de $N$: los valores que se quedan lejos de la media influyen más porque tenemos pocos datos, que es por lo que las varianzas son un poco más altas para $N=18$. Ahora, las varianzas de $e_i$ van a ser más altas que la varianza de $E_{cv}$ porque $E_{cv}$ es la media de todos los $e_i$ y en media los errores, por lo que hemos comentado en el punto anterior, son parecidos (muy parecidos, como vemos en la gráfica, ya que la varianza se queda muy cerca de cero), es decir, ovbiamente va a haber menos varianza entre dos medias (caso de $E_{cv}$) que entre varios datos (caso de $e_i$).
@@ -1093,6 +1179,7 @@ N <- seq(18, 118, by=10)
 Neff <- 100*(e_1/Ecv)/N
 pinta_particion(N, Neff, rep(1,11), main="Neff", xlab="Valor de N",
                 ylab="Neff como porcentaje de N")
+parada()
 ```
 
 Podemos ver que $N_{eff}$ como porcentaje de $N$ se queda en una franja alredador del 100%, que es lo que el ejercicio nos decía que debíamos encontrar, en concreto entre el 70% y el 120%.
@@ -1152,8 +1239,10 @@ while (N <= 118) {
 ```{r}
 print("La media de e1, e2 y Ecv ha sido, para cada N y en este orden:")
 print(errores)
+parada()
 print("La varianza de e1, e2 y Ecv ha sido, para cada N y este orden:")
 print(varianzas)
+parada()
 ```
 
 Pintamos los valores medios:
@@ -1163,6 +1252,7 @@ N <- c(rep(18,3), rep(28,3), rep(38,3), rep(48, 3), rep(58,3), rep(68,3),
 pinta_particion(N, unlist(errores), color, xlab="Valor de N", 
                 ylab="Valores medios de e1, e2 y Ecv", 
                 main="Valores medios de e1, e2 y Ecv")
+parada()
 ```
 
 Como vemos los valores medios han aumentado un poco, mientras que antes los valores mínimos estaban en 0.26 o un poco por debajo ahora se quedan un poco por encima, con lo que hemos aumentado $\lambda$ mucho, de forma que estamos ajustando un poco peor la función objetivo.  
@@ -1171,6 +1261,7 @@ Veamos ahora las varianzas:
 pinta_particion(N, unlist(varianzas), color, xlab="Valor de N", 
                 ylab="Varianzas de e1, e2 y Ecv", 
                 main="Varianzas de e1, e2 y Ecv")
+parada()
 ```
 
 Vemos que la varianza de $e_1$ ha subido un poco con respecto al experimento anterior, y para valores pequeños de $N$ vemos que $E_{cv}$ ha bajado un poco, de forma que el cociente aumenta, pero es muy poquito, con lo que no vamos a ver mucha diferencia en la gráfica de $N_{eff}$:
@@ -1181,6 +1272,16 @@ N <- seq(18, 118, by=10)
 Neff <- 100*(e_1/Ecv)/N
 pinta_particion(N, Neff, rep(1,11), main="Neff", xlab="Valor de N",
                 ylab="Neff como porcentaje de N")
+parada()
 ```
 
 Efectivamente, ahora $N_{eff}$ ha subido un poco, los valores están entre 70 y 130, pero es muy poquito y el valor que está en 130 es uno sólo.
+
+```{r}
+# Borramos lo que no necesitamos
+rm(datos, datos_loo, e_n, valor_estimado, wreg)
+rm(color, d, e, e_1, e1, e2, Ecv, errores, i, j, k)
+rm(lambda, listaEcv, N, Neff, sigma, varianzas, wf)
+rm(xn, y_n, yn_loo)
+```
+
