@@ -1,0 +1,125 @@
+\documentclass[12pt]{article}
+
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,activeacute]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{mathtools}
+\usepackage{enumerate}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{anysize}
+
+\marginsize{2cm}{2cm}{2cm}{2cm}
+
+\title{Aprendizaje Automático: Cuestionario 2}
+\author{Anabel G\'omez R\'ios}
+
+\theoremstyle{definition}
+
+\begin{document}
+\maketitle
+
+\newtheorem{pregunta}{Pregunta}
+
+\section{Cuestiones}
+\begin{pregunta}
+Sean $\mathbf{x}$ e $\mathbf{y}$ dos vectores de observaciones de tamaño $N$. Sea
+\[
+	cov(\mathbf{x},\mathbf{y})=\frac{1}{N}\sum_{i=1}^N(x_i-\overline{x})(y_i - \overline{y})
+\]
+la covarianza de dichos vectores, donde $\overline{z}$ representa el valor medio de los elementos de $\mathbf{z}$. Considere ahora una matriz $X$ cuyas columnas representan vectores de observaciones. La matriz de covarianzas asociada a la matriz $X$ es el conjunto de covarianzas definidas por cada dos de sus vectores columnas. Defina la expresión matricial que expresa la matriz $cov(X)$ en función de la matriz $X$.\\
+
+
+\end{pregunta}
+
+\begin{pregunta}
+Cosiderar la matriz hat definida en regresión, $H=X(X^TX)^{-1}X^T$, donde $X$ es una matriz $N \times (d+1)$, y $X^TX$ es invertible.
+\begin{enumerate}
+\item[a)] Mostrar que $H$ es simétrica.
+\item[b)] Mostrar que $H^K=H$ para cualquier entero K.
+\end{enumerate}
+
+\end{pregunta}
+
+\begin{pregunta}
+Resolver el siguiente problema: Encontrar el punto $(x_0,y_0)$ sobre la línea $ax+by+d=0$ que esté más cerca del punto $(x_1,y_1)$.\\
+
+
+\end{pregunta}
+
+\begin{pregunta}
+Consideremos el problema de optimización lineal con restricciones definido por 
+\[	Min_{\mathbf{z}}\mathbf{c}^T\mathbf{z}	\]
+\[	Sujeto\ a\ A\mathbf{z} \leq b	\]
+donde $\mathbf{c}$ y $\mathbf{b}$ son vectores y A es una matriz.
+\begin{enumerate}
+\item[a)] Para un conjunto de datos linealmente separable mostrar que para algún $\mathbf{w}$ se debe verificar la condición $y_n\mathbf{w}^T\mathbf{x}_n > 0$ para todo $(\mathbf{x}_n, y_n)$ del conjunto.
+\item[b)] Formular un problema de programación lineal que resuelva el problema de la búsqueda del hiperplano separador. Es decir, identifique quiénes son A, $\mathbf{z}$, $\mathbf{b}$ y $\mathbf{c}$ para este caso.
+\end{enumerate}
+
+\end{pregunta}
+
+\begin{pregunta}
+Probar que en el caso general de funciones con ruido se verifica que $\mathbb{E}_{\mathcal{D}}[E_{out}]=\sigma^2+bias+var$ (ver transparencias de clase).\\
+
+
+\end{pregunta}
+
+\begin{pregunta}
+Consideremos las mismas condiciones generales del enunciado del Ejercicio 2 del apartado de Regresión de la relación de ejercicios 2. Considerar ahora $\sigma=0.1$ y $d=8$, ¿cuál es el más pequeño tamaño muestral que resultará en un valor esperado de $E_{in}$ mayor de 0.008?\\
+
+
+\end{pregunta}
+
+\begin{pregunta}
+En regresión logística mostrar que 
+\[
+	\nabla E_{in} = -\frac{1}{N}\sum_{n=1}^N\frac{y_n\mathbf{x}_n}{e^{y_n\mathbf{w}^T\mathbf{x}_n}} = \frac{1}{N}\sum_{n=1}^N-y_n\mathbf{x}_n\sigma(-y_n\mathbf{w}^T\mathbf{x}_n)
+\]
+Argumentar que un ejemplo mal clasificado contribuye al gradiente más que un ejemplo bien clasificado.\\
+
+
+\end{pregunta}
+
+\begin{pregunta}
+Definimos el error en un punto $(\mathbf{x}_n,y_n)$ por 
+\[		\mathbf{e}_n(\mathbf{w})=max(0,-y_n\mathbf{w}^T\mathbf{x}_n)		\]
+Argumentar que el algoritmo PLA puede interpretarse como SGD sobre $\mathbf{e}_n$ con tasa de aprendizaje $\nu=1$.\\
+
+
+\end{pregunta}
+
+\begin{pregunta}
+El ruido determinista depende de $\mathcal{H}$, ya que algunos modelos aproximan mejor $f$ que otros.
+\begin{enumerate}
+\item[a)] Suponer que $\mathcal{H}$ es fija y que incrementamos la complejidad de $f$.
+\item[b)] Suponer que $f$ es fija y decrementamos la complejidad de $\mathcal{H}$.
+\end{enumerate}
+Contestar para ambos escenarios: ¿En general subirá o bajará el ruido determinista? ¿La tendencia a sobreajustar será mayor o menor? (Ayuda: analizar los detalles que influencian el sobreajuste).\\
+
+
+\end{pregunta}
+
+\begin{pregunta}
+La técnica de regularización de Tikhonov es bastante general al usar la condición
+\[		\mathbf{w}^T\Gamma^T\Gamma\mathbf{w} \leq C		\]
+que define relaciones entre las $w_i$ (la matriz $\Gamma_i$ se denomina regularizados de Tikhonov)
+\begin{enumerate}
+\item[a)] Calcular $\Gamma$ cuando $\sum_{q=0}^Qw_q^2 \leq C$
+\item[b)] Calcular $\Gamma$ cuando $(\sum_{q=0}^Qw_q)^q \leq C$
+\end{enumerate}
+Argumentar si el estudio de los regulizadores de Tikhonov puede hacerse a través de las propiedades algebraicas de las matrices $\Gamma$.\\
+
+
+\end{pregunta}
+
+\section{Bonus}
+\begin{pregunta}
+Considerar la matriz hat $H=X(X^TX)^{-1}X^T$. Sea $X$ una matriz $N \times (d+1)$, y $X^TX$ invertible. Mostrar que traza($H$)=$d+1$, donde traza significa la suma de los elementos de la diagonal principal.
+
+\end{pregunta}
+
+\section{Bibliografía}
+
+\end{document}
