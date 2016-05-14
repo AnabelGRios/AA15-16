@@ -30,6 +30,80 @@ Sean $\mathbf{x}$ e $\mathbf{y}$ dos vectores de observaciones de tamaño $N$. S
 \]
 la covarianza de dichos vectores, donde $\overline{z}$ representa el valor medio de los elementos de $\mathbf{z}$. Considere ahora una matriz $X$ cuyas columnas representan vectores de observaciones. La matriz de covarianzas asociada a la matriz $X$ es el conjunto de covarianzas definidas por cada dos de sus vectores columnas. Defina la expresión matricial que expresa la matriz $cov(X)$ en función de la matriz $X$.\\
 
+Vamos a llamar $X=(x_1,x_2,...,x_M)$ con $x_i$, $i=1...M$ vectores columna. Entonces
+\[ cov(X) = \left( \begin{array}{cccc}
+		cov(x_1,x_1) & cov(x_1,x_2) & ... & cov(x_1,x_M) \\
+		... & ... & ... & ...\\
+		cov(x_M,x_1) & cov(x_M, x_2) & ... & cov(x_M, x_M) \\ \end{array} \right)   
+\]
+Ahora, vamos a desarrollar la igualdad dada para utilizarla en esta matriz:
+\[
+	cov(x,y)=\frac{1}{N}\sum_{i=1}^N(x_i-\bar{x})(y_i-\bar{y}) = \frac{1}{N} \sum_{i=1}^N(x_iy_i-x_i\bar{y}+\bar{x}y_i+\bar{x}\bar{y}) =
+\]
+Ahora, $\bar{x}$ y $\bar{y}$ son independientes de $i$ y los podemos sacar fuera de la suma y separar la suma, luego
+\[
+	= \bar{x}\bar{y} -\bar{x}\frac{1}{N}\sum_{i=1}^Ny_i - \bar{y}\frac{1}{N} \sum_{i=1}^Nx_i + \frac{1}{N}\sum_{i=1}^Nx_iy_i = 
+\]
+
+y como $\bar{x} = \sum_{i=1}^N x_i$ e igualmente con $\bar{y}$, y $\sum_{i=1}^N x_iy_i= x^Ty$, podemos escribir:
+\[
+	\bar{x}\bar{y} - \bar{x}\bar{y} - \bar{y}\bar{x} + \frac{1}{N}x^Ty = -\bar{x}\bar{y} + \frac{1}{N}x^Ty
+\]
+
+con lo que hemos llegado a que $cov(x,y)=\frac{1}{N}\sum_{i=1}^N(x_i-\bar{x})(y_i-\bar{y}) = -\bar{x}\bar{y} + \frac{1}{N}x^Ty$ y podemos utilizar esto en cada elemento de la matriz anterior:
+\[ \left( \begin{array}{cccc}
+		-\bar{x}_1^2 + \frac{1}{N}x_1^Tx_1 & -\bar{x}_1\bar{x}_2 + \frac{1}{N}x_1^Tx_2 & ... & -\bar{x}_1\bar{x}_M + \frac{1}{N}x_1^Tx_M \\
+		... & ... & ... & ...\\
+		-\bar{x}_M\bar{x}_1 + \frac{1}{N}x_M^Tx_1 & -\bar{x}_M\bar{x}_2 + \frac{1}{N}x_M^Tx_2 & ... & -\bar{x}_M^2 + \frac{1}{N}x_M^Tx_M \\ \end{array} \right)   
+\]
+
+Como en cada elemento tenemos dos sumandos bien diferenciados, los vamos a separar en dos matrices distintas, sumando:
+\[ \left( \begin{array}{cccc}
+		-\bar{x}_1^2 & -\bar{x}_1\bar{x}_2 & ... & -\bar{x}_1\bar{x}_M \\
+		... & ... & ... & ...\\
+		-\bar{x}_M\bar{x}_1 & -\bar{x}_M\bar{x}_2 & ... & -\bar{x}_M^2 \\ \end{array} \right)   +
+		 \left( \begin{array}{cccc}
+		\frac{1}{N}x_1^Tx_1 &  \frac{1}{N}x_1^Tx_2 & ... &  \frac{1}{N}x_1^Tx_M \\
+		... & ... & ... & ...\\
+		\frac{1}{N}x_M^Tx_1 &  \frac{1}{N}x_M^Tx_2 & ... &  \frac{1}{N}x_M^Tx_M \\ \end{array} \right)   
+\]
+
+Ahora la primera matriz la podemos escribir como la multiplicación de dos vectores:
+\[ \left( \begin{array}{cccc}
+		-\bar{x}_1^2 & -\bar{x}_1\bar{x}_2 & ... & -\bar{x}_1\bar{x}_M \\
+		... & ... & ... & ...\\
+		-\bar{x}_M\bar{x}_1 & -\bar{x}_M\bar{x}_2 & ... & -\bar{x}_M^2 \\ \end{array} \right) =
+		- \left( \begin{array}{c}
+		\bar{x}_1 \\
+		... \\
+		\bar{x}_M \\ \end{array} \right)
+		\left( \begin{array}{ccc}
+		\bar{x}_1 & ... & \bar{x}_M  \end{array} \right)
+\]
+
+y en la segunda matriz hacer lo mismo sacando previamente $\frac{1}{N}$ factor común:
+\[ 	\left( \begin{array}{cccc}
+		\frac{1}{N}x_1^Tx_1 &  \frac{1}{N}x_1^Tx_2 & ... &  \frac{1}{N}x_1^Tx_M \\
+		... & ... & ... & ...\\
+		\frac{1}{N}x_M^Tx_1 &  \frac{1}{N}x_M^Tx_2 & ... &  \frac{1}{N}x_M^Tx_M \\ \end{array} \right)  =
+		\frac{1}{N} \left( \begin{array}{c}
+		x_1^T \\
+		...\\
+		x_M^T \\ \end{array} \right)
+		\left( \begin{array}{ccc}
+		x_1 & ... & x_M \\ \end{array} \right) = \frac{1}{N}X^TX
+\]
+
+Y por tanto hemos llegado a que
+
+\[
+	cov(X) = - \left( \begin{array}{c}
+		\bar{x}_1 \\
+		... \\
+		\bar{x}_M \\ \end{array} \right)
+		\left( \begin{array}{ccc}
+		\bar{x}_1 & ... & \bar{x}_M  \end{array} \right) + \frac{1}{N}X^TX
+\]
 
 \end{pregunta}
 
