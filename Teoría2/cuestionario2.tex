@@ -224,18 +224,38 @@ Consideremos las mismas condiciones generales del enunciado del Ejercicio 2 del 
 \begin{pregunta}
 En regresión logística mostrar que 
 \[
-	\nabla E_{in} = -\frac{1}{N}\sum_{n=1}^N\frac{y_n\mathbf{x}_n}{e^{y_n\mathbf{w}^T\mathbf{x}_n}} = \frac{1}{N}\sum_{n=1}^N-y_n\mathbf{x}_n\sigma(-y_n\mathbf{w}^T\mathbf{x}_n)
+	\nabla E_{in} = -\frac{1}{N}\sum_{n=1}^N\frac{y_n\mathbf{x}_n}{1+e^{y_n\mathbf{w}^T\mathbf{x}_n}} = \frac{1}{N}\sum_{n=1}^N-y_n\mathbf{x}_n\sigma(-y_n\mathbf{w}^T\mathbf{x}_n)
 \]
 Argumentar que un ejemplo mal clasificado contribuye al gradiente más que un ejemplo bien clasificado.\\
 
+Derivamos con respecto al vector $\mathbf{w}$.
+\[	\nabla_\mathbf{w} E_{in} \frac{1}{N}\sum_{n=1}^Nln(1+e^{-y_n\mathbf{w}^T\mathbf{x}_n}) = \frac{1}{N} \sum_{n=1}^N\frac{-y_n\mathbf{x}_ne^{-y_n\mathbf{w}^T\mathbf{x}_n}}{1+e^{-y_n\mathbf{w}^T\mathbf{x}_n}}	\]
+Multiplicamos arriba y abajo de la fracción por $e^{y_n\mathbf{w}^T\mathbf{x}_n}$ y nos queda:
+\[ -\frac{1}{N} \sum_{n=1}^N\frac{y_n\mathbf{x}_n}{1+e^{y_n\mathbf{w}^T\mathbf{x}_n}}	\]
+que era el primer sumando a probar. Para el segundo, volvemos a la primera expresión que hemos obtenido y recordamos que $\sigma(s)=\frac{e^s}{1+e^s}$, con lo que tomando como $s=-y_n\mathbf{w}^T\mathbf{x}_n$ nos queda
+\[	-\frac{1}{N} \sum_{n=1}^N y_n\mathbf{x}_n \sigma(-y_n\mathbf{w}^T\mathbf{x}_n)	\]\\
 
+En cuanto a que un ejemplo mal clasificado contribuye más al gradiente que uno bien clasificado, vamos a fijarnos en la expresión $\nabla E_{in} = -\frac{1}{N}\sum_{n=1}^N\frac{y_n\mathbf{x}_n}{1+e^{y_n\mathbf{w}^T\mathbf{x}_n}}$. Si está mal clasificado, entonces $signo(y_n)\neq signo(\mathbf{w}^T\mathbf{x}_n)$ y por tanto $y_n\mathbf{w}^T\mathbf{x}_n$ será negativo y por tanto $e^{y_n\mathbf{w}^T\mathbf{x}_n}$ será más pequeño que si fuera positivo, es decir, que si estuviera bien clasificado al ser la exponencial una función creciente. Al ser más pequeño el denominador, la fracción es más grande, y por tanto contribuye más al gradiente.
 \end{pregunta}
 
 \begin{pregunta}
 Definimos el error en un punto $(\mathbf{x}_n,y_n)$ por 
 \[		\mathbf{e}_n(\mathbf{w})=max(0,-y_n\mathbf{w}^T\mathbf{x}_n)		\]
-Argumentar que el algoritmo PLA puede interpretarse como SGD sobre $\mathbf{e}_n$ con tasa de aprendizaje $\nu=1$.\\
+Argumentar que el algoritmo PLA puede interpretarse como SGD sobre $\mathbf{e}_n$ con tasa de aprendizaje $\eta=1$.\\
 
+La regla de actualización del SGD es $\mathbf{w} \leftarrow \mathbf{w} - \eta\nabla \mathbf{e}_n(\mathbf{w})$ y la del PLA es $\mathbf{w} \leftarrow \mathbf{w} + y_n\mathbf{x}_n$ cuando $\mathbf{w}$ está clasificando mal $\mathbf{x}_n$ y $\mathbf{w} \leftarrow \mathbf{w}$ si lo está clasificando bien. Veamos si podemos llegar a esto partiendo del SGD. Como $\eta = 1$ nos queda la regla $\mathbf{w} \leftarrow \mathbf{w} - \nabla \mathbf{e}_n(\mathbf{w})$. Vamos a calcular $\nabla \mathbf{e}_n(\mathbf{w})$ con $\mathbf{e}_n(\mathbf{w})=max(0,-y_n\mathbf{w}^T\mathbf{x}_n)$, que será en cada caso la derivada de 0 si éste es mayor o la derivada de $-y_n\mathbf{w}^T\mathbf{x}_n$ si éste es el mayor:
+
+\begin{equation}
+\nabla \mathbf{e}_n(\mathbf{w}) = 
+  \left\lbrace
+  \begin{array}{l}
+     0\ \ \ \ \ \ \ \ \ \ \ si\ \ \ \ \  0 \geq -y_n\mathbf{w}^T\mathbf{x}_n \\
+     -y_n\mathbf{x_n}\ \ \ \  si\ \ \ \ \  0 < -y_n\mathbf{w}^T\mathbf{x}_n \\
+  \end{array}
+  \right.
+\end{equation}
+
+Ahora, $0 \geq -y_n\mathbf{w}^T\mathbf{x}_n$ si $y_n\mathbf{w}^T\mathbf{x}_n \geq 0$ y $0 < -y_n\mathbf{w}^T\mathbf{x}_n$ si $y_n\mathbf{w}^T\mathbf{x}_n < 0$. Introduciendo esto en la regla de actualización del SGD, nos queda que $\mathbf{w} \leftarrow \mathbf{w} - 0$ si $y_n\mathbf{w}^T\mathbf{x}_n \geq 0$, es decir, si el dato está bien clasificado, y $\mathbf{w} \leftarrow \mathbf{w} - (-y_n\mathbf{x_n})$ si $0 < -y_n\mathbf{w}^T\mathbf{x}_n$, es decir, si está mal clasificado, que es justo la regla de actualización del PLA, como queríamos probar.
 
 \end{pregunta}
 
