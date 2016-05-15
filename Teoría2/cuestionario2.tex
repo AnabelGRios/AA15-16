@@ -270,7 +270,10 @@ El ruido determinista depende de $\mathcal{H}$, ya que algunos modelos aproximan
 \end{enumerate}
 Contestar para ambos escenarios: ¿En general subirá o bajará el ruido determinista? ¿La tendencia a sobreajustar será mayor o menor? (Ayuda: analizar los detalles que influencian el sobreajuste).\\
 
-
+\item[a)] En este caso aumentará el ruido determinista, ya que el área en el que se diferencian $f$ y $h$ (donde $h$ es el mejor ajuste de $f$ en $\mathcal{H}$) aumentará en tanto que $f$ va aumentando complejidad y $\mathcal{H}$ es fijo (no podemos ajustar con un polinomio de más grado del que nos deje $\mathcal{H}$ cuando $f$ lo requiere) y por tanto según aumente la complejidad de $f$ ajustaremos cada vez peor.\\
+La tendencia a sobreajustar será menor ya que según aumente la complejidad de la $f$ estaremos ajustando peor con $h$ y por tanto no se podrán sobreajustar los datos.
+\item[b)] Dependerá de la complejidad previa que tuviera $\mathcal{H}$. Aumentará el ruido determinista cuando la complejidad de $\mathcal{H}$ sea demasiado baja, ya que de nuevo ajustaremos $f$ cada vez peor. Sin embargo si $H$ era muy alta y estábamos sobreajustando $f$, el ruido determinista irá bajando hasta que se obtenga el mejor ajuste posible y volverá a subir si seguimos bajando la complejidad de $\mathcal{H}$, llegando a lo comentado anteriormente.\\
+La tendencia a sobreajustar será menor si estábamos sobreajustando los datos al tener muchos grados de libertad en $\mathcal{H}$, ya que al ir bajando la complejidad irá bajando el sobreajuste al ir ajustando cada vez peor.
 \end{pregunta}
 
 \begin{pregunta}
@@ -321,14 +324,21 @@ y entonces
 \]
 que era lo que queríamos.
 \end{enumerate}
+
+En cuanto a si el estudio de los regulizadores de Tikhonov puede hacerse a través de las propiedades algebraicas de las matrices $\Gamma$, no creo que se pueda hacer de forma generalizada sólo con las propiedades algebraicas de las matrices $\Gamma$, ya que hay casos en los que sí se pueden utilizar dichas propiedades (como en el caso a), donde nos vale una $\Gamma$ ortogonal) y casos en los que no, como el b), en el que $\Gamma$ no tiene por qué tener ninguna propiedad algebraica.
 \end{pregunta}
 
 \section{Bonus}
 \begin{pregunta}
-Considerar la matriz hat $H=X(X^TX)^{-1}X^T$. Sea $X$ una matriz $N \times (d+1)$, y $X^TX$ invertible. Mostrar que traza($H$)=$d+1$, donde traza significa la suma de los elementos de la diagonal principal.
+Considerar la matriz hat $H=X(X^TX)^{-1}X^T$. Sea $X$ una matriz $N \times (d+1)$, y $X^TX$ invertible. Mostrar que traza($H$)=$d+1$, donde traza significa la suma de los elementos de la diagonal principal.\\
+
+Vamos a utilizar la siguiente propiedad de las matrices: si  $A$ es una matriz $P \times Q$ y $B$ es una matriz $Q \times P$, se tiene que traza($AB$) = traza($BA$). En nuestro caso tenemos que traza($H$) = traza($X(X^TX)^{-1}X^T$) y $X(X^TX)^{-1}$ es una matriz $N \times (d+1)$ (ya que $(X^TX)^{-1}$ es una matriz cuadrada de orden $d+1$) y $X^T$ es una matriz $(d+1) \times N$, con lo que podemos hacer traza($X(X^TX)^{-1} X^T$) = traza($(X^TX)^{-1} X^TX$) = traza($I$), donde $I$ es la identidad de orden $d+1$ puesto que tanto $(X^TX)^{-1}$ como $X^TX$ son matrices cuadradas de orden $d+1$ por ser $X$ una matriz $N \times (d+1)$. Finalmente, traza($I$) $=d+1$, ya que es la suma de $d+1$ unos, lo que nos da lo que queríamos probar.
 
 \end{pregunta}
 
 \section{Bibliografía}
-
+\begin{enumerate}
+\item Las transparencias de clase disponibles en decsai.
+\item El libro \textit{Learning from data}, de Abu-Mostafa, Magdon-Ismail \& Lin
+\end{enumerate}
 \end{document}
