@@ -111,7 +111,15 @@ Y por tanto hemos llegado a que
 Cosiderar la matriz hat definida en regresión, $H=X(X^TX)^{-1}X^T$, donde $X$ es una matriz $N \times (d+1)$, y $X^TX$ es invertible.
 \begin{enumerate}
 \item[a)] Mostrar que $H$ es simétrica.
-\item[b)] Mostrar que $H^K=H$ para cualquier entero K.
+\item[b)] Mostrar que $H^K=H$ para cualquier entero $K>0$.
+\end{enumerate}
+
+\begin{enumerate}
+\item[a)] $H$ es simétrica si $H=H^T$. Veamos si esto se cumple. $H^T=(X(X^TX)^{-1}X^T)^T=(X^T)^T((X^TX)^{-1})^TX^T=X((X^TX)^{-1})^TX^T$ puesto que la traspuesta de una traspuesta es ella misma y por las propiedades de las matrices, $(AB)^T=B^TA^T$. Dado que $H$ se diferencia de $H^T$ sólo en la parte central, para que sean iguales tenemos que probar que $(X^TX)^{-1} = ((X^TX)^{-1})^T$. Como, de nuevo por las propiedades de las matrices, tenemos que $(A^{-1})^T = (A^T)^{-1}$ podemos desarrollar la parte de la derecha: $((X^TX)^{-1})^T = ((X^TX)^T)^{-1} = (X^T(X^T)^T)^{-1} = (X^TX)^{-1}$, que es la parte de la izquierda, luego $H^T=H$ y por tanto $H$ es simétrica.
+\item[b)] Tenemos que probar que $H=H^K$ para todo $K \in \mathbb{N}$. Lo vamos a hacer por inducción.\\
+Para $K=2$, que será nuestro caso base, tenemos que $H^2 = (X(X^TX)^{-1}X^T)(X(X^TX)^{-1}X^T)$. Si reagrupamos de la forma $X(X^TX)^{-1}(X^TX(X^TX)^{-1})X^T$ y utilizamos que $AA^{-1}=I$, donde $I$ es la identidad de orden $q$ con $q$ es el número de filas de $A$, nos queda que $X(X^TX)^{-1}(X^TX(X^TX)^{-1})X^T = X(X^TX)^{-1}IX^T) = X(X^TX)^{-1}X^T = H$, con lo que lo probamos para $K=2$.\\
+Vamos ahora a suponerlo cierto para $K=n$, es decir, suponemos que $H^n=H$ y vamos a probarlo para $K=n+1$:\\
+$H^{n+1} = H^nH$ utilizamos la hipótesis de inducción y $H^nH=HH=H^2$, donde utilizamos el caso base y nos queda que $H^2=H$ y por tanto $H^{n+1}=H$, como queríamos demostrar.
 \end{enumerate}
 
 \end{pregunta}
@@ -119,6 +127,37 @@ Cosiderar la matriz hat definida en regresión, $H=X(X^TX)^{-1}X^T$, donde $X$ e
 \begin{pregunta}
 Resolver el siguiente problema: Encontrar el punto $(x_0,y_0)$ sobre la línea $ax+by+d=0$ que esté más cerca del punto $(x_1,y_1)$.\\
 
+Vamos a resolver este problema utilizando multiplicadores de Lagrange, como en el ejercicio pedido para el bonus 2, es decir, el ejercicio 3 del apartado de matrices y optimización, del que vamos a utilizar también la expresión de la distancia de dos curvas en el plano: $\sqrt{(x_0-x_1)^2+(y_0-y_1)^2}$, donde $(x_0,y_0)$ está sobre una de las curvas y $(x_1,y_1)$ está sobre la otra. En nuestro caso el punto $(x_1,y_1)$ es un punto fijo en el plano y el punto $(x_0,y_0)$ está sobre la línea $ax+by+d=0$. Tenemos por tanto el siguiente problema:\\
+\[	\underset{(x_0,y_0)}{mín}\sqrt{(x_0-x_1)^2+(y_0-y_1)^2} \ \ Sujeto\ \ a\ \ ax_0+by_0+d=0 \]
+Definimos la función langrangiana
+\[	\mathcal{L}(x_0,y_0,\lambda)=\sqrt{(x_0-x_1)^2+(y_0-y_1)^2} - \lambda(ax_0+by_0+d) \]
+y la solución a este problema es la solución del sistema de ecuaciones $\nabla_{(x_0,y_0,\lambda)}\mathcal{L}(x_0,y_0,\lambda)=0$. Calculamos $\nabla_{(x_0,y_0,\lambda)}\mathcal{L}(x_0,y_0,\lambda)$:
+\[ \nabla_{(x_0,y_0,\lambda)}\mathcal{L}(x_0,y_0,\lambda) = (\frac{2(x_0-x_1)}{2\sqrt{(x_0-x_1)^2+(y_0-y_1)^2}} - \lambda a,
+	\frac{2(y_0-y_1)}{2\sqrt{(x_0-x_1)^2+(y_0-y_1)^2}}-\lambda b, ax_0-by_0+d)\]
+
+Si llamamos $A=\sqrt{(x_0-x_1)^2+(y_0-y_1)^2}$ tenemos el siguiente sistema de 3 ecuaciones:
+\[	\frac{x_0-x_1}{A} - \lambda a = 0	\]
+\[	\frac{y_0-y_1}{A} - \lambda b = 0	\]
+\[	ax_0+by_0+d = 0		\]
+
+Ahora, de las dos primeras ecuaciones vamos a despejar $\lambda$ y a igualar. De la primera ecuación,
+\[	\lambda = \frac{x_0-x_1}{aA}	\] y de la segunda ecuación,
+\[	\lambda = \frac{y_0-y_1}{bA}	\]
+Si igualamos,
+\[	\frac{x_0-x_1}{aA} = \frac{y_0-y_1}{bA} \Rightarrow a(y_0-y_1) = b(x_0-x_1) \Rightarrow x_0 = \frac{a}{b}(y_0-y_1)+x_1	\]
+Ahora en la tercera ecuación vamos a sustituir $x_0$ por la expresión que acabamos de obtener:
+\[	ax_0+by_0+d = a(\frac{a}{b}(y_0-y_1)+x_1)+by_0+d = 0 \Rightarrow \frac{a^2}{b}y_0-\frac{a^2}{b}y_1+ax_1+by_0+d=0	\]
+Despejamos $y_0$:
+\[	y_0(\frac{a^2}{b}+b) = -d-ax_1+\frac{a^2}{b}y_1 \Rightarrow y_0=\frac{-d-ax_1+\frac{a^2}{b}y_1}{\frac{a^2+b^2}{b}} = \frac{-bd - abx_1 + a^2y_1}{a^2+b^2}	\]
+y con esto podemos obtener $x_0$ ya que los datos $x_1$ e $y_1$ son fijos (conocidos):
+\[	x_0 = \frac{a}{b}(y_0-y_1)+x_1 = \frac{a}{b}(\frac{-bd - abx_1 + a^2y_1}{a^2+b^2}-y_1)+x_1 = \frac{-ad - a^2x_1 + \frac{a^3}{b}y_1}{a^2+b^2}-\frac{a}{b}y_1+x_1	= \]
+\[	= \frac{-ad}{a^2+b^2} + \frac{-a^2x_1}{a^2+b^2} + x_1 +\frac{a^3y_1}{b(a^2+b^2)} -\frac{a}{b}y_1 = 
+	\frac{-ad}{a^2+b^2} + \frac{-a^2x_1 + a^2x_1 + b^2x_1}{a^2+b^2} + \frac{a^3y_1 - a^3y_1 - ab^2y_1}{b(a^2+b^2)} = 	\]
+\[	= \frac{-ad}{a^2+b^2} + \frac{b^2x_1}{a^2+b^2} + \frac{- aby_1}{a^2+b^2}	 = 
+	\frac{-ad + b^2x_1 - aby_1}{a^2+b^2}	\]
+
+Con lo que el punto de la recta $ax_0+by_0+d=0$ más cercano al punto $(x_1,y_1)$ es
+\[ (x_0,y_0) = (\frac{b^2x_1 - aby_1 -ad}{a^2+b^2}, \frac{a^2y_1 - abx_1 -bd}{a^2+b^2})	\]
 
 \end{pregunta}
 
