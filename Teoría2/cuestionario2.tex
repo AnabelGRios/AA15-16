@@ -163,7 +163,7 @@ Con lo que el punto de la recta $ax_0+by_0+d=0$ más cercano al punto $(x_1,y_1)
 
 \begin{pregunta}
 Consideremos el problema de optimización lineal con restricciones definido por 
-\[	Min_{\mathbf{z}}\mathbf{c}^T\mathbf{z}	\]
+\[	\underset{\mathbf{z}}{Min} \ \ \mathbf{c}^T\mathbf{z}	\]
 \[	Sujeto\ a\ A\mathbf{z} \leq b	\]
 donde $\mathbf{c}$ y $\mathbf{b}$ son vectores y A es una matriz.
 \begin{enumerate}
@@ -171,11 +171,47 @@ donde $\mathbf{c}$ y $\mathbf{b}$ son vectores y A es una matriz.
 \item[b)] Formular un problema de programación lineal que resuelva el problema de la búsqueda del hiperplano separador. Es decir, identifique quiénes son A, $\mathbf{z}$, $\mathbf{b}$ y $\mathbf{c}$ para este caso.
 \end{enumerate}
 
+\begin{enumerate}
+\item[a)] Si el conjunto de datos es linealmente separable entonces existe un $\mathbf{w}$ que deja los datos con etiqueta positiva a un lado y los de etiqueta negativa a otro lado, es decir, que clasifica bien todos los datos, y entonces $signo(y_n) = signo(\mathbf{w}^T\mathbf{x}_n)$ para cada $n$ puesto que todos están bien clasificados y por tanto $y_n\mathbf{w}^T\mathbf{x}_n > 0$.
+\item[b)] Vamos a suponer como en el apartado anterior que los datos son linealmente separables y que tenemos $N$ datos. Entonces como hemos visto los datos que estén bien clasificados tendrán $y_n\mathbf{w}^T\mathbf{x}_n > 0$ y los que estén mal clasificados tendrán $y_n\mathbf{w}^T\mathbf{x}_n < 0$. Nosotros queremos que $\sum_{i=1}^Ny_i\mathbf{w}^T\mathbf{x}_n$ sea lo mayor posible para que todos los datos estén bien clasificados y con la mayor distancia a $\mathbf{w}$, luego queremos minimizar $-\sum_{i=1}^Ny_i\mathbf{w}^T\mathbf{x}_n$ y por tanto $\mathbf{c}^T=(-1,...,-1)$ de dimensión $N$ y $\mathbf{z} = (y_1\mathbf{w}^T\mathbf{x}_1,...,y_N\mathbf{w}^T\mathbf{x}_N)$ sujetos a que cada $y_i\mathbf{w}^T\mathbf{x}_n > 0$ para obligar a que todos los puntos estén bien clasificados, de forma que
+\[ A = 	\left( \begin{array}{cccc}
+		-1 &  0 & ... &  0 \\
+		0 & -1 & ... & 0 \\
+		... & ... & ... & ... \\
+		0 & ... & 0 & -1 \\ \end{array} \right)
+\]
+puesto que la restricción que tenemos en el enunciado es $\leq$ y le tenemos que dar la vuelta y $b^T = (0,...,0)$ de dimensión $N$.
+\end{enumerate}
+
 \end{pregunta}
 
 \begin{pregunta}
 Probar que en el caso general de funciones con ruido se verifica que $\mathbb{E}_{\mathcal{D}}[E_{out}]=\sigma^2+bias+var$ (ver transparencias de clase).\\
 
+Tenemos que calcular $\mathbb{E}_{\mathcal{D}}[E_{out}(g^{\mathcal{D}})]$ teniendo en cuenta que nuestra función $f$ la recibimos con ruido, es decir, que tenemos $y_n = f(x_n)+\varepsilon$, donde $\varepsilon$ tiene media cero y varianza $\sigma^2$. Sabemos que entonces $E_{out}(h)=\mathbb{E}_x[(h(x)-f(x)-\varepsilon)^2]$. Para $h=g^{\mathcal{D}}$ que es lo que tenemos que calcular, $E_{out}(g^{\mathcal{D}})=\mathbb{E}_x[(g^{\mathcal{D}}(x)-f(x)-\varepsilon)^2]$. Al introducir $\varepsilon$, lo que tenemos que calcular  $\mathbb{E}_{\mathcal{D}}[E_{out}(g^{\mathcal{D}})]$ se convierte en $\mathbb{E}_{\mathcal{D}, \varepsilon}[E_{out}(g^{\mathcal{D}})]$. Vamos a desarrollarlo:
+\[	\mathbb{E}_{\mathcal{D}, \varepsilon}[E_{out}(g^{\mathcal{D}})] = \mathbb{E}_{\mathcal{D}, \varepsilon}[\mathbb{E}_x[(g^{\mathcal{D}}(x)-f(x)-\varepsilon)^2]] = \mathbb{E}_x[  \mathbb{E}_{\mathcal{D}, \varepsilon}[ (g^{\mathcal{D}}(x)-f(x)-\varepsilon)^2]] =	\]
+Desarrollamos el cuadrado agrupando en un término $(f(x)+\varepsilon)$:
+\[	= \mathbb{E}_x[  \mathbb{E}_{\mathcal{D}, \varepsilon}[ g^{\mathcal{D}}(x)^2 + (f(x)+\varepsilon)^2 - 2g^{\mathcal{D}}(x)(f(x)+\varepsilon)]] =	\]
+Desarrollamos ahora el cuadrado que queda y utilizamos que $f$ y $\varepsilon$ son independientes de $\mathcal{D}$ y por tanto los podemos sacar de la esperanza con respecto a $\mathcal{D}$, al igual que $g$ es independiente de $\varepsilon$.
+\[	= \mathbb{E}_x[  \mathbb{E}_{\mathcal{D}}[ g^{\mathcal{D}}(x)^2] + f(x)^2 + \mathbb{E}_\varepsilon[\varepsilon^2 + 2f(x)\varepsilon] - 2\mathbb{E}_{\mathcal{D}}[g^{\mathcal{D}}(x)]\mathbb{E}_\varepsilon[(f(x)+\varepsilon)]] =	\]
+Utilizamos la definición de $\bar{g} = \mathbb{E}_{\mathcal{D}}[g^{\mathcal{D}}(x)]$ y separamos las esperanzas que quedan:
+\[	\mathbb{E}_x[  \mathbb{E}_{\mathcal{D}}[ g^{\mathcal{D}}(x)^2] + f(x)^2 + \mathbb{E}_\varepsilon[\varepsilon^2] + \mathbb{E}_\varepsilon[2f(x)\varepsilon] - 2\bar{g}(x)f(x) - 2\bar{g}(x)\mathbb{E}_\varepsilon[\varepsilon]] =	\]
+
+Ahora, como $\varepsilon$ es independiente de $f$ y de $x$, $\mathbb{E}_\varepsilon[2f(x)\varepsilon] = 2f(x)\mathbb{E}_\varepsilon[\varepsilon]$ y como hemos dicho previamente, la media de $\varepsilon$ es 0, luego nos queda:
+\[	= \mathbb{E}_x[  \mathbb{E}_{\mathcal{D}}[ g^{\mathcal{D}}(x)^2] + f(x)^2 + \mathbb{E}_\varepsilon[\varepsilon^2] - 2\bar{g}(x)f(x)] = \]
+
+Sumamos y restamos $\bar{g}(x)$:
+\[	= \mathbb{E}_x[  \mathbb{E}_{\mathcal{D}}[ g^{\mathcal{D}}(x)^2] - \bar{g}(x) + \bar{g}(x) - 2\bar{g}(x)f(x) + f(x)^2 + \mathbb{E}_\varepsilon[\varepsilon^2]] 	\]
+
+Veamos que $ \mathbb{E}_{\mathcal{D}}[ g^{\mathcal{D}}(x)^2] - \bar{g}(x) = \mathbb{E}_{\mathcal{D}}[(g^{\mathcal{D}}(x)-\bar{g}(x))^2]$. Partimos de la derecha y desarrollamos el cuadrado: $\mathbb{E}_{\mathcal{D}}[(g^{\mathcal{D}}(x)-\bar{g}(x))^2] = \mathbb{E}_{\mathcal{D}}[g^{\mathcal{D}}(x)^2 + \bar{g}(x)^2 -2\bar{g}(x)g^{\mathcal{D}}(x)] = \mathbb{E}_{\mathcal{D}}[g^{\mathcal{D}}(x)^2] + \bar{g}(x)^2 -2\bar{g}(x)\mathbb{E}_{\mathcal{D}}[g^{\mathcal{D}}(x)] = \mathbb{E}_{\mathcal{D}}[g^{\mathcal{D}}(x)^2] + \bar{g}(x)^2 -2\bar{g}(x)\bar{g}(x) =  \mathbb{E}_{\mathcal{D}}[g^{\mathcal{D}}(x)^2] - \bar{g}(x)^2$, como queríamos probar.\\
+Ahora, juntando esto con que $\bar{g}(x) - 2\bar{g}(x)f(x) + f(x)^2 = (\bar{g}(x)-f(x))^2$ y que $\mathbb{E}_\varepsilon[\varepsilon^2]$ es la varianza de $\varepsilon$ porque $\varepsilon$ tiene media 0 (por definición, la varianza es la media de $(\varepsilon - media)^2$) tenemos $\mathbb{E}_\varepsilon[\varepsilon^2] = \sigma^2$ la expresión anterior nos queda:
+\[	\mathbb{E}_x[   \mathbb{E}_{\mathcal{D}}[(g^{\mathcal{D}}(x)-\bar{g}(x))^2] + (\bar{g}(x)-f(x))^2 + \sigma^2] = 
+	\mathbb{E}_x[   \mathbb{E}_{\mathcal{D}}[(g^{\mathcal{D}}(x)-\bar{g}(x))^2]] + \mathbb{E}_x[(\bar{g}(x)-f(x))^2] + \sigma^2 =
+\]
+
+Y sabemos que $ \mathbb{E}_{\mathcal{D}}[(g^{\mathcal{D}}(x)-\bar{g}(x))^2] = var(x)$ y $(\bar{g}(x)-f(x))^2 = bias(x)$, luego nos queda:
+\[	= \mathbb{E}_x[ var(x)] + \mathbb{E}_x[bias(x)] + \sigma^2 = var + bias + \sigma^2	\]
+que era lo que nos pedía el ejercicio.
 
 \end{pregunta}
 
