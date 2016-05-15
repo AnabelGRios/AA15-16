@@ -216,9 +216,12 @@ que era lo que nos pedía el ejercicio.
 \end{pregunta}
 
 \begin{pregunta}
-Consideremos las mismas condiciones generales del enunciado del Ejercicio 2 del apartado de Regresión de la relación de ejercicios 2. Considerar ahora $\sigma=0.1$ y $d=8$, ¿cuál es el más pequeño tamaño muestral que resultará en un valor esperado de $E_{in}$ mayor de 0.008?\\
+Consideremos las mismas condiciones generales del enunciado del Ejercicio 2 del apartado de Regresión de la relación de ejercicios 2. Considerar ahora $\sigma=0.1$ y $d=8$, ¿cuál es el más pequeño tamaño muestral que resultará en un valor esperado de $E_{in}$ mayor de 0,008?\\
 
-
+En dicho ejercicio nos dice que el error esperado de entrenamiento es $\mathbb{E}_{\mathcal{D}} [E_{in}(\mathbf{w}_{lin})] = \sigma^2(1-\frac{d+1}{N})$. Sustituyendo con los datos que nos da este ejercicio tenemos $\mathbb{E}_{\mathcal{D}} [E_{in}(\mathbf{w}_{lin})] = (0.1)^2(1-\frac{8+1}{N})$ y queremos obtener $N$ para que $\mathbb{E}_\mathcal{D}[E_{in}(\mathbf{w}_{lin})] > 0.008$, es decir, $(0.1)^2(1-\frac{8+1}{N}) > 0.008$.
+\[	(0.1)^2(1-\frac{8+1}{N}) = 0.01-\frac{0.09}{N} > 0.008 \Rightarrow -\frac{0.09}{N} > -0.002 \Rightarrow \frac{0.09}{N} < 0.002	\]
+\[	\Rightarrow N > \frac{0.09}{0.002} \Rightarrow N > 45	\]
+Por tanto, el más pequeño muestral para que el valor esperado de $E_{in}$ sea mayor de $0.008$ es 46.
 \end{pregunta}
 
 \begin{pregunta}
@@ -276,11 +279,48 @@ La técnica de regularización de Tikhonov es bastante general al usar la condic
 que define relaciones entre las $w_i$ (la matriz $\Gamma_i$ se denomina regularizados de Tikhonov)
 \begin{enumerate}
 \item[a)] Calcular $\Gamma$ cuando $\sum_{q=0}^Qw_q^2 \leq C$
-\item[b)] Calcular $\Gamma$ cuando $(\sum_{q=0}^Qw_q)^q \leq C$
+\item[b)] Calcular $\Gamma$ cuando $(\sum_{q=0}^Qw_q)^2 \leq C$
 \end{enumerate}
 Argumentar si el estudio de los regulizadores de Tikhonov puede hacerse a través de las propiedades algebraicas de las matrices $\Gamma$.\\
 
-
+\begin{enumerate}
+\item[a)] Si queremos que $\sum_{q=0}^Q w_q^2 \leq C$ se tiene que dar que $\mathbf{w}^T\Gamma^T\Gamma\mathbf{w} = \sum_{q=0}^Q w_q^2$, pero ya tenemos que $\mathbf{w}^T\mathbf{w} = \sum_{q=0}^Q w_q^2$, con lo que $\Gamma^T\Gamma$ tiene que ser la identidad matricial de orden el número de filas de $\Gamma^T$ si queremos que esto se siga cumpliendo, es decir, que nos vale cualquier $\Gamma$ invertible tal que $\Gamma^{-1} = \Gamma^T$ (ya que si $\Gamma$ es invertible, $\Gamma^{-1}\Gamma = I$), es decir, nos vale cualquier matriz ortogonal.
+\item[b)] Ahora tiene que darse que $\mathbf{w}^T\Gamma^T\Gamma\mathbf{w} = (\sum_{q=0}^Qw_q)^2$, es decir, $\mathbf{w}^T\Gamma^T = \Gamma\mathbf{w} = (\sum_{q=0}^Qw_q, 0, 0)$ o su traspuesto, y esto lo tenemos si 
+\[ \Gamma = \left( \begin{array}{cccc}
+		1 & 1 & ... & 1 \\
+		0 & 0 & ... & 0\\
+		0 & 0 & ... & 0 \\ \end{array} \right)
+\]
+Veámoslo por ejemplo para $Q=2$, donde tenemos 3 componentes de $\mathbf{w}$:
+\[ \mathbf{w}^T\Gamma^T = \left( \begin{array}{ccc}
+	w_0 & w_1 & w_2 \\ \end{array} \right)
+	\left( \begin{array}{ccc}
+		1 & 0 & 0 \\
+		1 & 0 & 0\\
+		1 & 0 & 0 \\ \end{array} \right) = (w_0+w_1+w_2, 0, 0)
+\]
+\[ \Gamma\mathbf{w} = \left( \begin{array}{ccc}
+		1 & 1 & 1 \\
+		0 & 0 & 0\\
+		0 & 0 & 0 \\ \end{array} \right)
+		\left( \begin{array}{c}
+		w_0 \\
+		w_1 \\
+		w_2 \\  \end{array} \right) = \left( \begin{array}{c}
+		w_0 + w_1 + w_2 \\
+		0 \\
+		0 \\  \end{array} \right)
+\]
+y entonces
+\[ \mathbf{w}^T\Gamma^T\Gamma\mathbf{w} = \left( \begin{array}{ccc}
+		w_0+w_1+w_2 & 0 & 0 \end{array} \right)
+		 \left( \begin{array}{c}
+		w_0 + w_1 + w_2 \\
+		0 \\
+		0 \\  \end{array} \right) = (w_0+w_1+w_2)^2
+\]
+que era lo que queríamos.
+\end{enumerate}
 \end{pregunta}
 
 \section{Bonus}
