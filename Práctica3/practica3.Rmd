@@ -5,10 +5,11 @@ output: pdf_document
 ---
 ```{r}
 library(ISLR)
-library(MASS)
-library(class) # Para el KNN
+#library(MASS)
+#library(class) # Para el KNN
 # Para ahorrarnos el prefijo en Auto$mpg (cada vez que queramos acceder a algo de
-# Auto: attach(Auto))
+# Auto: 
+attach(Auto)
 ```
 
 #Ejercicio 1
@@ -18,38 +19,192 @@ library(class) # Para el KNN
 
 ```{r}
 pairs(Auto)
-
 ```
 
+Como vemos con la función `pairs`, las características que parecen más útiles para predecir mpg (que son aquellas que tienen un patrón más o menos claro con respecto a mpg) son `displacement`, `horsepower` y `weight`.  
+
+Vamos a ver ahora las tres seleccionadas con `boxplot`:
+```{r}
+boxplot(Auto$mpg~Auto$cylinders)
+boxplot(Auto$mpg~Auto$horsepower)
+boxplot(Auto$mpg~Auto$weight)
+```
+
+Como vemos las tres siguen más o menos una estructura clara. Veamos otra que no sea ninguna de estas tres:
+```{r}
+boxplot(Auto$mpg~Auto$name)
+boxplot(Auto$mpg~Auto$acceleration)
+```
+Estas por ejemplo, vemos que no tienen mucho que ver con `mpg`.
 
 ##b) Seleccionar las variables predictorias que considere más relevantes.
 
+Lo que vamos a hacer es crear otro `data.frame` en el que vamos a eliminar el resto de variables, y vamos a dejar sólo las que hemos citado previamente.
+```{r}
+# Elegimos las cinco primeras columnas de Auto, que contienen mpg, cylinders,
+# displacement, horsepower y weight
+AutoMod <- Auto[ ,1:5]
+# Nos sobra la columna de cylinders, así que la eliminamos
+AutoMod <- AutoMod[ ,-2]
+```
+
 ##c) Particionar el conjunto de datos en un conjunto de entrenamiento (80%) y otro de test (20%). Justificar el procedimiento usado.
 
-##d) Crear una variable binaria, mpg01, que será igual a 1 si la variable mpg contiene un valor por encima de la mediana, y -1 si mpg contiene un valor por encima de la mediana, y -1 si mpg contiene un valor por debajo de la mediana. La mediana se puede calcular usando la función median(). (Nota: puede resultar útil usar la función data.frames() para unir en un mismo conjutno de datos la nueva variable mpg01 y las otras variables de Auto).
+```{r}
+train = sample(1:nrow(AutoMod), round(nrow(AutoMod)*0.8))
+test = AutoMod[-train, ]
+train = AutoMod[train, ]
+```
+
+##d) Crear una variable binaria, mpg01, que será igual a 1 si la variable mpg contiene un valor por encima de la mediana, y -1 si mpg contiene un valor por debajo de la mediana. La mediana se puede calcular usando la función median(). (Nota: puede resultar útil usar la función data.frames() para unir en un mismo conjunto de datos la nueva variable mpg01 y las otras variables de Auto).
+
+```{r}
+posiciones <- c(1:length(train[,1]))
+pos_positivos <- posiciones[train[,1] >= median(train[,1])]
+pos_negativos <- posiciones[train[,1] < median(train[,1])]
+train[,1][pos_positivos] = 1
+train[,1][pos_negativos] = -1
+
+posiciones <- c(1:length(test[,1]))
+pos_positivos <- posiciones[test[,1] >= median(test[,1])]
+pos_negativos <- posiciones[test[,1] < median(test[,1])]
+test[,1][pos_positivos] = 1
+test[,1][pos_negativos] = -1
+```
+
 
 ###1. Ajustar un modelo de regresión logística a los datos de entrenamiento y predecir mpg01 usando las variables seleccionadas en b). ¿Cuál es el error de test del modelo? Justificar la respuesta.
 
+```{r}
+modlog1 <- glm(train$mpg~., data = train)
+predicciones <- predict(modlog1, test)
+comp <- sign(predicciones) == sign(test$mpg)
+errores <- comp[comp == FALSE]
+error.regresion <- 100*(length(errores)/nrow(test))
+cat("El error con regresión ha sido:", error.regresion)
+```
+
+
 ###2. Ajustar un modelo K-NN a los datos de entrenamiento y predecir mpg01 usando solamente las variables seleccionadas en b). ¿Cuál es el error de test en el modelo? ¿Cuál es el valor de K que mejor ajusta los datos? Justificar la respuesta. (Usar el paquete class de R).
 
+
+```{r}
+escalado <- scale(train[,2:4])
+train[,2:4] <- escalado
+centro <- attr(escalado,"scaled:center")
+escala <- attr(escalado, "scaled:scale")
+test[,2:4] <- scale(test[,2:4], center=centro, scale=escala)
+```
+
+
+```{r}
+library(class)
+library(e1071)
+# Pasamos los datos con los que vamos a predecir a una matriz
+x <- as.matrix(train[,-1])
+# Fijamos la semilla
+set.seed(237)
+tune.knn(x,as.factor(train[,1]), k=1:10, tunecontrol=tune.control(sampling = "cross"))
+# Utilizamos knn con el mejor k que nos ha dicho tune.knn
+pred.knn <- knn(train[,-1], test[,-1], train[,1], k=5)
+
+```
+
+Vamos  a ver ahora el error de test
+```{r}
+confM <- table(pred.knn, test[,1])
+error <- (confM[1,2] + confM[2,1])/(confM[1,1]+confM[1,2]+confM[2,1]+confM[2,2])
+```
+
 ###3. Pintar las curvas ROC (instalar paquete ROCR de R) y comparar y valorar los resultados obtenidos para ambos modelos.
+
+```{r}
+library(ROCR)
+knn.res <- knn(train[,-1], test[,-1], train[,1], k=5, prob=T)
+prob <- attr(knn.res,"prob")
+prob <- sapply(1:length(prob), function(i) {
+  if(as.numeric(knn.res[i]) == 1) {
+    1-prob[i]
+  }
+  else {
+    prob[i]
+  }
+ })
+
+pred <- prediction(prob, test$mpg)
+perf <- performance(pred, "tpr", "fpr")
+plot(perf)
+```
 
 
 ##e) Bonus-1: Estimar el error de test de ambos modelos (RL, k-NN) pero usando Validación Cruzada de 5-particiones. Comparar con los resultados obtenidos en el punto anterior.
 
 ##f) Bonus-2: Ajustar el mejor modelo de regresión posible considerando la variable mpg como salida y el resto como predictorias. Justificar el modelo ajustado en base al patrón de los residuos. Estimar su error de entrenamiento y test.
 
+```{r}
+# Borramos lo que no necesitamos
+rm(AutoMod, escalado, test, train, x)
+rm(centro, comp, confM, error, error.regresion, errores)
+rm(escala, knn.res, modlog1, perf, pos_negativos, pos_positivos)
+rm(posiciones, pred, pred.knn, predicciones, prob)
+```
+
 
 #Ejercicio 2.
 #Usar la base de datos Boston (en el paquete MASS de R) para ajustar un modelo que prediga si dado un suburbio este tiene una tasa de criminalidad (crim) por encima o por debajo de la mediana. Para ello considere la variable crim como la variable salida y el resto como variables predictoras.
 
+```{r}
+library(MASS)
+# Dividimos el conjunto en train (80%) y test(20%)
+train = sample(1:nrow(Boston), round(nrow(Boston)*0.8))
+test = Boston[-train, ]
+train = Boston[train, ]
+```
+
+
 ##a) Encontrar el subconjunto óptimo de variables predictoras a partir de un modelo de regresión-LASSO (usar paquete glmnet de R) donde seleccionamos sólo aquellas variables con coeficiente mayor de un umbral prefijado.
+
+Utilizando `glmnet`, le tenemos que dar un 1 al parámetro `alpha` para que sea un modelo LASSO.
+
+```{r}
+library(glmnet)
+# Volvemos a fijar la semilla
+set.seed(237)
+modelo.lasso <- glmnet(as.matrix(train[,-1]), as.matrix(train[,1]), alpha=1)
+plot(modelo.lasso)
+```
+
+Como vemos, muchos de los coeficientes están cerca de cero, o son exactamente cero, lo que quiere decir que las variables correspondientes no influirán en la variable `crim`. Vamos a elegir un $\lambda$ apropiado usando cross-validation.
+
+```{r}
+crossv <- cv.glmnet(as.matrix(train[,-1]), as.matrix(train[,1]), alpha=1)
+lambda <- crossv$lambda.min
+coeficientes <- predict(modelo.lasso, type="coefficients", s=lambda)[1:14,]
+print(coeficientes)
+```
+
+Como vemos hay muchos de estos coeficientes muy cercanos a 0. Nos vamos a quedar con aquellos que estén (en valor absoluto) por encima de un umbral 0.5, que significará que tienen cierta correlación con la variable `crim`, aunque podríamos elegir uno un poco más bajo si quisiéramos considerar más variables (aunque serían menos relevantes)
+
+```{r}
+coeficientes <- coeficientes[abs(coeficientes)>0.5]
+print(coeficientes)
+```
+
+Nos quedamos sólo entonces con las variables `chas`, `nox`, `dis` y `rad`.
 
 ##b) Ajustar un modelo de regresión regularizada con "weight-decay" (ridge-regression) y las variables seleccionadas. Estimar el error residual del modelo y discutir si el comportamiento de los residuos muestran algún indicio de "underfitting".
 
+Para $\textit{weight-decay}$ tenemos que usar también `glmnet` pero con el parámetro $\lambda=0$.
+
+```{r}
+
+```
+
+
 ##c) Definir una nueva variable con valores -1 y 1 usando el valor de la mediana de la variable crim como umbral. Ajustar un modelo SVM que prediga la nueva variable definida. (Usar el paquete e1071 de R). Describir con detalle cada uno de los pasos dados en el aprendizaje del modelo SVM. Comience ajustando un modelo lineal y argumente si considera necesario usar algún núcleo. Valorar los resultados del uso de distintos núcleos.
 
-#Bonus-3: Estimar el error de entrenamiento y test por validación cruzada de 5 particiones.
+##Bonus-3: Estimar el error de entrenamiento y test por validación cruzada de 5 particiones.
+
 
 #Ejercicio 3.
 #Usar el conjunto de datos Boston y las librerías randomForest y gbm de R.
