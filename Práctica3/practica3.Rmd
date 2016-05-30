@@ -194,14 +194,128 @@ Nos quedamos sólo entonces con las variables `chas`, `nox`, `dis` y `rad`.
 
 ##b) Ajustar un modelo de regresión regularizada con "weight-decay" (ridge-regression) y las variables seleccionadas. Estimar el error residual del modelo y discutir si el comportamiento de los residuos muestran algún indicio de "underfitting".
 
-Para $\textit{weight-decay}$ tenemos que usar también `glmnet` pero con el parámetro $\lambda=0$.
+Para $\textit{weight-decay}$ tenemos que usar también `glmnet` pero con el parámetro $\alpha=0$.  
+Nos quedamos primero con las variables seleccionadas por el método anterior, y vamos a utilizar el mejor $\lambda$ que nos ha salido del apartado anterior por cross-validation:
 
 ```{r}
-
+BostonMod.train <- data.frame(train$crim, train$chas, train$nox, train$dis,
+                              train$rad)
+BostonMod.test <- data.frame(test$crim, test$chas, test$nox, test$dis, test$rad)
+modelo.ridge <- glmnet(as.matrix(BostonMod.train[,-1]),
+                       as.matrix(BostonMod.train[,1]), alpha=0, lambda=lambda)
+predicciones <- predict(modelo.ridge, s=lambda,
+                        newx=as.matrix(BostonMod.test[,-1]))
 ```
 
 
+Calculamos ahora el error residual, que será la raíz cuadrada positiva de los cuadrados de las diferencias entre nuestro valor y el predicho por el modelo.
+
+```{r}
+error.res <- sum((BostonMod.test[,1] - predicciones)^2)
+error.res <- sqrt(error.res/length(predicciones))
+```
+
+Para ver ahora si estamos o no ajustando poco el modelo (underfitting) vamos a probar distintos valores de $\lambda$, que es el parámetro que maneja la cantidad de regularización que le damos al modelo. Vamos a coger dos valores por debajo del $\lambda$ que tenemos en este momento (0.0450578) y dos por encima y comprobar qué sucede:
+
+```{r}
+lambda <- 0.08
+modelo.ridge <- glmnet(as.matrix(BostonMod.train[,-1]),
+                       as.matrix(BostonMod.train[,1]), alpha=0, lambda=lambda)
+predicciones <- predict(modelo.ridge, s=lambda,
+                        newx=as.matrix(BostonMod.test[,-1]))
+error.res <- sum((BostonMod.test[,1] - predicciones)^2)
+error.res <- sqrt(error.res/length(predicciones))
+cat("El error para lambda =", lambda, "ha sido", error.res)
+```
+```{r}
+lambda <- 1
+modelo.ridge <- glmnet(as.matrix(BostonMod.train[,-1]),
+                       as.matrix(BostonMod.train[,1]), alpha=0, lambda=lambda)
+predicciones <- predict(modelo.ridge, s=lambda,
+                        newx=as.matrix(BostonMod.test[,-1]))
+error.res <- sum((BostonMod.test[,1] - predicciones)^2)
+error.res <- sqrt(error.res/length(predicciones))
+cat("El error para lambda =", lambda, "ha sido", error.res)
+```
+```{r}
+lambda <- 0.02
+modelo.ridge <- glmnet(as.matrix(BostonMod.train[,-1]),
+                       as.matrix(BostonMod.train[,1]), alpha=0, lambda=lambda)
+predicciones <- predict(modelo.ridge, s=lambda,
+                        newx=as.matrix(BostonMod.test[,-1]))
+error.res <- sum((BostonMod.test[,1] - predicciones)^2)
+error.res <- sqrt(error.res/length(predicciones))
+cat("El error para lambda =", lambda, "ha sido", error.res)
+```
+```{r}
+lambda <- 0.002
+modelo.ridge <- glmnet(as.matrix(BostonMod.train[,-1]),
+                       as.matrix(BostonMod.train[,1]), alpha=0, lambda=lambda)
+predicciones <- predict(modelo.ridge, s=lambda,
+                        newx=as.matrix(BostonMod.test[,-1]))
+error.res <- sum((BostonMod.test[,1] - predicciones)^2)
+error.res <- sqrt(error.res/length(predicciones))
+cat("El error para lambda =", lambda, "ha sido", error.res)
+```
+
+Como vemos, cuanto mayor es el $\lambda$, menor es el error (mayor la cantidad de regularización), mientras que si lo bajamos, el error aumenta, por lo que sí que estamos ajustando poco el modelo aún, se podría mejorar aumentando $\lambda$.
+
 ##c) Definir una nueva variable con valores -1 y 1 usando el valor de la mediana de la variable crim como umbral. Ajustar un modelo SVM que prediga la nueva variable definida. (Usar el paquete e1071 de R). Describir con detalle cada uno de los pasos dados en el aprendizaje del modelo SVM. Comience ajustando un modelo lineal y argumente si considera necesario usar algún núcleo. Valorar los resultados del uso de distintos núcleos.
+
+```{r}
+posiciones <- c(1:length(train[,1]))
+pos_positivos <- posiciones[train[,1] >= median(train[,1])]
+pos_negativos <- posiciones[train[,1] < median(train[,1])]
+train[,1][pos_positivos] = 1
+train[,1][pos_negativos] = -1
+
+posiciones <- c(1:length(test[,1]))
+pos_positivos <- posiciones[test[,1] >= median(test[,1])]
+pos_negativos <- posiciones[test[,1] < median(test[,1])]
+test[,1][pos_positivos] = 1
+test[,1][pos_negativos] = -1
+```
+
+Vamos a hacer ahora un SVM con núcleo lineal
+
+```{r}
+# Volvemos a fijar la semilla
+set.seed(237)
+modelo.svm <- svm(train[,1]~., train[,-1], kernel="linear")
+predicciones <- predict(modelo.svm, test[,-1])
+comp <- sign(predicciones) == sign(test$crim)
+errores <- comp[comp == FALSE]
+error <- 100*(length(errores)/nrow(test))
+cat("El error con SVM lineal ha sido:", error)
+```
+
+Vamos a probar con los otros tres tipos de núcleos a ver los resultados en errores que obtenemos
+
+```{r}
+modelo.svm <- svm(train[,1]~., train[,-1], kernel="polynomial")
+predicciones <- predict(modelo.svm, test[,-1])
+comp <- sign(predicciones) == sign(test$crim)
+errores <- comp[comp == FALSE]
+error <- 100*(length(errores)/nrow(test))
+cat("El error con SVM polinomial ha sido:", error)
+```
+```{r}
+modelo.svm <- svm(train[,1]~., train[,-1], kernel="radial")
+predicciones <- predict(modelo.svm, test[,-1])
+comp <- sign(predicciones) == sign(test$crim)
+errores <- comp[comp == FALSE]
+error <- 100*(length(errores)/nrow(test))
+cat("El error con SVM radial ha sido:", error)
+```
+```{r}
+modelo.svm <- svm(train[,1]~., train[,-1], kernel="sigmoid")
+predicciones <- predict(modelo.svm, test[,-1])
+comp <- sign(predicciones) == sign(test$crim)
+errores <- comp[comp == FALSE]
+error <- 100*(length(errores)/nrow(test))
+cat("El error con SVM sigmoidal ha sido:", error)
+```
+
 
 ##Bonus-3: Estimar el error de entrenamiento y test por validación cruzada de 5 particiones.
 
