@@ -15,6 +15,10 @@ attach(Auto)
 #Ejercicio 1
 #Usar el conjunto de datos Auto que es parte del paquete ISLR. En este ejercicio desarrollaremos un modelo para predecir si un coche tiene un consumo de carburante alto o bajo usando la base de datos Auto. Se considerará alto cuando sea superior a la media de la variable mpg y bajo en caso contrario.
 
+```{r}
+library(ISLR)
+```
+
 ##a) Usar las funciones de R pairs() y boxplot() para investigar la dependencia entre mpg y las otras características. ¿Cuáles de las otras características parece más útil para predecir mpg? Justificar la respuesta.
 
 ```{r}
@@ -30,12 +34,12 @@ boxplot(Auto$mpg~Auto$horsepower)
 boxplot(Auto$mpg~Auto$weight)
 ```
 
-Como vemos las tres siguen más o menos una estructura clara. Veamos otra que no sea ninguna de estas tres:
+Como vemos las tres siguen más o menos una estructura clara. Veamos otras que no sean ninguna de estas tres:
 ```{r}
 boxplot(Auto$mpg~Auto$name)
 boxplot(Auto$mpg~Auto$acceleration)
 ```
-Estas por ejemplo, vemos que no tienen mucho que ver con `mpg`.
+Estas por ejemplo, vemos que no tienen mucho que ver con `mpg`, puesto que las cajas, en lugar de seguir un patrón, parecen más o menos puestas de forma aleatoria.
 
 ##b) Seleccionar las variables predictorias que considere más relevantes.
 
@@ -50,7 +54,11 @@ AutoMod <- AutoMod[ ,-2]
 
 ##c) Particionar el conjunto de datos en un conjunto de entrenamiento (80%) y otro de test (20%). Justificar el procedimiento usado.
 
+Como la base de datos de Auto tiene una gran cantidad de instancias y además están ordenadas por el año de salida, lo que hacemos es elegir de forma aleatoria, con la función `sample()` el 80% de estas instancias para train, y el resto las dejaremos para test.
+
 ```{r}
+# Fijamos la semilla para el sample
+set.seed(237)
 train = sample(1:nrow(AutoMod), round(nrow(AutoMod)*0.8))
 test = AutoMod[-train, ]
 train = AutoMod[train, ]
@@ -58,13 +66,17 @@ train = AutoMod[train, ]
 
 ##d) Crear una variable binaria, mpg01, que será igual a 1 si la variable mpg contiene un valor por encima de la mediana, y -1 si mpg contiene un valor por debajo de la mediana. La mediana se puede calcular usando la función median(). (Nota: puede resultar útil usar la función data.frames() para unir en un mismo conjunto de datos la nueva variable mpg01 y las otras variables de Auto).
 
+Lo que vamos a haces es seleccionar de los conjuntos de train y test que hemos separado previamente, las posiciones en las que la variable `mpg` está por encima de la mediana y las posiciones en las que está por debajo para después cambiar dicha variable a 1 y -1 repectivamente. No he utilizado la función `data.frame()` porque como ya tengo un data.frame train y otro test con las variables seleccionadas en b) lo voy a modificar en dichos data.frame directamente.
+
 ```{r}
+# Obtenemos las posiciones a cambiar con 1 y -1 en train
 posiciones <- c(1:length(train[,1]))
 pos_positivos <- posiciones[train[,1] >= median(train[,1])]
 pos_negativos <- posiciones[train[,1] < median(train[,1])]
 train[,1][pos_positivos] = 1
 train[,1][pos_negativos] = -1
 
+# Hacemos lo mismo para test
 posiciones <- c(1:length(test[,1]))
 pos_positivos <- posiciones[test[,1] >= median(test[,1])]
 pos_negativos <- posiciones[test[,1] < median(test[,1])]
@@ -75,18 +87,24 @@ test[,1][pos_negativos] = -1
 
 ###1. Ajustar un modelo de regresión logística a los datos de entrenamiento y predecir mpg01 usando las variables seleccionadas en b). ¿Cuál es el error de test del modelo? Justificar la respuesta.
 
+Estos datos, con las variables seleccionadas y con la variable `mpg` a 1 y -1 es lo que tenemos ahora mismo en train y test, y es lo que por tanto vamos a utilizar. Para ajustar un modelo de regresión logística vamos a utilizar la función `glm()`, a la que le pasamos la variable a predecir, `train$mpg` y las variables con las que la vamos a predecir. Como hemos dicho que ya tenemos sólo las variables seleccionadas, podemos directamente poner un `.` para que tome el resto de variables presentes en los datos que le pasamos, que serán `train`.  
+
+Para calcular el error de test del modelo tenemos que predecir, con el modelo logístico que hemos obtenido, la salida que nos da para la variable `mpg` del conjunto de test. Para esto utilizo la función `predict()`, a la que hay que pasarle el modelo y los datos de test sin la variable `mpg`. Una vez tenemos las predicciones, que serán números positivos o negativos, como es un problema que hemos transformado a clasificación, nos quedamos con el signo de estas predicciones y todas aquellas que coincidan en signo con la variable `mpg` de test, estarán bien clasificadas. Contamos por tanto aquellas que no coincidan, lo dividimos por el número de instancias que tenemos en test y multiplicamos por 100 para obtener el porcentaje de error.
+
 ```{r}
 modlog1 <- glm(train$mpg~., data = train)
-predicciones <- predict(modlog1, test)
-comp <- sign(predicciones) == sign(test$mpg)
+prediccionesRL <- predict(modlog1, test[,-1])
+comp <- sign(prediccionesRL) == sign(test$mpg)
 errores <- comp[comp == FALSE]
 error.regresion <- 100*(length(errores)/nrow(test))
 cat("El error con regresión ha sido:", error.regresion)
 ```
 
+El porcentaje de error, como vemos, es 3.846154
 
 ###2. Ajustar un modelo K-NN a los datos de entrenamiento y predecir mpg01 usando solamente las variables seleccionadas en b). ¿Cuál es el error de test en el modelo? ¿Cuál es el valor de K que mejor ajusta los datos? Justificar la respuesta. (Usar el paquete class de R).
 
+Para obtener el valor de K que mejor ajusta a los datos he utilizado la función `tune.knn()`, que prueba con un rango de Ks dados y devuelve aquel que tenga mejor tasa de acierto en train. Previo a esto, he normalizado los datos de test y de train (por separado, para así no infliur en los datos de test con los de train):
 
 ```{r}
 escalado <- scale(train[,2:4])
@@ -96,6 +114,7 @@ escala <- attr(escalado, "scaled:scale")
 test[,2:4] <- scale(test[,2:4], center=centro, scale=escala)
 ```
 
+Vamos a obtener el mejor K entre 1 y 10. Antes de usar `tune.knn()` es importante fijar una semilla ya que cuando hay empates lo que hace es desempatar de forma aleatoria. Además es necesario pasar los datos a una matriz para que funcione.
 
 ```{r}
 library(class)
@@ -106,17 +125,25 @@ x <- as.matrix(train[,-1])
 set.seed(237)
 tune.knn(x,as.factor(train[,1]), k=1:10, tunecontrol=tune.control(sampling = "cross"))
 # Utilizamos knn con el mejor k que nos ha dicho tune.knn
-pred.knn <- knn(train[,-1], test[,-1], train[,1], k=5)
+pred.knn <- knn(train[,-1], test[,-1], train[,1], k=9)
 
 ```
 
-Vamos  a ver ahora el error de test
+Vamos  a ver ahora el error de test, para el que utilizo la función `table()` con las predicciones y la variable `mpg` real para que me devuelva la matriz de confusión. El error serán los falsos positivos y los falsos negativos entre el número de todas las instancias:
+
 ```{r}
 confM <- table(pred.knn, test[,1])
 error <- (confM[1,2] + confM[2,1])/(confM[1,1]+confM[1,2]+confM[2,1]+confM[2,2])
+cat("El error en test ha sido:", error)
 ```
 
+Tenemos por tanto un error de poco más del 5% en test, lo que es muy bueno.
+
 ###3. Pintar las curvas ROC (instalar paquete ROCR de R) y comparar y valorar los resultados obtenidos para ambos modelos.
+
+En el caso del knn tenemos que obtener la probabilidad de que cada elemento en test pertenezca a la clase 1 o -1, para lo que utilizamos el parámetro `prob=T` en la función `knn()`. Sin embargo necesitamos tener la probabilidad de que todos los elementos pertenezcan a una sola clase, o a 1 o a -1, para lo que cambiamos aquellas que sean, por ejemplo, -1, y ponemos 1-la probabilidad de que pertenezcan a la clase -1, que es lo que nos devuelve `knn()` con `prob=T`, con lo que tenemos lo que necesitamos. 
+
+Posteriormente, y esto es común para `knn` y para regresión logística, lo que tenemos que hacer es obtener de esto un objeto de tipo `prediction` para lo que utilizamos la función del mismo nombre, pasándole por parámetros estas probabilidades, después utilzamos la función `performance()` con el objeto de tipo `prediction` y las medidas "tpr" y "fpr", que según nos dice en la ayuda de la función, son las necesarias para obtener la curva ROC. Por último, pintando el objeto performance, tenemos las curvas ROC:
 
 ```{r}
 library(ROCR)
@@ -133,9 +160,16 @@ prob <- sapply(1:length(prob), function(i) {
 
 pred <- prediction(prob, test$mpg)
 perf <- performance(pred, "tpr", "fpr")
-plot(perf)
+plot(perf, main="Curva ROC para knn")
 ```
 
+```{r}
+pred = prediction(prediccionesRL, test$mpg)
+perf = performance(pred, "tpr", "fpr")
+plot(perf, main="Curva ROC para logística")
+```
+
+Como vemos, ambas son muy buenas, ya que crecen hacia 1 muy rápido en el 0, aunque después knn va un poco más lento que regresión logística, por lo que esta última nos sale un poco mejor, que es algo que ya habíamos notado al calcular los errores, ya que regresión logística tiene un error de poco más del 3% y knn de poco más del 5%.
 
 ##e) Bonus-1: Estimar el error de test de ambos modelos (RL, k-NN) pero usando Validación Cruzada de 5-particiones. Comparar con los resultados obtenidos en el punto anterior.
 
@@ -330,7 +364,19 @@ rm(lambda, modelo.lasso, modelo.ridge, predicciones, modelo.svm)
 #Ejercicio 3.
 #Usar el conjunto de datos Boston y las librerías randomForest y gbm de R.
 
+```{r}
+library(randomForest)
+library(gbm)
+library(MASS)
+```
+
 ##a) Dividir la base de datos en dos conjuntos de entrenamiento (80%) y test (20%).
+
+```{r}
+train = sample(1:nrow(Boston), round(nrow(Boston)*0.8))
+test = Boston[-train, ]
+train = Boston[train, ]
+```
 
 ##b) Usando la variable medv como salida y el resto como predictoras, ajustar un modelo de regresión usando bagging. Explicar cada uno de los parámetros usados. Calcular el error del test.
 
@@ -420,3 +466,9 @@ print(cv.oj)
 Como podemos ver, los árboles con 9 y 5 nodos terminales son los que tienen el menor error, 144. El árbol que habíamos ajustado en el apartado c) tenía justo 9 nodos terminales, por lo que ya habíamos obtenido aquel con menor error y mejor precisión.
 
 ##Bonus-4. Generar un gráfico con el tamaño del árbol en el eje x (número de nodos) y la tasa de error de validación cruzada en el eje y. ¿Qué tamaño de árbol corresponde a la tasa más pequeña de error de clasificación por validación cruzada?
+
+```{r}
+# Borramos lo que no necesitamos
+rm(test, train, cv.oj, train.idx, tree.oj, tree.predict)
+```
+
