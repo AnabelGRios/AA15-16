@@ -319,6 +319,13 @@ cat("El error con SVM sigmoidal ha sido:", error)
 
 ##Bonus-3: Estimar el error de entrenamiento y test por validación cruzada de 5 particiones.
 
+```{r}
+# Borramos lo que no necesitamos
+rm(BostonMod.test, BostonMod.train, test, train)
+rm(coeficientes, comp, crossv, error, error.res, errores)
+rm(lambda, modelo.lasso, modelo.ridge, predicciones, modelo.svm)
+```
+
 
 #Ejercicio 3.
 #Usar el conjunto de datos Boston y las librerías randomForest y gbm de R.
@@ -337,10 +344,79 @@ cat("El error con SVM sigmoidal ha sido:", error)
 
 ##a) Crear un conjunto de entrenamiento conteniendo una muestra aleatoria de 800 observaciones, y un conjunto de test conteniendo el resto de las observaciones. Ajustar un árbol a los datos de entrenamiento, con Purchase como la variable respuesta y las otras variables como predictoras (paquete tree de R).
 
+```{r}
+# Fijamos de nuevo la semilla
+set.seed(237)
+
+library(ISLR)
+train.idx = sample(1:nrow(OJ), 800)
+test = OJ[-train.idx, ]
+train = OJ[train.idx, ]
+
+# Usamos la librería tree
+library(tree)
+```
+
+Para saber si usar clasificación o regresión vamos a ver de qué tipo es la variable `Purchase` con la función `summary()`
+
+```{r}
+summary(OJ)
+```
+
+Como vemos, `Purchase` toma sólo dos valores: `CH` y `MM`, con lo que vamos a utilizar clasificación:
+
+```{r}
+tree.oj <- tree(train$Purchase~., train)
+```
+
+Vamos a ver el resultado de este árbol:
+```{r}
+plot(tree.oj)
+text(tree.oj, pretty = 0)
+```
+
+Como este no queda muy bien, vamos a hacerlo también con el software `RWeka`, que también permite dibujar árboles, y se ven mejor:
+
+```{r}
+library(RWeka)
+library(partykit)
+oj.rweka = J48(OJ$Purchase~., data = OJ, subset = train.idx)
+plot(oj.rweka)
+```
+
+
 ##c) Usar la función summary() para generar un resumen estadístico acerca del árbol y describir los resultados obtenidos: tasa de error de training, número de nodos del árbol, etc.
+
+```{r}
+summary(tree.oj)
+```
+
+Como vemos, el número de nodos hoja son 9. El número total de nodos lo podemos ver en el árbol anterior y es 17. Las variables que se han utilizado en los nodos internos (aquellos que no son hoja) nos lo dice también la función `summary()` y son `LoyalCH`, `SalePriceMM`, `PriceDiff`, `ListPriceDiff` y `DiscCH`.  
+También nos dice el error en training: 0.1638 (16%) y la desviación residual hasta la media, que en este caso es la desviación normal a la media entre 800 (total de instancias en train) - 6 (número de nodos hoja) = 794, lo que da 0.7303. Como es lógico, a menor desviación, mejor ajusta el árbol a los datos de train.
 
 ##d) Predecir la respuesta de los datos de test, y generar e interpretar la matriz de confusión de los datos de test. ¿Cuál es la tasa de error del test? ¿Cuál es la precisión del test?
 
+Para esto podemos usar de nuevo la función `predict()` pasándole el árbol que hemos entrenado con train y los datos de test. Le ponemos el argumento `type=class` porque estamos con un árbol de clasificación y así obligamos a utilziar la predicción con la variable `Purchase`. Para calcular el error de test y su precisión vamos a utilizar la función `table()`, que nos devuelve la matriz de confusión.
+
+```{r}
+tree.predict <- predict(tree.oj, test[,-1], type="class")
+table(tree.predict, test[,1])
+```
+
+El error en test es (11+39)/(125+11+39+95) = 0.1851852  
+La precisión es (125+95)/(125+11+39+95) = 0.8148148  
+Es decir, hay un error en test del 18.5% y una precisión del 81.4%.
+
 ##e) Aplicar la función cv.tree() al conjunto de training y determinar el tamaño óptimo del árbol. ¿Qué hace cv.tree?
 
-#Bonus-4. Generar un gráfico con el tamaño del árbol en el eje x (número de nodos) y la tasa de error de validación cruzada en el eje y. ¿Qué tamaño de árbol corresponde a la tasa más pequeña de error de clasificación por validación cruzada?
+La misión de `cv.tree()` es utilizar cross-validation para obtener el mejor nivel de complejidad para el árbol que se obtiene. Este "mejor nivel" se puede obtener en base a diferentes criterior. Por ejemplo, si usamos `cv.tree()` con los parámetros por defecto, nos devolverá aquel que tenga menor desvianza. Si queremos que nos devuelva aquel que tenga menor error en la validación cruzada tenemos que usar el parámetro `FUN = prune.misclass`.
+
+```{r}
+set.seed(237)
+cv.oj <- cv.tree(tree.oj, FUN = prune.misclass)
+print(cv.oj)
+```
+
+Como podemos ver, los árboles con 9 y 5 nodos terminales son los que tienen el menor error, 144. El árbol que habíamos ajustado en el apartado c) tenía justo 9 nodos terminales, por lo que ya habíamos obtenido aquel con menor error y mejor precisión.
+
+##Bonus-4. Generar un gráfico con el tamaño del árbol en el eje x (número de nodos) y la tasa de error de validación cruzada en el eje y. ¿Qué tamaño de árbol corresponde a la tasa más pequeña de error de clasificación por validación cruzada?
