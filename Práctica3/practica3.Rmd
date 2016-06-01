@@ -180,7 +180,7 @@ Como vemos, ambas son muy buenas, ya que crecen hacia 1 muy rápido en el 0, aunq
 rm(AutoMod, escalado, test, train, x)
 rm(centro, comp, confM, error, error.regresion, errores)
 rm(escala, knn.res, modlog1, perf, pos_negativos, pos_positivos)
-rm(posiciones, pred, pred.knn, predicciones, prob)
+rm(posiciones, pred, pred.knn, prediccionesRL, prob)
 ```
 
 
@@ -189,6 +189,7 @@ rm(posiciones, pred, pred.knn, predicciones, prob)
 
 ```{r}
 library(MASS)
+set.seed(237)
 # Dividimos el conjunto en train (80%) y test(20%)
 train = sample(1:nrow(Boston), round(nrow(Boston)*0.8))
 test = Boston[-train, ]
@@ -373,6 +374,7 @@ library(MASS)
 ##a) Dividir la base de datos en dos conjuntos de entrenamiento (80%) y test (20%).
 
 ```{r}
+set.seed(237)
 train = sample(1:nrow(Boston), round(nrow(Boston)*0.8))
 test = Boston[-train, ]
 train = Boston[train, ]
@@ -380,9 +382,137 @@ train = Boston[train, ]
 
 ##b) Usando la variable medv como salida y el resto como predictoras, ajustar un modelo de regresión usando bagging. Explicar cada uno de los parámetros usados. Calcular el error del test.
 
+Veamos cuántas variables hay, ya que va a ser necesario especificar el total para hacer bagging:
+
+```{r}
+summary(train)
+```
+
+Como vemos son 14 variables en total, si quitamos la que vamos a predecir, son en total 13. Vamos a empezar con un número de árboles 10 y ver el error que tiene, e iremos subiendo hasta que el error se quede más o menos estable, ya que sabemos que bagging no sobreajusta los datos.
+
+```{r}
+bagging10 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 10)
+pred10 <- predict(bagging10, newdata = test)
+cat("El error con 10 árboles es:", mean((pred10-test$medv)^2))
+```
+
+```{r}
+bagging30 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 30)
+pred30 <- predict(bagging30, newdata = test)
+cat("El error con 30 árboles es:", mean((pred30-test$medv)^2))
+```
+
+```{r}
+bagging300 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 300)
+pred300 <- predict(bagging300, newdata = test)
+cat("El error con 300 árboles es:", mean((pred300-test$medv)^2))
+```
+
+```{r}
+bagging500 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 500)
+pred500 <- predict(bagging500, newdata = test)
+cat("El error con 500 árboles es:", mean((pred500-test$medv)^2))
+```
+
+```{r}
+bagging600 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 600)
+pred600 <- predict(bagging600, newdata = test)
+cat("El error con 600 árboles es:", mean((pred600-test$medv)^2))
+```
+
+```{r}
+bagging800 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 800)
+pred800 <- predict(bagging800, newdata = test)
+cat("El error con 800 árboles es:", mean((pred800-test$medv)^2))
+```
+
+```{r}
+bagging700 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 700)
+pred700 <- predict(bagging700, newdata = test)
+cat("El error con 700 árboles es:", mean((pred700-test$medv)^2))
+```
+
+```{r}
+bagging650 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 650)
+pred650 <- predict(bagging650, newdata = test)
+cat("El error con 650 árboles es:", mean((pred650-test$medv)^2))
+```
+
+
 ##c) Ajustar un modelo de regresión usando Random Forest. Obtener una estimación del número de árboles necesario. Justificar el resto de parámetros usados en el ajuste. Calcular el error de test y compararlo con el obtenido con bagging.
 
+Como es un modelo de regresión, vamos a usar una cantidad de variables igual a $p/3$, donde $p$ es el número de variables, que en este caso es 13, luego utilizamos el redondeo por arriba de $13/3=4,33$, que es 5. Vamos a hacer lo mismo que antes para elegir el número de árboles, ya que random forest tampoco sobreajusta los datos.
+
+```{r}
+# Fijamos la semilla de nuevo
+set.seed(237)
+randomF10 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 10)
+pred10 <- predict(randomF10, newdata=test)
+cat("El error con 10 árboles es:", mean((pred10-test$medv)^2))
+```
+
+```{r}
+randomF30 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 30)
+pred30 <- predict(randomF30, newdata=test)
+cat("El error con 30 árboles es:", mean((pred30-test$medv)^2))
+```
+
+```{r}
+randomF50 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 50)
+pred50 <- predict(randomF50, newdata=test)
+cat("El error con 50 árboles es:", mean((pred50-test$medv)^2))
+```
+
+```{r}
+randomF100 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 100)
+pred100 <- predict(randomF100, newdata=test)
+cat("El error con 100 árboles es:", mean((pred100-test$medv)^2))
+```
+
+```{r}
+randomF200 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 200)
+pred200 <- predict(randomF200, newdata=test)
+cat("El error con 200 árboles es:", mean((pred200-test$medv)^2))
+```
+
+```{r}
+randomF400 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 400)
+pred400 <- predict(randomF400, newdata=test)
+cat("El error con 400 árboles es:", mean((pred400-test$medv)^2))
+```
+
+```{r}
+randomF600 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 600)
+pred600 <- predict(randomF600, newdata=test)
+cat("El error con 600 árboles es:", mean((pred600-test$medv)^2))
+```
+
+```{r}
+randomF500 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 500)
+pred500 <- predict(randomF500, newdata=test)
+cat("El error con 100 árboles es:", mean((pred500-test$medv)^2))
+```
+
+```{r}
+randomF450 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 450)
+pred450 <- predict(randomF450, newdata=test)
+cat("El error con 450 árboles es:", mean((pred450-test$medv)^2))
+```
+
+Podemos ver que el mejor número de árboles es 400, que es con el que nos vamos a quedar.
+
 ##d) Ajustar un modelo de regresión usando Boosting (usar gbm con distribution = 'gaussian'). Calcular el error de test y compararlo con el obtenido con bagging y Random Forest.
+
+```{r}
+library(gbm)
+set.seed(237)
+```
+
+```{r}
+boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 5000, shrinkage = 0.2)
+pred <- predict(boosting, newdata = test, n.trees=5000)
+mean((pred - test$medv)^2)
+```
 
 
 #Ejercicio 4.
@@ -420,16 +550,6 @@ Vamos a ver el resultado de este árbol:
 plot(tree.oj)
 text(tree.oj, pretty = 0)
 ```
-
-Como este no queda muy bien, vamos a hacerlo también con el software `RWeka`, que también permite dibujar árboles, y se ven mejor:
-
-```{r}
-library(RWeka)
-library(partykit)
-oj.rweka = J48(OJ$Purchase~., data = OJ, subset = train.idx)
-plot(oj.rweka)
-```
-
 
 ##c) Usar la función summary() para generar un resumen estadístico acerca del árbol y describir los resultados obtenidos: tasa de error de training, número de nodos del árbol, etc.
 
