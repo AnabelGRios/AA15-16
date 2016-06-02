@@ -230,7 +230,7 @@ for (i in 1:5) {
   x <- as.matrix(train[,-1])
   # Fijamos la semilla
   set.seed(237)
-  k <- tune.knn(x,as.factor(train[,1]), k=1:10, tunecontrol = 
+  k <- tune.knn(x, as.factor(train[,1]), k=1:10, tunecontrol = 
                   tune.control(sampling = "cross"))
   k <- k$best.parameters$k
   # Utilizamos knn con el mejor k que nos ha dicho tune.knn
@@ -261,11 +261,14 @@ rm(AutoMod, escalado, test, train, x)
 rm(centro, comp, confM, error, error.regresion, errores)
 rm(escala, knn.res, modlog1, perf, pos_negativos, pos_positivos)
 rm(posiciones, pred, pred.knn, prediccionesRL, prob)
+rm(particiones, media_regresion, media_knn, l)
 ```
 
 
 #Ejercicio 2.
 #Usar la base de datos Boston (en el paquete MASS de R) para ajustar un modelo que prediga si dado un suburbio este tiene una tasa de criminalidad (crim) por encima o por debajo de la mediana. Para ello considere la variable crim como la variable salida y el resto como variables predictoras.
+
+De nuevo dejamos un 80% de los datos para train y un 20% para test, y los extraemos de forma aleatoria.
 
 ```{r}
 library(MASS)
@@ -289,7 +292,7 @@ modelo.lasso <- glmnet(as.matrix(train[,-1]), as.matrix(train[,1]), alpha=1)
 plot(modelo.lasso)
 ```
 
-Como vemos, muchos de los coeficientes están cerca de cero, o son exactamente cero, lo que quiere decir que las variables correspondientes no influirán en la variable `crim`. Vamos a elegir un $\lambda$ apropiado usando cross-validation.
+Como vemos, muchos de los coeficientes están cerca de cero, o son exactamente cero, lo que quiere decir que las variables correspondientes no influirán en la variable `crim`. Vamos a elegir un $\lambda$ apropiado usando cross-validation, en concreto, el cross-validation de `cv.glmnet()`.
 
 ```{r}
 crossv <- cv.glmnet(as.matrix(train[,-1]), as.matrix(train[,1]), alpha=1)
@@ -298,10 +301,10 @@ coeficientes <- predict(modelo.lasso, type="coefficients", s=lambda)[1:14,]
 print(coeficientes)
 ```
 
-Como vemos hay muchos de estos coeficientes muy cercanos a 0. Nos vamos a quedar con aquellos que estén (en valor absoluto) por encima de un umbral 0.5, que significará que tienen cierta correlación con la variable `crim`, aunque podríamos elegir uno un poco más bajo si quisiéramos considerar más variables (aunque serían menos relevantes)
+Como vemos hay muchos de estos coeficientes muy cercanos a 0. Nos vamos a quedar con aquellos que estén (en valor absoluto) por encima de un umbral 0.2, que significará que tienen cierta correlación con la variable `crim`, aunque podríamos elegir uno un poco más bajo si quisiéramos considerar más variables (aunque serían menos relevantes).
 
 ```{r}
-coeficientes <- coeficientes[abs(coeficientes)>0.5]
+coeficientes <- coeficientes[abs(coeficientes)>0.2]
 print(coeficientes)
 ```
 
@@ -310,7 +313,7 @@ Nos quedamos sólo entonces con las variables `chas`, `nox`, `dis` y `rad`.
 ##b) Ajustar un modelo de regresión regularizada con "weight-decay" (ridge-regression) y las variables seleccionadas. Estimar el error residual del modelo y discutir si el comportamiento de los residuos muestran algún indicio de "underfitting".
 
 Para $\textit{weight-decay}$ tenemos que usar también `glmnet` pero con el parámetro $\alpha=0$.  
-Nos quedamos primero con las variables seleccionadas por el método anterior, y vamos a utilizar el mejor $\lambda$ que nos ha salido del apartado anterior por cross-validation:
+Nos quedamos primero con las variables seleccionadas por el método anterior, que introducimos en un data.frame nuevo para facilitar el uso posterior de la función `as.matrix()`, necesaria para `glmnet()`, y vamos a utilizar el mejor $\lambda$ que nos ha salido del apartado anterior por cross-validation:
 
 ```{r}
 BostonMod.train <- data.frame(train$crim, train$chas, train$nox, train$dis,
@@ -328,6 +331,7 @@ Calculamos ahora el error residual, que será la raíz cuadrada positiva de los cu
 ```{r}
 error.res <- sum((BostonMod.test[,1] - predicciones)^2)
 error.res <- sqrt(error.res/length(predicciones))
+cat("El error residual ha sido:", error.res)
 ```
 
 Para ver ahora si estamos o no ajustando poco el modelo (underfitting) vamos a probar distintos valores de $\lambda$, que es el parámetro que maneja la cantidad de regularización que le damos al modelo. Vamos a coger dos valores por debajo del $\lambda$ que tenemos en este momento (0.0450578) y dos por encima y comprobar qué sucede:
@@ -343,7 +347,7 @@ error.res <- sqrt(error.res/length(predicciones))
 cat("El error para lambda =", lambda, "ha sido", error.res)
 ```
 ```{r}
-lambda <- 1
+lambda <- 1.5
 modelo.ridge <- glmnet(as.matrix(BostonMod.train[,-1]),
                        as.matrix(BostonMod.train[,1]), alpha=0, lambda=lambda)
 predicciones <- predict(modelo.ridge, s=lambda,
@@ -363,7 +367,7 @@ error.res <- sqrt(error.res/length(predicciones))
 cat("El error para lambda =", lambda, "ha sido", error.res)
 ```
 ```{r}
-lambda <- 0.002
+lambda <- 0.0015
 modelo.ridge <- glmnet(as.matrix(BostonMod.train[,-1]),
                        as.matrix(BostonMod.train[,1]), alpha=0, lambda=lambda)
 predicciones <- predict(modelo.ridge, s=lambda,
@@ -373,9 +377,16 @@ error.res <- sqrt(error.res/length(predicciones))
 cat("El error para lambda =", lambda, "ha sido", error.res)
 ```
 
-Como vemos, cuanto mayor es el $\lambda$, menor es el error (mayor la cantidad de regularización), mientras que si lo bajamos, el error aumenta, por lo que sí que estamos ajustando poco el modelo aún, se podría mejorar aumentando $\lambda$.
+Cuanto mayor es el $\lambda$ mayor la cantidad de regularización, pero el error sube tanto si bajamos como si aumentamos $\lambda$, con lo que no estamos ajustando poco el modelo, ya que si disminuimos la cantidad de reguralización ajustamos más los datos de train pero el error residual es mayor, con lo que sobreajustamos el modelo a los datos, y por tanto estamos en el mejor valor de $\lambda$ posible.
 
 ##c) Definir una nueva variable con valores -1 y 1 usando el valor de la mediana de la variable crim como umbral. Ajustar un modelo SVM que prediga la nueva variable definida. (Usar el paquete e1071 de R). Describir con detalle cada uno de los pasos dados en el aprendizaje del modelo SVM. Comience ajustando un modelo lineal y argumente si considera necesario usar algún núcleo. Valorar los resultados del uso de distintos núcleos.
+
+Comenzamos discretizando por separado los datos de train y test (lo hacemos por separado para que los datos de test no influyan en los de train).
+
+```{r}
+library(e1071)
+```
+
 
 ```{r}
 posiciones <- c(1:length(train[,1]))
@@ -391,7 +402,7 @@ test[,1][pos_positivos] = 1
 test[,1][pos_negativos] = -1
 ```
 
-Vamos a hacer ahora un SVM con núcleo lineal
+Vamos a hacer ahora un SVM con núcleo lineal, a ver qué error obtenemos. Para ello vamos a utilizar la función `svm()`, a la que le pasamos, como viene siendo habitual, el conjunto de train sin la variable a predecir, la variable a predecir y el tipo de núcelo que queremos utilizar, en este caso lineal. Seguidamente volvemos a utilizar la función `predict()` con el modelo `svm` obtenido y los datos de train sin la variable que intentamos predecir. Como lo hemos convertido en un problema de clasificación, lo que tenemos que hacer es lo que hemos hecho en el primer ejercicio, comparar aquellas instancias en las que el signo de la varaible predicha no coincida con la nuestra discretizada y contar aquellas en las que esto ocurra, de forma que el error será este número por 100 entre el número total de instancias.
 
 ```{r}
 # Volvemos a fijar la semilla
@@ -404,7 +415,7 @@ error <- 100*(length(errores)/nrow(test))
 cat("El error con SVM lineal ha sido:", error)
 ```
 
-Vamos a probar con los otros tres tipos de núcleos a ver los resultados en errores que obtenemos
+El error obtenido está muy por encima del error obtenido en el apartado anterior utilizando regresión regularizada, lo que nos hace pensar que un svm lineal no ajusta lo suficientemente bien los datos. Vamos a probar con los otros tres tipos de núcleos a ver los resultados en errores que obtenemos y comprobar si podemos mejorar el error ajustando mejor los datos con otros tipos de núcleos. La predicción y el cálculo de errores se hace de forma análoga al caso lineal.
 
 ```{r}
 modelo.svm <- svm(train[,1]~., train[,-1], kernel="polynomial")
@@ -431,6 +442,7 @@ error <- 100*(length(errores)/nrow(test))
 cat("El error con SVM sigmoidal ha sido:", error)
 ```
 
+Efectivamente, tanto el modelo polinomial como el radial mejoran el error, aunque no mucho y sigue siendo alto, y el mejor de ellos es el radial por dos puntos de diferencia con el polinomial.
 
 ##Bonus-3: Estimar el error de entrenamiento y test por validación cruzada de 5 particiones.
 
@@ -439,6 +451,7 @@ cat("El error con SVM sigmoidal ha sido:", error)
 rm(BostonMod.test, BostonMod.train, test, train)
 rm(coeficientes, comp, crossv, error, error.res, errores)
 rm(lambda, modelo.lasso, modelo.ridge, predicciones, modelo.svm)
+rm(pos_negativos, pos_positivos, posiciones)
 ```
 
 
