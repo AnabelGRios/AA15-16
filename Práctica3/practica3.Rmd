@@ -4,18 +4,19 @@ author: "Anabel Gómez Ríos"
 output: pdf_document
 ---
 ```{r}
-library(ISLR)
-#library(MASS)
-#library(class) # Para el KNN
-# Para ahorrarnos el prefijo en Auto$mpg (cada vez que queramos acceder a algo de
-# Auto: 
-attach(Auto)
+x11()
+# Función para provocar la parada de la ejecución
+parada <- function(){
+  cat("\nPresione una tecla para continuar\n")
+  t <- readline()
+}
 ```
 
 #Ejercicio 1
 #Usar el conjunto de datos Auto que es parte del paquete ISLR. En este ejercicio desarrollaremos un modelo para predecir si un coche tiene un consumo de carburante alto o bajo usando la base de datos Auto. Se considerará alto cuando sea superior a la media de la variable mpg y bajo en caso contrario.
 
 ```{r}
+# EJERCICIO 1
 library(ISLR)
 ```
 
@@ -30,14 +31,19 @@ Como vemos con la función `pairs`, las características que parecen más útiles pa
 Vamos a ver ahora las tres seleccionadas con `boxplot`:
 ```{r}
 boxplot(Auto$mpg~Auto$cylinders)
+parada()
 boxplot(Auto$mpg~Auto$horsepower)
+parada()
 boxplot(Auto$mpg~Auto$weight)
+parada()
 ```
 
 Como vemos las tres siguen más o menos una estructura clara. Veamos otras que no sean ninguna de estas tres:
 ```{r}
 boxplot(Auto$mpg~Auto$name)
+parada()
 boxplot(Auto$mpg~Auto$acceleration)
+parada()
 ```
 Estas por ejemplo, vemos que no tienen mucho que ver con `mpg`, puesto que las cajas, en lugar de seguir un patrón, parecen más o menos puestas de forma aleatoria.
 
@@ -98,6 +104,7 @@ comp <- sign(prediccionesRL) == sign(test$mpg)
 errores <- comp[comp == FALSE]
 error.regresion <- 100*(length(errores)/nrow(test))
 cat("El error con regresión ha sido:", error.regresion)
+parada()
 ```
 
 El porcentaje de error, como vemos, es 3.846154
@@ -134,7 +141,8 @@ Vamos  a ver ahora el error de test, para el que utilizo la función `table()` co
 ```{r}
 confM <- table(pred.knn, test[,1])
 error <- (confM[1,2] + confM[2,1])/(confM[1,1]+confM[1,2]+confM[2,1]+confM[2,2])
-cat("El error en test ha sido:", error)
+cat("El error en test con knn ha sido:", error)
+parada()
 ```
 
 Tenemos por tanto un error de poco más del 5% en test, lo que es muy bueno.
@@ -161,12 +169,14 @@ prob <- sapply(1:length(prob), function(i) {
 pred <- prediction(prob, test$mpg)
 perf <- performance(pred, "tpr", "fpr")
 plot(perf, main="Curva ROC para knn")
+parada()
 ```
 
 ```{r}
 pred = prediction(prediccionesRL, test$mpg)
 perf = performance(pred, "tpr", "fpr")
 plot(perf, main="Curca ROC para regresión logística")
+parada()
 ```
 
 Como vemos, ambas son muy buenas, ya que crecen hacia 1 muy rápido en el 0, aunque después knn va un poco más lento que regresión logística, por lo que esta última nos sale un poco mejor, que es algo que ya habíamos notado al calcular los errores, ya que regresión logística tiene un error de poco más del 3% y knn de poco más del 5%.
@@ -249,6 +259,7 @@ media_knn <- 100*media_knn/5
 cat("El error medio por validación cruzada en regresión logística ha sido", 
     media_regresion)
 cat("El error medio por validación cruzada con knn ha sido", media_knn)
+parada()
 ```
 
 Vemos que los errores, aunque siguen siendo bajos, son un poco más altos que antes. Esto puede deberse a que con las particiones de los datos que teníamos en apartados anteriores hayamos tenido más suerte a la hora de predecir. Es importante decir que este error es más fiable, ya que estamos repitiendo el experimento 5 veces con conjuntos de train y test distintos, donde los datos de test no influyen en ningún momento en los de train, y estamos calculando la media de los errores, que es más fiable que hacerlo una única vez. En este caso, además, nos sale un 2% mejor el ajuste con knn que con regresión logística.
@@ -271,6 +282,7 @@ rm(particiones, media_regresion, media_knn, l)
 De nuevo dejamos un 80% de los datos para train y un 20% para test, y los extraemos de forma aleatoria.
 
 ```{r}
+# EJERCICIO 2
 library(MASS)
 set.seed(237)
 # Dividimos el conjunto en train (80%) y test(20%)
@@ -290,6 +302,7 @@ library(glmnet)
 set.seed(237)
 modelo.lasso <- glmnet(as.matrix(train[,-1]), as.matrix(train[,1]), alpha=1)
 plot(modelo.lasso)
+parada()
 ```
 
 Como vemos, muchos de los coeficientes están cerca de cero, o son exactamente cero, lo que quiere decir que las variables correspondientes no influirán en la variable `crim`. Vamos a elegir un $\lambda$ apropiado usando cross-validation, en concreto, el cross-validation de `cv.glmnet()`.
@@ -299,6 +312,7 @@ crossv <- cv.glmnet(as.matrix(train[,-1]), as.matrix(train[,1]), alpha=1)
 lambda <- crossv$lambda.min
 coeficientes <- predict(modelo.lasso, type="coefficients", s=lambda)[1:14,]
 print(coeficientes)
+parada()
 ```
 
 Como vemos hay muchos de estos coeficientes muy cercanos a 0. Nos vamos a quedar con aquellos que estén (en valor absoluto) por encima de un umbral 0.2, que significará que tienen cierta correlación con la variable `crim`, aunque podríamos elegir uno un poco más bajo si quisiéramos considerar más variables (aunque serían menos relevantes).
@@ -306,6 +320,7 @@ Como vemos hay muchos de estos coeficientes muy cercanos a 0. Nos vamos a quedar
 ```{r}
 coeficientes <- coeficientes[abs(coeficientes)>0.2]
 print(coeficientes)
+parada()
 ```
 
 Nos quedamos sólo entonces con las variables `chas`, `nox`, `dis` y `rad`.
@@ -332,6 +347,7 @@ Calculamos ahora el error residual, que será la raíz cuadrada positiva de los cu
 error.res <- sum((BostonMod.test[,1] - predicciones)^2)
 error.res <- sqrt(error.res/length(predicciones))
 cat("El error residual ha sido:", error.res)
+parada()
 ```
 
 Para ver ahora si estamos o no ajustando poco el modelo (underfitting) vamos a probar distintos valores de $\lambda$, que es el parámetro que maneja la cantidad de regularización que le damos al modelo. Vamos a coger dos valores por debajo del $\lambda$ que tenemos en este momento (0.0450578) y dos por encima y comprobar qué sucede:
@@ -345,6 +361,7 @@ predicciones <- predict(modelo.ridge, s=lambda,
 error.res <- sum((BostonMod.test[,1] - predicciones)^2)
 error.res <- sqrt(error.res/length(predicciones))
 cat("El error para lambda =", lambda, "ha sido", error.res)
+parada()
 ```
 ```{r}
 lambda <- 1.5
@@ -355,6 +372,7 @@ predicciones <- predict(modelo.ridge, s=lambda,
 error.res <- sum((BostonMod.test[,1] - predicciones)^2)
 error.res <- sqrt(error.res/length(predicciones))
 cat("El error para lambda =", lambda, "ha sido", error.res)
+parada()
 ```
 ```{r}
 lambda <- 0.02
@@ -365,6 +383,7 @@ predicciones <- predict(modelo.ridge, s=lambda,
 error.res <- sum((BostonMod.test[,1] - predicciones)^2)
 error.res <- sqrt(error.res/length(predicciones))
 cat("El error para lambda =", lambda, "ha sido", error.res)
+parada()
 ```
 ```{r}
 lambda <- 0.0015
@@ -375,6 +394,7 @@ predicciones <- predict(modelo.ridge, s=lambda,
 error.res <- sum((BostonMod.test[,1] - predicciones)^2)
 error.res <- sqrt(error.res/length(predicciones))
 cat("El error para lambda =", lambda, "ha sido", error.res)
+parada()
 ```
 
 Cuanto mayor es el $\lambda$ mayor la cantidad de regularización, pero el error sube tanto si bajamos como si aumentamos $\lambda$, con lo que no estamos ajustando poco el modelo, ya que si disminuimos la cantidad de reguralización ajustamos más los datos de train pero el error residual es mayor, con lo que sobreajustamos el modelo a los datos, y por tanto estamos en el mejor valor de $\lambda$ posible.
@@ -413,6 +433,7 @@ comp <- sign(predicciones) == sign(test$crim)
 errores <- comp[comp == FALSE]
 error <- 100*(length(errores)/nrow(test))
 cat("El error con SVM lineal ha sido:", error)
+parada()
 ```
 
 El error obtenido está muy por encima del error obtenido en el apartado anterior utilizando regresión regularizada, lo que nos hace pensar que un svm lineal no ajusta lo suficientemente bien los datos. Vamos a probar con los otros tres tipos de núcleos a ver los resultados en errores que obtenemos y comprobar si podemos mejorar el error ajustando mejor los datos con otros tipos de núcleos. La predicción y el cálculo de errores se hace de forma análoga al caso lineal.
@@ -424,6 +445,7 @@ comp <- sign(predicciones) == sign(test$crim)
 errores <- comp[comp == FALSE]
 error <- 100*(length(errores)/nrow(test))
 cat("El error con SVM polinomial ha sido:", error)
+parada()
 ```
 ```{r}
 modelo.svm <- svm(train[,1]~., train[,-1], kernel="radial")
@@ -432,6 +454,7 @@ comp <- sign(predicciones) == sign(test$crim)
 errores <- comp[comp == FALSE]
 error <- 100*(length(errores)/nrow(test))
 cat("El error con SVM radial ha sido:", error)
+parada()
 ```
 ```{r}
 modelo.svm <- svm(train[,1]~., train[,-1], kernel="sigmoid")
@@ -440,6 +463,7 @@ comp <- sign(predicciones) == sign(test$crim)
 errores <- comp[comp == FALSE]
 error <- 100*(length(errores)/nrow(test))
 cat("El error con SVM sigmoidal ha sido:", error)
+parada()
 ```
 
 Efectivamente, tanto el modelo polinomial como el radial mejoran el error, aunque no mucho y sigue siendo alto. El mejor de ellos es el radial por dos puntos de diferencia con el polinomial.
@@ -481,24 +505,14 @@ for (i in 1:5) {
   pos_negativos <- posiciones[test[,1] < median(test[,1])]
   test[,1][pos_positivos] = 1
   test[,1][pos_negativos] = -1
-
-  # Elegimos variables para el conjunto de train seleccionado con lasso
-  crossv <- cv.glmnet(as.matrix(train[,-1]), as.matrix(train[,1]), alpha=1)
-  lambda <- crossv$lambda.min
-  coeficientes <- predict(modelo.lasso, type="coefficients", s=lambda)[1:14,]
-  coeficientes <- which(abs(coeficientes) > 0.2)[-1]
-  crim <- train[,1]
-  train <- train[,coeficientes]
-  crim.test <- test[,1]
-  test <- test[,coeficientes]
   
-  modelo.svm <- svm(crim~., train, kernel="radial")
+  modelo.svm <- svm(train[,1]~., train[,-1], kernel="radial")
   predicciones.test <- predict(modelo.svm, test)
   predicciones.train <- predict(modelo.svm, train)
-  comp.test <- sign(predicciones) == sign(crim.test)
-  errores.test <- comp[comp == FALSE]
-  comp.train <- sign(predicciones) == sign(crim)
-  errores.train <- comp[comp == FALSE]
+  comp.test <- sign(predicciones.test) == sign(test[,1])
+  errores.test <- comp.test[comp.test == FALSE]
+  comp.train <- sign(predicciones.train) == sign(train[,1])
+  errores.train <- comp.train[comp.train == FALSE]
   error.test <- 100*(length(errores.test)/nrow(test))
   error.train <- 100*(length(errores.train)/nrow(train))
   error_test <- error_test + error.test
@@ -511,6 +525,7 @@ print("El error con svm de núcelo radial para train con validación cruzada ha si
 print(error_train)
 print("El error con svm de núcelo radial para test con validación cruzada ha sido")
 print(error_test)
+parada()
 ```
 
 
@@ -530,6 +545,7 @@ rm(errores.test, errores.train)
 #Usar el conjunto de datos Boston y las librerías randomForest y gbm de R.
 
 ```{r}
+# EJERCICIO 3
 library(randomForest)
 library(gbm)
 library(MASS)
@@ -560,36 +576,42 @@ Los parámetros utilizados son la variable a estimar, el resto del conjunto de tr
 bagging10 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 100)
 pred10 <- predict(bagging10, newdata = test)
 cat("El error con 10 árboles es:", mean((pred10-test$medv)^2))
+parada()
 ```
 
 ```{r}
 bagging300 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 300)
 pred300 <- predict(bagging300, newdata = test)
 cat("El error con 300 árboles es:", mean((pred300-test$medv)^2))
+parada()
 ```
 
 ```{r}
 bagging500 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 500)
 pred500 <- predict(bagging500, newdata = test)
 cat("El error con 500 árboles es:", mean((pred500-test$medv)^2))
+parada()
 ```
 
 ```{r}
 bagging600 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 600)
 pred600 <- predict(bagging600, newdata = test)
 cat("El error con 600 árboles es:", mean((pred600-test$medv)^2))
+parada()
 ```
 
 ```{r}
 bagging700 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 700)
 pred700 <- predict(bagging700, newdata = test)
 cat("El error con 700 árboles es:", mean((pred700-test$medv)^2))
+parada()
 ```
 
 ```{r}
 bagging650 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 650)
 pred650 <- predict(bagging650, newdata = test)
 cat("El error con 650 árboles es:", mean((pred650-test$medv)^2))
+parada()
 ```
 
 Como vemos ya en valores cercanos a 650 el error se estabiliza y no varía mucho. El mejor de ellos es en 650, donde da 6.84%.
@@ -604,54 +626,63 @@ set.seed(237)
 randomF10 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 10)
 pred10 <- predict(randomF10, newdata=test)
 cat("El error con 10 árboles es:", mean((pred10-test$medv)^2))
+parada()
 ```
 
 ```{r}
 randomF30 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 30)
 pred30 <- predict(randomF30, newdata=test)
 cat("El error con 30 árboles es:", mean((pred30-test$medv)^2))
+parada()
 ```
 
 ```{r}
 randomF50 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 50)
 pred50 <- predict(randomF50, newdata=test)
 cat("El error con 50 árboles es:", mean((pred50-test$medv)^2))
+parada()
 ```
 
 ```{r}
 randomF100 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 100)
 pred100 <- predict(randomF100, newdata=test)
 cat("El error con 100 árboles es:", mean((pred100-test$medv)^2))
+parada()
 ```
 
 ```{r}
 randomF200 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 200)
 pred200 <- predict(randomF200, newdata=test)
 cat("El error con 200 árboles es:", mean((pred200-test$medv)^2))
+parada()
 ```
 
 ```{r}
 randomF400 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 400)
 pred400 <- predict(randomF400, newdata=test)
 cat("El error con 400 árboles es:", mean((pred400-test$medv)^2))
+parada()
 ```
 
 ```{r}
 randomF600 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 600)
 pred600 <- predict(randomF600, newdata=test)
 cat("El error con 600 árboles es:", mean((pred600-test$medv)^2))
+parada()
 ```
 
 ```{r}
 randomF500 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 500)
 pred500 <- predict(randomF500, newdata=test)
 cat("El error con 100 árboles es:", mean((pred500-test$medv)^2))
+parada()
 ```
 
 ```{r}
 randomF450 <- randomForest(train$medv~., data = train, mtry = 5, ntree = 450)
 pred450 <- predict(randomF450, newdata=test)
 cat("El error con 450 árboles es:", mean((pred450-test$medv)^2))
+parada()
 ```
 
 Podemos ver que el mejor número de árboles es 400, que da un error de 6.87%, y es por tanto con el que nos vamos a quedar.
@@ -668,6 +699,7 @@ boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 400, 
 pred <- predict(boosting, newdata = test, n.trees=400)
 print("Error para 400 árboles y shrinkage = 0.001")
 print(mean((pred - test$medv)^2))
+parada()
 ```
 
 El error sale muy alto, vamos a intentar cambiar los párametros (subir tanto el número de árboles como shrinkage, que se recomienda que esté entre 0.1 y 0.001) a ver si conseguimos bajarlo:
@@ -677,6 +709,7 @@ boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 400, 
 pred <- predict(boosting, newdata = test, n.trees=400)
 print("Error para 400 árboles y shrinkage = 0.01")
 print(mean((pred - test$medv)^2))
+parada()
 ```
 
 ```{r}
@@ -684,6 +717,7 @@ boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 500, 
 pred <- predict(boosting, newdata = test, n.trees=500)
 print("Error para 500 árboles y shrinkage = 0.01")
 print(mean((pred - test$medv)^2))
+parada()
 ```
 
 Vemos que subir ambos parámetros ayuda. Continuamos:
@@ -693,6 +727,7 @@ boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 500, 
 pred <- predict(boosting, newdata = test, n.trees=500)
 print("Error para 500 árboles y shrinkage = 0.1")
 print(mean((pred - test$medv)^2))
+parada()
 ```
 
 ```{r}
@@ -700,6 +735,7 @@ boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 600, 
 pred <- predict(boosting, newdata = test, n.trees=600)
 print("Error para 500 árboles y shrinkage = 0.1")
 print(mean((pred - test$medv)^2))
+parada()
 ```
 
 ```{r}
@@ -707,6 +743,7 @@ boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 600, 
 pred <- predict(boosting, newdata = test, n.trees=600)
 print("Error para 500 árboles y shrinkage = 0.1")
 print(mean((pred - test$medv)^2))
+parada()
 ```
 
 Aquí vemos que subir a 0.2 shrinkage no ayuda, con lo que vamos a dejarlo en 0.1 y continuar con el número de árboles.
@@ -716,6 +753,7 @@ boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 700, 
 pred <- predict(boosting, newdata = test, n.trees=700)
 print("Error para 500 árboles y shrinkage = 0.1")
 print(mean((pred - test$medv)^2))
+parada()
 ```
 
 Subir el número de árboles ya tampoco ayuda, con lo que lo dejamos en 600 árboles. El error por tanto con boosting es 10.82%, 4 puntos peor que con bagging y randomForest.
@@ -728,6 +766,7 @@ Subir el número de árboles ya tampoco ayuda, con lo que lo dejamos en 600 árbole
 Hacemos lo mismo que en el resto de ejercicios para dividir en train y test: seleccionamos una muestra aleatoria de, en este caso, 800 instancias para train y dejamos el resto para test.
 
 ```{r}
+# EJERCICIO 4
 # Fijamos de nuevo la semilla
 set.seed(237)
 
@@ -756,6 +795,7 @@ Vamos a ver el resultado de este árbol:
 ```{r}
 plot(tree.oj)
 text(tree.oj, pretty = 0)
+parada()
 ```
 
 Dicho árbol tiene 9 nodos terminales y 17 nodos en total, contando el nodo raíz. Sin embargo vemos que podría haber menos, ya que en la parte de la izquierda, por ejemplo, todos los nodos van a `MM`.
@@ -764,6 +804,7 @@ Dicho árbol tiene 9 nodos terminales y 17 nodos en total, contando el nodo raíz.
 
 ```{r}
 summary(tree.oj)
+parada()
 ```
 
 Como vemos, el número de nodos hoja son 9. El número total de nodos lo podemos ver en el árbol anterior y es 17. Las variables que se han utilizado en los nodos internos (aquellos que no son hoja) nos lo dice también la función `summary()` y son `LoyalCH`, `SalePriceMM`, `PriceDiff`, `ListPriceDiff` y `DiscCH`.  
@@ -776,6 +817,7 @@ Para esto podemos usar de nuevo la función `predict()` pasándole el árbol que he
 ```{r}
 tree.predict <- predict(tree.oj, test[,-1], type="class")
 table(tree.predict, test[,1])
+parada()
 ```
 
 Esta matriz devuelve en la primera fila aquellas instancias que eran `CH` y efectivamente el árbol ha predicho `CH` y las instancias que lo eran pero el árbol predijo `MM`, que son 11. En la segunda fila devuelve las instancias en las que era `MM` y el árbol predijo `CH` (39) y aquellas que eran `CH` y acertó, 95.  
@@ -791,6 +833,7 @@ La misión de `cv.tree()` es utilizar cross-validation para obtener el mejor nive
 set.seed(237)
 cv.oj <- cv.tree(tree.oj, FUN = prune.misclass)
 print(cv.oj)
+parada()
 ```
 
 Como podemos ver, los árboles con 9 y 5 nodos terminales son los que tienen el menor error, 144. El árbol que habíamos ajustado en el apartado c) tenía justo 9 nodos terminales, pero habíamos visto que tenía nodos que le sobraban, con lo que el árbol óptimo es el que tiene 5 nodos terminales, que es el que tiene menos error y menos nodos simultáneamente.
@@ -800,6 +843,7 @@ Como podemos ver, los árboles con 9 y 5 nodos terminales son los que tienen el m
 ```{r}
 plot(cv.oj$size, cv.oj$dev, type = "b", main = "CV para tamaño de árbol",
      ylab = "Error en validación cruzada", xlab = "Número de nodos")
+parada()
 ```
 
 El tamaño de árbol que corresponde a la tasa más pequeña de error de clasificación es, como hemos comentado antes, es 5 (y todos a partir de ahí).
