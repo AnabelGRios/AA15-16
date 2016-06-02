@@ -684,6 +684,8 @@ mean((pred - test$medv)^2)
 
 ##a) Crear un conjunto de entrenamiento conteniendo una muestra aleatoria de 800 observaciones, y un conjunto de test conteniendo el resto de las observaciones. Ajustar un árbol a los datos de entrenamiento, con Purchase como la variable respuesta y las otras variables como predictoras (paquete tree de R).
 
+Hacemos lo mismo que en el resto de ejercicios para dividir en train y test: seleccionamos una muestra aleatoria de, en este caso, 800 instancias para train y dejamos el resto para test.
+
 ```{r}
 # Fijamos de nuevo la semilla
 set.seed(237)
@@ -703,10 +705,10 @@ Para saber si usar clasificación o regresión vamos a ver de qué tipo es la varia
 summary(OJ)
 ```
 
-Como vemos, `Purchase` toma sólo dos valores: `CH` y `MM`, con lo que vamos a utilizar clasificación:
+Como vemos, `Purchase` toma sólo dos valores: `CH` y `MM`, con lo que vamos a utilizar clasificación. Utilizamos la función `tree()`, pasándole como parámetro la variable a predecir y el resto del conjunto de train, y nos devuelve un árbol de clasificación para dicho conjunto de entrenamiento:
 
 ```{r}
-tree.oj <- tree(train$Purchase~., train)
+tree.oj <- tree(train$Purchase~., train[,-1])
 ```
 
 Vamos a ver el resultado de este árbol:
@@ -715,6 +717,8 @@ plot(tree.oj)
 text(tree.oj, pretty = 0)
 ```
 
+Dicho árbol tiene 9 nodos terminales y 17 nodos en total, contando el nodo raíz. Sin embargo vemos que podría haber menos, ya que en la parte de la izquierda, por ejemplo, todos los nodos van a `MM`.
+
 ##c) Usar la función summary() para generar un resumen estadístico acerca del árbol y describir los resultados obtenidos: tasa de error de training, número de nodos del árbol, etc.
 
 ```{r}
@@ -722,24 +726,25 @@ summary(tree.oj)
 ```
 
 Como vemos, el número de nodos hoja son 9. El número total de nodos lo podemos ver en el árbol anterior y es 17. Las variables que se han utilizado en los nodos internos (aquellos que no son hoja) nos lo dice también la función `summary()` y son `LoyalCH`, `SalePriceMM`, `PriceDiff`, `ListPriceDiff` y `DiscCH`.  
-También nos dice el error en training: 0.1638 (16%) y la desviación residual hasta la media, que en este caso es la desviación normal a la media entre 800 (total de instancias en train) - 6 (número de nodos hoja) = 794, lo que da 0.7303. Como es lógico, a menor desviación, mejor ajusta el árbol a los datos de train.
+También nos dice el error en training: 0.1638 (16%) y la desviación residual hasta la media, que en este caso es la desviación normal a la media entre 800 (total de instancias en train) - 9 (número de nodos hoja) = 791, lo que da 0.7303. Como es lógico, a menor desviación, mejor ajusta el árbol a los datos de train.
 
 ##d) Predecir la respuesta de los datos de test, y generar e interpretar la matriz de confusión de los datos de test. ¿Cuál es la tasa de error del test? ¿Cuál es la precisión del test?
 
-Para esto podemos usar de nuevo la función `predict()` pasándole el árbol que hemos entrenado con train y los datos de test. Le ponemos el argumento `type=class` porque estamos con un árbol de clasificación y así obligamos a utilziar la predicción con la variable `Purchase`. Para calcular el error de test y su precisión vamos a utilizar la función `table()`, que nos devuelve la matriz de confusión.
+Para esto podemos usar de nuevo la función `predict()` pasándole el árbol que hemos entrenado con train y por otro lado los datos de test. Le ponemos el argumento `type=class` porque estamos con un árbol de clasificación y así obligamos a utilziar la predicción con la variable `Purchase`. Para calcular el error de test y su precisión vamos a utilizar la función `table()`, que nos devuelve la matriz de confusión.
 
 ```{r}
 tree.predict <- predict(tree.oj, test[,-1], type="class")
 table(tree.predict, test[,1])
 ```
 
+Esta matriz devuelve en la primera fila aquellas instancias que eran `CH` y efectivamente el árbol ha predicho `CH` y las instancias que lo eran pero el árbol predijo `MM`, que son 11. En la segunda fila devuelve las instancias en las que era `MM` y el árbol predijo `CH` (39) y aquellas que eran `CH` y acertó, 95.  
 El error en test es (11+39)/(125+11+39+95) = 0.1851852  
 La precisión es (125+95)/(125+11+39+95) = 0.8148148  
 Es decir, hay un error en test del 18.5% y una precisión del 81.4%.
 
 ##e) Aplicar la función cv.tree() al conjunto de training y determinar el tamaño óptimo del árbol. ¿Qué hace cv.tree?
 
-La misión de `cv.tree()` es utilizar cross-validation para obtener el mejor nivel de complejidad para el árbol que se obtiene. Este "mejor nivel" se puede obtener en base a diferentes criterior. Por ejemplo, si usamos `cv.tree()` con los parámetros por defecto, nos devolverá aquel que tenga menor desvianza. Si queremos que nos devuelva aquel que tenga menor error en la validación cruzada tenemos que usar el parámetro `FUN = prune.misclass`.
+La misión de `cv.tree()` es utilizar cross-validation para obtener el mejor nivel de complejidad para el árbol que se obtiene. Este "mejor nivel" se puede obtener en base a diferentes criterios. Por ejemplo, si usamos `cv.tree()` con los parámetros por defecto, nos devolverá aquel que tenga menor desvianza. Si queremos que nos devuelva aquel que tenga menor error en la validación cruzada tenemos que usar el parámetro `FUN = prune.misclass`.
 
 ```{r}
 set.seed(237)
@@ -747,9 +752,16 @@ cv.oj <- cv.tree(tree.oj, FUN = prune.misclass)
 print(cv.oj)
 ```
 
-Como podemos ver, los árboles con 9 y 5 nodos terminales son los que tienen el menor error, 144. El árbol que habíamos ajustado en el apartado c) tenía justo 9 nodos terminales, por lo que ya habíamos obtenido aquel con menor error y mejor precisión.
+Como podemos ver, los árboles con 9 y 5 nodos terminales son los que tienen el menor error, 144. El árbol que habíamos ajustado en el apartado c) tenía justo 9 nodos terminales, pero habíamos visto que tenía nodos que le sobraban, con lo que el árbol óptimo es el que tiene 5 nodos terminales, que es el que tiene menos error y menos nodos simultáneamente.
 
 ##Bonus-4. Generar un gráfico con el tamaño del árbol en el eje x (número de nodos) y la tasa de error de validación cruzada en el eje y. ¿Qué tamaño de árbol corresponde a la tasa más pequeña de error de clasificación por validación cruzada?
+
+```{r}
+plot(cv.oj$size, cv.oj$dev, type = "b", main = "CV para tamaño de árbol",
+     ylab = "Error en validación cruzada", xlab = "Número de nodos")
+```
+
+El tamaño de árbol que corresponde a la tasa más pequeña de error de clasificación es, como hemos comentado antes, es 5 (y todos a partir de ahí).
 
 ```{r}
 # Borramos lo que no necesitamos
