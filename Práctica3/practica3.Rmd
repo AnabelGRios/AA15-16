@@ -160,13 +160,13 @@ prob <- sapply(1:length(prob), function(i) {
 
 pred <- prediction(prob, test$mpg)
 perf <- performance(pred, "tpr", "fpr")
-plot(perf, main="Curva ROC para knn")
+plot(perf, main="Curvas ROC")
 ```
 
 ```{r}
 pred = prediction(prediccionesRL, test$mpg)
 perf = performance(pred, "tpr", "fpr")
-plot(perf, main="Curva ROC para logística")
+plot(perf, add=T)
 ```
 
 Como vemos, ambas son muy buenas, ya que crecen hacia 1 muy rápido en el 0, aunque después knn va un poco más lento que regresión logística, por lo que esta última nos sale un poco mejor, que es algo que ya habíamos notado al calcular los errores, ya que regresión logística tiene un error de poco más del 3% y knn de poco más del 5%.
@@ -442,16 +442,87 @@ error <- 100*(length(errores)/nrow(test))
 cat("El error con SVM sigmoidal ha sido:", error)
 ```
 
-Efectivamente, tanto el modelo polinomial como el radial mejoran el error, aunque no mucho y sigue siendo alto, y el mejor de ellos es el radial por dos puntos de diferencia con el polinomial.
+Efectivamente, tanto el modelo polinomial como el radial mejoran el error, aunque no mucho y sigue siendo alto. El mejor de ellos es el radial por dos puntos de diferencia con el polinomial.
 
 ##Bonus-3: Estimar el error de entrenamiento y test por validación cruzada de 5 particiones.
+
+Vamos a hacer las 5 particiones como en el bonus del apartado 1, haciendo una permutación del número de instancias en la base de datos Boston y partiendo esa permutación en 5 trozos, que serán los índices de las instancias en cada partición:
+
+```{r}
+set.seed(237)
+x <- sample(405,405)
+l <- c(0, 81, 162, 243, 324, 405)
+particiones <- lapply(1:5, function(i) {
+    Boston[x[(l[i]+1):l[i+1]], ]
+})
+```
+
+Vamos a utilizar el svm que mejor error nos ha dado, que ha sido el de núcleo radial con las variables que ya habíamos seleccionado en apartados anteriores.
+
+```{r}
+error_test <- 0
+error_train <- 0
+for (i in 1:5) {
+  test <- particiones[[i]]
+  y <- 1:5
+  y <- y[y != i]
+  train <- rbind(particiones[[y[1]]], particiones[[y[2]]], particiones[[y[3]]],
+                 particiones[[y[4]]])
+  
+  # Discretizamos la variable crim en train y test
+  posiciones <- c(1:length(train[,1]))
+  pos_positivos <- posiciones[train[,1] >= median(train[,1])]
+  pos_negativos <- posiciones[train[,1] < median(train[,1])]
+  train[,1][pos_positivos] = 1
+  train[,1][pos_negativos] = -1
+  
+  posiciones <- c(1:length(test[,1]))
+  pos_positivos <- posiciones[test[,1] >= median(test[,1])]
+  pos_negativos <- posiciones[test[,1] < median(test[,1])]
+  test[,1][pos_positivos] = 1
+  test[,1][pos_negativos] = -1
+
+  # Elegimos variables para el conjunto de train seleccionado con lasso
+  crossv <- cv.glmnet(as.matrix(train[,-1]), as.matrix(train[,1]), alpha=1)
+  lambda <- crossv$lambda.min
+  coeficientes <- predict(modelo.lasso, type="coefficients", s=lambda)[1:14,]
+  coeficientes <- which(abs(coeficientes) > 0.2)[-1]
+  crim <- train[,1]
+  train <- train[,coeficientes]
+  crim.test <- test[,1]
+  test <- test[,coeficientes]
+  
+  modelo.svm <- svm(crim~., train, kernel="radial")
+  predicciones.test <- predict(modelo.svm, test)
+  predicciones.train <- predict(modelo.svm, train)
+  comp.test <- sign(predicciones) == sign(crim.test)
+  errores.test <- comp[comp == FALSE]
+  comp.train <- sign(predicciones) == sign(crim)
+  errores.train <- comp[comp == FALSE]
+  error.test <- 100*(length(errores.test)/nrow(test))
+  error.train <- 100*(length(errores.train)/nrow(train))
+  error_test <- error_test + error.test
+  error_train <- error_train + error.train
+}
+
+error_train <- error_train/5
+error_test <- error_test/5
+print("El error con svm de núcelo radial para train con validación cruzada ha sido")
+print(error_train)
+print("El error con svm de núcelo radial para test con validación cruzada ha sido")
+print(error_test)
+```
+
 
 ```{r}
 # Borramos lo que no necesitamos
 rm(BostonMod.test, BostonMod.train, test, train)
 rm(coeficientes, comp, crossv, error, error.res, errores)
 rm(lambda, modelo.lasso, modelo.ridge, predicciones, modelo.svm)
-rm(pos_negativos, pos_positivos, posiciones)
+rm(pos_negativos, pos_positivos, posiciones, error.test, error.train)
+rm(comp.test, comp.train, crim, crim.test, error_test, error_train)
+rm(l, particiones, predicciones.test, predicciones.train, y)
+rm(errores.test, errores.train)
 ```
 
 
