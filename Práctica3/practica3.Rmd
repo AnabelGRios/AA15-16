@@ -173,6 +173,86 @@ Como vemos, ambas son muy buenas, ya que crecen hacia 1 muy rápido en el 0, aunq
 
 ##e) Bonus-1: Estimar el error de test de ambos modelos (RL, k-NN) pero usando Validación Cruzada de 5-particiones. Comparar con los resultados obtenidos en el punto anterior.
 
+Dividimos el conjunto AutoMod, en el que ya tenemos sólo las variables seleccionadas en el apartado b), en 5 particiones de forma aleatoria haciendo uso de las funciones `sample()` y `lapply()`, de forma que obtenemos las particiones en una lista que después combinaremos con `rbind()`.
+
+```{r}
+set.seed(237)
+x <- sample(392,392)
+l <- c(0, 78, 156, 234, 313, 392)
+particiones <- lapply(1:5, function(i) {
+    AutoMod[x[(l[i]+1):l[i+1]], ]
+})
+```
+
+Vamos a hacer un bucle de 5 iteraciones en los que iremos cambiando los conjuntos de train y test (e iremos en cada uno modificando la variable `mpg` umbralizándola a 1 y -1 según la mediana de cada conjunto de train y test que obtengamos).
+
+```{r}
+media_regresion <- 0
+media_knn <- 0
+
+for (i in 1:5) {
+  test <- particiones[[i]]
+  y <- 1:5
+  y <- y[y != i]
+  train <- rbind(particiones[[y[1]]], particiones[[y[2]]], particiones[[y[3]]],
+                 particiones[[y[4]]])
+  
+  # Discretizamos la variable mpg en train y test
+  posiciones <- c(1:length(train[,1]))
+  pos_positivos <- posiciones[train[,1] >= median(train[,1])]
+  pos_negativos <- posiciones[train[,1] < median(train[,1])]
+  train[,1][pos_positivos] = 1
+  train[,1][pos_negativos] = -1
+  
+  posiciones <- c(1:length(test[,1]))
+  pos_positivos <- posiciones[test[,1] >= median(test[,1])]
+  pos_negativos <- posiciones[test[,1] < median(test[,1])]
+  test[,1][pos_positivos] = 1
+  test[,1][pos_negativos] = -1
+  
+  # Calculamos el error con regresión logística
+  modlog1 <- glm(train$mpg~., data = train)
+  prediccionesRL <- predict(modlog1, test[,-1])
+  comp <- sign(prediccionesRL) == sign(test$mpg)
+  errores <- comp[comp == FALSE]
+  error.regresion <- 100*(length(errores)/nrow(test))
+  media_regresion <- media_regresion + error.regresion
+  
+  # Escalamos para knn
+  escalado <- scale(train[,2:4])
+  train[,2:4] <- escalado
+  centro <- attr(escalado,"scaled:center")
+  escala <- attr(escalado, "scaled:scale")
+  test[,2:4] <- scale(test[,2:4], center=centro, scale=escala)
+  
+  # Obtemos el mejor k
+  # Pasamos los datos con los que vamos a predecir a una matriz
+  x <- as.matrix(train[,-1])
+  # Fijamos la semilla
+  set.seed(237)
+  k <- tune.knn(x,as.factor(train[,1]), k=1:10, tunecontrol = 
+                  tune.control(sampling = "cross"))
+  k <- k$best.parameters$k
+  # Utilizamos knn con el mejor k que nos ha dicho tune.knn
+  pred.knn <- knn(train[,-1], test[,-1], train[,1], k=k)
+  
+  # Creamos la tabla de confusión y calculamos el error
+  confM <- table(pred.knn, test[,1])
+  error <- (confM[1,2] + confM[2,1]) / 
+              (confM[1,1]+confM[1,2]+confM[2,1]+confM[2,2])
+  media_knn <- media_knn + error
+}
+
+media_regresion <- media_regresion/5
+media_knn <- 100*media_knn/5
+
+cat("El error medio por validación cruzada en regresión logística ha sido", 
+    media_regresion)
+cat("El error medio por validación cruzada con knn ha sido", media_knn)
+```
+
+Vemos que los errores, aunque siguen siendo bajos, son un poco más altos que antes. Esto puede deberse a que con las particiones de los datos que teníamos en apartados anteriores hayamos tenido más suerte a la hora de predecir. Es importante decir que este error es más fiable, ya que estamos repitiendo el experimento 5 veces con conjuntos de train y test distintos, donde los datos de test no influyen en ningún momento en los de train, y estamos calculando la media de los errores, que es más fiable que hacerlo una única vez. En este caso, además, nos sale un 2% mejor el ajuste con knn que con regresión logística.
+
 ##f) Bonus-2: Ajustar el mejor modelo de regresión posible considerando la variable mpg como salida y el resto como predictorias. Justificar el modelo ajustado en base al patrón de los residuos. Estimar su error de entrenamiento y test.
 
 ```{r}
@@ -199,7 +279,7 @@ train = Boston[train, ]
 
 ##a) Encontrar el subconjunto óptimo de variables predictoras a partir de un modelo de regresión-LASSO (usar paquete glmnet de R) donde seleccionamos sólo aquellas variables con coeficiente mayor de un umbral prefijado.
 
-Utilizando `glmnet`, le tenemos que dar un 1 al parámetro `alpha` para que sea un modelo LASSO.
+Utilizando `glmnet`, le tenemos que dar un 1 al parámetro `alpha` para que sea un modelo LASSO, con el que vamos a obtener el conjunto óptimo de variables predictoras (aquellas que más correlación tengan con `crim`). A `glmnet` le tenemos que pasar los datos como matrices para que funcione, para lo que utilizo la función `as.matrix()`.
 
 ```{r}
 library(glmnet)
