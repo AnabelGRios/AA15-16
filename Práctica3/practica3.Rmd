@@ -160,13 +160,13 @@ prob <- sapply(1:length(prob), function(i) {
 
 pred <- prediction(prob, test$mpg)
 perf <- performance(pred, "tpr", "fpr")
-plot(perf, main="Curvas ROC")
+plot(perf, main="Curva ROC para knn")
 ```
 
 ```{r}
 pred = prediction(prediccionesRL, test$mpg)
 perf = performance(pred, "tpr", "fpr")
-plot(perf, add=T)
+plot(perf, main="Curca ROC para regresión logística")
 ```
 
 Como vemos, ambas son muy buenas, ya que crecen hacia 1 muy rápido en el 0, aunque después knn va un poco más lento que regresión logística, por lo que esta última nos sale un poco mejor, que es algo que ya habíamos notado al calcular los errores, ya que regresión logística tiene un error de poco más del 3% y knn de poco más del 5%.
@@ -552,18 +552,14 @@ Veamos cuántas variables hay, ya que va a ser necesario especificar el total par
 summary(train)
 ```
 
-Como vemos son 14 variables en total, si quitamos la que vamos a predecir, son en total 13. Vamos a empezar con un número de árboles 10 y ver el error que tiene, e iremos subiendo hasta que el error se quede más o menos estable, ya que sabemos que bagging no sobreajusta los datos.
+Como vemos son 14 variables en total, si quitamos la que vamos a predecir, son en total 13. Vamos a empezar con un número de árboles 100 y ver el error que tiene, e iremos subiendo hasta que el error se quede más o menos estable, ya que sabemos que bagging no sobreajusta los datos.  
+
+Los parámetros utilizados son la variable a estimar, el resto del conjunto de train y el número de variables del conjunto de entrenamiento. Después hacemos una predicción con la función `predict()` y calculamos el error cuadrado medio.
 
 ```{r}
-bagging10 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 10)
+bagging10 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 100)
 pred10 <- predict(bagging10, newdata = test)
 cat("El error con 10 árboles es:", mean((pred10-test$medv)^2))
-```
-
-```{r}
-bagging30 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 30)
-pred30 <- predict(bagging30, newdata = test)
-cat("El error con 30 árboles es:", mean((pred30-test$medv)^2))
 ```
 
 ```{r}
@@ -585,12 +581,6 @@ cat("El error con 600 árboles es:", mean((pred600-test$medv)^2))
 ```
 
 ```{r}
-bagging800 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 800)
-pred800 <- predict(bagging800, newdata = test)
-cat("El error con 800 árboles es:", mean((pred800-test$medv)^2))
-```
-
-```{r}
 bagging700 <- randomForest(train$medv~., data = train, mtry = 13, ntree = 700)
 pred700 <- predict(bagging700, newdata = test)
 cat("El error con 700 árboles es:", mean((pred700-test$medv)^2))
@@ -602,6 +592,7 @@ pred650 <- predict(bagging650, newdata = test)
 cat("El error con 650 árboles es:", mean((pred650-test$medv)^2))
 ```
 
+Como vemos ya en valores cercanos a 650 el error se estabiliza y no varía mucho. El mejor de ellos es en 650, donde da 6.84%.
 
 ##c) Ajustar un modelo de regresión usando Random Forest. Obtener una estimación del número de árboles necesario. Justificar el resto de parámetros usados en el ajuste. Calcular el error de test y compararlo con el obtenido con bagging.
 
@@ -663,7 +654,7 @@ pred450 <- predict(randomF450, newdata=test)
 cat("El error con 450 árboles es:", mean((pred450-test$medv)^2))
 ```
 
-Podemos ver que el mejor número de árboles es 400, que es con el que nos vamos a quedar.
+Podemos ver que el mejor número de árboles es 400, que da un error de 6.87%, y es por tanto con el que nos vamos a quedar.
 
 ##d) Ajustar un modelo de regresión usando Boosting (usar gbm con distribution = 'gaussian'). Calcular el error de test y compararlo con el obtenido con bagging y Random Forest.
 
@@ -673,11 +664,61 @@ set.seed(237)
 ```
 
 ```{r}
-boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 5000, shrinkage = 0.2)
-pred <- predict(boosting, newdata = test, n.trees=5000)
-mean((pred - test$medv)^2)
+boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 400, shrinkage = 0.001)
+pred <- predict(boosting, newdata = test, n.trees=400)
+print("Error para 400 árboles y shrinkage = 0.001")
+print(mean((pred - test$medv)^2))
 ```
 
+El error sale muy alto, vamos a intentar cambiar los párametros (subir tanto el número de árboles como shrinkage, que se recomienda que esté entre 0.1 y 0.001) a ver si conseguimos bajarlo:
+
+```{r}
+boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 400, shrinkage = 0.01)
+pred <- predict(boosting, newdata = test, n.trees=400)
+print("Error para 400 árboles y shrinkage = 0.01")
+print(mean((pred - test$medv)^2))
+```
+
+```{r}
+boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 500, shrinkage = 0.01)
+pred <- predict(boosting, newdata = test, n.trees=500)
+print("Error para 500 árboles y shrinkage = 0.01")
+print(mean((pred - test$medv)^2))
+```
+
+Vemos que subir ambos parámetros ayuda. Continuamos:
+
+```{r}
+boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 500, shrinkage = 0.1)
+pred <- predict(boosting, newdata = test, n.trees=500)
+print("Error para 500 árboles y shrinkage = 0.1")
+print(mean((pred - test$medv)^2))
+```
+
+```{r}
+boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 600, shrinkage = 0.1)
+pred <- predict(boosting, newdata = test, n.trees=600)
+print("Error para 500 árboles y shrinkage = 0.1")
+print(mean((pred - test$medv)^2))
+```
+
+```{r}
+boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 600, shrinkage = 0.2)
+pred <- predict(boosting, newdata = test, n.trees=600)
+print("Error para 500 árboles y shrinkage = 0.1")
+print(mean((pred - test$medv)^2))
+```
+
+Aquí vemos que subir a 0.2 shrinkage no ayuda, con lo que vamos a dejarlo en 0.1 y continuar con el número de árboles.
+
+```{r}
+boosting <- gbm(medv~., data = train, distribution = "gaussian", n.trees = 700, shrinkage = 0.1)
+pred <- predict(boosting, newdata = test, n.trees=700)
+print("Error para 500 árboles y shrinkage = 0.1")
+print(mean((pred - test$medv)^2))
+```
+
+Subir el número de árboles ya tampoco ayuda, con lo que lo dejamos en 600 árboles. El error por tanto con boosting es 10.82%, 4 puntos peor que con bagging y randomForest.
 
 #Ejercicio 4.
 #Usar el conjunto de datos OJ que es parte del paquete ISLR.
