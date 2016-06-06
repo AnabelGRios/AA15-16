@@ -1,0 +1,91 @@
+\documentclass[12pt]{article}
+
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,activeacute]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{mathtools}
+\usepackage{enumerate}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{anysize}
+
+\marginsize{2cm}{2cm}{2cm}{2cm}
+
+\title{Aprendizaje Automático: Cuestionario 2}
+\author{Anabel G\'omez R\'ios}
+
+\theoremstyle{definition}
+
+\begin{document}
+\maketitle
+
+\newtheorem{pregunta}{Pregunta}
+
+\begin{pregunta}
+
+\end{pregunta}
+
+
+\begin{pregunta}
+
+\end{pregunta}
+
+
+\begin{pregunta}
+
+\end{pregunta}
+
+
+\begin{pregunta}
+
+\end{pregunta}
+
+
+\begin{pregunta}
+
+\end{pregunta}
+
+
+\begin{pregunta}
+
+\end{pregunta}
+
+
+\begin{pregunta}
+\begin{enumerate}
+\item[a)] Considere un núcleo Gaussiano en un modelo de base radial. ¿Qué representa $g(x)$ (ecuación 6.2 del libro LfD) cuando $||x|| \rightarrow \infty$ para el modelo RBF no-paramétrico versus el modelo RBF paramétrico, asumiendo los $\mathbf{w}_n$ fijos.
+\item[b)] Sea $Z$ una matriz cuadrada de características definida por $Z_{nj} = \phi_j(\mathbf{x}_n)$ donde $\phi_j(\mathbf{x})$ representa una transformación no lineal. Suponer que $Z$ es invertible. Mostrar que un modelo paramétrico de base radial, con $g(\mathbf{x}) = \mathbf{w}^T \phi(\mathbf{x})$ y $\mathbf{w} = Z^{-1}\mathbf{y}$, interpola los puntos de forma exacta. Es decir, que $g(\mathbf{x}_n) = \mathbf{y}_n$, con $E_{in}(g)=0$.
+\item[c)] ¿Se verifica siempre que $E_{in}(g)=0$ en el modelo no-paramétrico?
+\end{enumerate}
+
+
+\end{pregunta}
+
+
+\begin{pregunta}
+Verificar que la función sign puede ser aproximada por la función tanh. Dados $\mathbf{w}_1$ y $\epsilon > 0$, encontrar $\mathbf{w}_2$ tal que $|sign(\mathbf{x}_n^T \mathbf{w}_1) - tanh(\mathbf{x}_n^T \mathbf{w}_2)| \leq \epsilon$ para $x_n \in \mathcal{D}$ (Ayuda: analizar la función $tanh(\alpha \mathbf{x}), \alpha \in R$).\\
+
+
+\end{pregunta}
+
+
+\begin{pregunta}
+Sean $V$ y $Q$ el número de nodos y pesos en una red neuronal,
+\[ V = \sum_{l=0}^L d^{(l)},\ \ Q = \sum_{l=1}^L d^{(l)} (d^{(l+1)}+1)	\]
+En términos de $V$ y $Q$, ¿cuántas operaciones se realizan en un pase hacia adelante (sumas, multiplicaciones y evaluaciones de $\theta$)? (Ayuda: analizar la complejidad en términos de $V$ y $Q$).\\
+
+
+\end{pregunta}
+
+
+\begin{pregunta}
+Para el perceptron sigmoidal $h(x) = tanh(\mathbf{x}^T\mathbf{w})$, sea el error de ajuste $E_{in}(\mathbf{w} = \frac{1}{N} \sum_{n=1}^N (tanh(\mathbf{x}_n^T\mathbf{w}) - y_n)^2$. Mostrar que
+\[ \nabla E_{in}(\mathbf{w}) = \frac{2}{N} \sum_{n=1}^N (tanh(\mathbf{x}_n^T \mathbf{w}) -y_n) (1-tanh(\mathbf{x}_n^T \mathbf{w})^2)\mathbf{x}_n	\]
+
+Si $\mathbf{w} \rightarrow \infty$ ¿qué le sucede al gradiente? ¿Cómo se relaciona esto con la dificultad de optimizar el perceptron multicapa?\\
+
+
+\end{pregunta}
+
+\end{document}
