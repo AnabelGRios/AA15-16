@@ -25,7 +25,7 @@
 % Cuestión 1
 \begin{pregunta}
 Considere los conjuntos de hipótesis $\mathcal{H}_1$ y $\mathcal{H}_{100}$ que contienen funciones \textit{booleanas} sobre 10 variables \textit{booleanas}, es decir $\mathcal{X} = \{-1, +1\}^{10}$. $\mathcal{H}_1$ contiene todas las funciones \textit{booleanas} que toman valor $+1$ en un único punto de $\mathcal{X}$ y $-1$ en el resto. $\mathcal{H}_{100}$ contiene todas las funciones \textit{booleanas} que toman valor $+1$ en exactamente $100$ puntos de $\mathcal{X}$ y $-1$ en el resto.
-\begin{enumerate}[a]
+\begin{enumerate}[a)]
 \item ¿Cuántas hipótesis contienen $\mathcal{H}_1$ y $\mathcal{H}_{100}$?
 \item ¿Cuántos bits son necesarios para especificar una hipótesis en $\mathcal{H}_1$?
 \item ¿Cuántos bits son necesarios para especificar una hipótesis en $\mathcal{H}_{100}$?
@@ -33,37 +33,55 @@ Considere los conjuntos de hipótesis $\mathcal{H}_1$ y $\mathcal{H}_{100}$ que 
 
 Argumente sobre la relación entre la complejidad de una clase de funciones y la complejidad de sus componentes.\\
 
+El conjunto $\mathcal{X}$ tiene $2^{10}$ elementos y cada uno de ellos es un vector de $10$ posiciones. Tiene $2^{10}$ elementos porque son todas las posibles formas de distribuir -1 y +1 en $10$ posiciones.
+\begin{enumerate}[a)]
+\item En el caso de $\mathcal{H}_1$, como contiene todas las funciones \textit{booleanas} que llevan un único punto al valor +1 y el resto al -1, habrá tantas hipótesis como puntos distintos se puedan llevar al +1, que como hemos dicho, son $2^{10}$. En el caso de $\mathcal{H}_{100}$, habrá tantas hipótesis como formas distintas de llevar 100 puntos distintos al +1 y los demás al -1. Este número es el número combinatorio de $2^{10}$ sobre $100$,
+\[ \left( \begin{array}{c} 2^{10} \\ 
+			100 \end{array} \right) = \frac{2^{10}!}{100! (2^{10}-100)!} = 7.746625\cdot10^{140} \]
+\item Vamos a intentar representar una hipótesis de $\mathcal{H}_1$ de la forma más simple para utilizar el menor número de bits posibles. Como $\mathcal{H}_1$ sólo lleva un punto al +1, podemos especificar este único punto suponiendo que todos los que no estén especificados irán al -1. Además, como este punto es un punto en $ \{-1, +1\}^{10}$, tendrá 10 posiciones y cada una de ellas tendrá un 1 o un -1. Si codificamos el 1 como 1 y el -1 como 0, podemos representar este único punto como una secuencia de 10 bits.
+\item Se puede hacer de forma análoga al apartado anterior, pero en este caso necesitamos representar los 100 puntos que vamos a llevar al 1, suponiendo de nuevo que todos los que no estén específicamente representados, irán al -1. Codificando otra vez el 1 como el 1 y el -1 como el 0, y sabiendo que cada punto tiene 10 posiciones, necesitamos $100*10=1000$ bits para codificar una hipótesis de $\mathcal{H}_{100}$.
+\end{enumerate}
+
+La complejidad de una clase de funciones y de sus componentes está estrechamente ligada en tanto que una clase será más compleja cuanto más complejas sean sus componentes. En concreto, una clase tendrá la complejidad que tenga la componente más compleja dentro de dicha clase.
 
 \end{pregunta}
 
 % Cuestión 2
 \begin{pregunta}
 Suponga que durante 5 semanas seguidas, recibe un correo postal que predice el resultado del partido de fútbol del domingo, donde hay apuestas sustanciosas. Cada lunes revisa la predicción y observa que la predicción es correcta en todas las ocasiones. El día de después del quinto partido recibe una carta diciéndole que si desea conocer la predicción de la semana que viene debe pagar 50.000 euros. ¿Pagaría?
-\begin{enumerate}[a]
+\begin{enumerate}[a)]
 \item ¿Cuántas son las posibles predicciones gana-pierde para los cinco partidos?
-\item Si el remitente desea estar seguro de que al menos una persona recibe de él la predicción correcta sobre los 5 partidos, ¿cuál es el mínimo número de cartas que deberá de
-enviar?
+\item Si el remitente desea estar seguro de que al menos una persona recibe de él la predicción correcta sobre los 5 partidos, ¿cuál es el mínimo número de cartas que deberá enviar?
 \item Después de la primera carta prediciendo el resultado del primer partido, ¿a cuántos de los seleccionados inicialmente deberá de enviarle la segunda carta?
 \item ¿Cuántas cartas en total se habrán enviado depués de las primeras cinco semanas?
 \item  Si el coste de imprimir y enviar las cartas es de $0.5$ euros por carta, ¿cuánto ingresa el remitente si el receptor de las 5 predicciones acertadas decide pagar los $50.000$ euros ?
 \item ¿Puede relacionar esta situación con la función de crecimiento y la credibilidad del ajuste a los datos?
 \end{enumerate}
 
+\begin{enumerate}[a)]
+\item En cada partido pueden darse dos posibilidades, que gane el equipo1 y pierda el equipo2 y que gane el equipo2 y pierda el equipo1. Para cada una de estas posibilidades, en el siguiente partido volverá a haber dos posibilidades. Como hay 5 partidos, el número de posibilidades totales es $2*2*2*2*2=2^5=32$ posibles predicciones gana-pierde para los cinco partidos.
+\item Si el remitente se quiere asegurar de que al menos una persona recibe la predicción correcta tiene que enviar 62 cartas. Vamos a verlo: para el primer partido, tendrá que enviar 16 con el resultado de que gana el equipo1 y 16 con el resultado de que gana el equipo2, 32 cartas en total. Para el segundo partido, sólo tendrá que enviar 16 en total, a aquellos a los que haya acertado con el primer partido, a 8 de ellos les dirá que gana el equipo1 y a los otros 8 el equipo2. Para el tercer partido tendrá que enviar 8 cartas, a aquellos a los que acertara en el primer y segundo partido, a 4 de ellos diciendo que gana el equipo1 y a otros 4 diciendo que gana el equipo2. Para el cuarto partido, de forma análoga, sólo tendrá que enviar 4 cartas, 2 y 2, y para el quinto,  2 cartas, 1 y 1, quedando sólo una persona que recibirá todas las cartas con la predicción correcta. En total son $32+16+8+4+2=62$ cartas.
+\item Como hemos dicho en el punto anterior, de los 32 seleccionados para la primera carta, habrá que enviarle la segunda a 16 de ellos (la mitad), aquellos con los que se ha acertado en la primera predicción.
+\item Las cartas totales, también calculadas en el apartado b), son 62, si queremos que al menos una persona reciba la predicción correcta. Si quisiéramos que la predicción correcta le llegara a $n$ personas, tendríamos que enviar $62*n$ cartas.
+\item Volvemos al caso en el que sólo hay un receptor de las 5 predicciones correctas. Como tiene que enviar 62 cartas, si el receptor decide pagar, el remitente ingresa $50000-62*0.5=49969$ euros.
+\item Podemos relacionarlo con la función de crecimiento en tanto que es el máximo número de dicotomías que se pueden generar por $\mathcal{H}$ en $N$ puntos, para lo que se consideran todas las posibles elecciones de los $N$ puntos y se elige aquella que da el mayor número de dicotomías y en este caso lo que estamos haciendo es considerar las posibles formas de mandar las 62 cartas y quedarnos con aquella forma que nos da el mayor número de dicotomías en tanto que si las distribuimos de otra forma puede que no sea posible que una persona reciba las 5 predicciones correctas.
+\end{enumerate}
 
 \end{pregunta}
 
 % Cuestión 3
 \begin{pregunta}
-En un experimento para determinar la distribución del tamaño de los peces en un lago, se decide echar una red para capturar una muestra representativa. Así se hace y se obtiene una muestra suficientemente grande de la que se pueden obtener conclusiones estadísticas sobre los peces del lago. Se obtiene la distribución de peces por tamaño y se entregan las conclusiones. Discuta si las conclusiones obtenidas servirán para el objetivo que se persigue e identifique si hay que lo impida.\\
+En un experimento para determinar la distribución del tamaño de los peces en un lago, se decide echar una red para capturar una muestra representativa. Así se hace y se obtiene una muestra suficientemente grande de la que se pueden obtener conclusiones estadísticas sobre los peces del lago. Se obtiene la distribución de peces por tamaño y se entregan las conclusiones. Discuta si las conclusiones obtenidas servirán para el objetivo que se persigue e identifique si hay algo que lo impida.\\
 
-
+Las conclusiones obtenidas es muy probable que no vayan a servir para el objetivo de encontrar la distribución de peces por tamaño ya que influyen muchos factores. Por ejemplo, dependerá de si el sitio en el que se ha echado la red tiene sólo peces de un determinado tipo (demasiado grandes o demasiado pequeños) que no representa a toda la población en el lago, sería más acertado echar la red en diferentes sitios y obtener peces de todo el lago. También influye el momento del año en el que se eche la red, ya que si es temporada de pesca los peces tenderán a ser más pequeños (los grandes los habrán pescado) y si no lo es, tenderán a ser más grandes, por lo que también convendría sacar peces en diferentes meses y épocas del año y hacer un estudio continuado para mejorar la distribución obtenida y que se acerque más a la realidad. Además, también depende del tipo de red ¿y si está dejando pasar a los peces pequeños y sólo estamos obteniendo los peces grandes? Dada la información que tenemos sobre el problema, podría estar ocurriendo así. De todo esto se deduce que con una sola muestra en un solo sitio del lago, no estamos obteniendo una distribución fiel del tamaño de los peces real en el lago, con lo que las conclusiones no servirán. En concreto, en estos casos, nuestra muestra de entrenamiento tiene una distribución distinta a otra muestra de test que saquemos (bien en otra zona del lago, bien en otra época del año, bien con otra red), por lo que no podemos decir nada de la distribución real con la distribución que hemos obtenido, puesto que no son la misma.
 \end{pregunta}
 
 % Cuestión 4
 \begin{pregunta}
-Considere la siguiente aproximación al aprendizaje. Mirando los datos, parece que los datos son linealmente separables, por tanto decidimos usar un simple perceptron y obtenemos un error de entrenamiento cero con los pesos óptimos encontrados. Ahora deseamos obtener algunas conclusiones sobre generalización, por tanto miramos el valor $d_{VC}$ de nuestro modelo y vemos que es $d + 1$. Usamos dicho valor de $d_{VC}$ para obtener una cota del error de test. Argumente a favor o en contra de esta forma de proceder identificando los posible fallos si los hubiera y en su caso cuál hubiera sido la forma correcta de actuación.\\
+Considere la siguiente aproximación al aprendizaje. Mirando los datos, parece que los datos son linealmente separables, por tanto decidimos usar un simple perceptrón y obtenemos un error de entrenamiento cero con los pesos óptimos encontrados. Ahora deseamos obtener algunas conclusiones sobre generalización, por tanto miramos el valor $d_{VC}$ de nuestro modelo y vemos que es $d + 1$. Usamos dicho valor de $d_{VC}$ para obtener una cota del error de test. Argumente a favor o en contra de esta forma de proceder identificando los posible fallos si los hubiera y en su caso cuál hubiera sido la forma correcta de actuación.\\
 
-
+Esta forma de proceder es errónea por varias razones. La primera de ellas es que no se pueden mirar los datos y actuar en base a lo que se ha visto nunca, ya que ajustaremos muy bien los datos que tenemos pero no nos servirá de nada para predecir después ya que las tasas de error aumentarán mucho. Además, es importante elegir el modelo a utilizar antes de ver nada de los datos. Esta elección puede hacerse en base a información general que se tenga del problema y dónde se mueva dicho problema, pero en información general, no en el conjunto de datos en sí. Si elegimos, como aquí dice, el perceptrón porque los datos parecen separables y obtenemos un error de entrenamiento cero, sin duda el error que tengamos fuera de la muestra será mucho más grande y además las cotas que se obtengan tampoco serán reales, no podemos basarnos para obtener una cota de generalización en algo que hemos hecho para unos datos concretos, mirando dichos datos y ajustando sólo esos datos, sabiendo cómo son.\\
+La forma correcta de actuar, por tanto, habría sido elegir previamente el modelo con el que se va a aprender sin mirar los datos, ajustar dicho modelo (probablemente usando regularización para no sobreajustar los datos tampoco) y obtener un error de train fiable, y con ese error y la dimensión $d_{VC}$ obtenida, sacar cotas de generalización fiables, que sí se parecerán al error que se tendrá si cambiamos el conjunto de train por uno de test u otra muestra.
 \end{pregunta}
 
 % Cuestión 5
@@ -81,9 +99,9 @@ Cada algoritmo trabaja con un conjunto $\mathcal{H}$ de tamaño 500. Nuestro des
 % Cuestión 6
 \begin{pregunta}
 Considere la tarea de seleccionar una regla del vecino más cercano. ¿Qué hay de erróneo en la siguiente lógica que se aplica a la selección de $k$? (Los límites son cuando $N \rightarrow \infty$).
-Considere la posibilidad de establecer la clase de hipótesis $H_{NN}$ con $N$ reglas, las $k-NN$ hipótesis, usando $k =1,\dots,N$. Use el error dentro de la muestra para elegir un valor de $k$ que minimiza $E_{in}$. Utilizando el error de generalización para $N$ hipótesis, obtenemos la conclusión
+\textit{''Considere la posibilidad de establecer la clase de hipótesis $H_{NN}$ con $N$ reglas, las $k-NN$ hipótesis, usando $k =1,\dots,N$. Use el error dentro de la muestra para elegir un valor de $k$ que minimiza $E_{in}$. Utilizando el error de generalización para $N$ hipótesis, obtenemos la conclusión
 de que $E_{in} \rightarrow E_{out}$ porque $\log N/N \rightarrow 0$. Por lo tanto concluimos que asintóticamente,
-estaremos eligiendo el mejor valor de $k$, basándonos sólo en $E_{in}$.\\
+estaremos eligiendo el mejor valor de $k$, basándonos sólo en $E_{in}$.''}\\
 
 
 \end{pregunta}
